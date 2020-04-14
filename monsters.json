@@ -1,0 +1,93 @@
+{
+  "rat" : {
+    "name" : "Rat",
+    "sprites" : "sv_enemies/Rat.png",
+    "health" : 110,
+    "str" : 15,
+    "def" : 5,
+    "mag" : 10,
+    "gold" : 100,
+    "exp" : 5000,
+    "move_list" : ["attack"],
+    "bg" : "backgrounds/Ruins2.png",
+    "weakness" : []
+  },
+  "snake": {
+    "name" : "Snake",
+    "sprites" : "sv_enemies/Snake.png",
+    "health" : 90,
+    "str" : 20,
+    "def" : 11,
+    "mag" : 5,
+    "gold" : 75,
+    "exp" : 5000,
+    "move_list" : ["attack"],
+    "bg" : "backgrounds/Ruins2.png",
+    "weakness" : []
+  },
+  "imp": {
+    "name" : "Imp",
+    "sprites" : "sv_enemies/Imp.png",
+    "health" : 100,
+    "str" : 7,
+    "def" : 10,
+    "mag" : 34,
+    "gold" : 120,
+    "exp" : 5000,
+    "move_list" : ["attack", "thunder"],
+    "bg" : "backgrounds/Ruins2.png",
+    "weakness" : ["fire"]
+  },
+  "hornet": {
+    "name" : "Hornet",
+    "sprites" : "sv_enemies/Hornet.png",
+    "health" : 80,
+    "str" : 37,
+    "def" : 10,
+    "mag" : 3,
+    "gold" : 100,
+    "exp" : 5000,
+    "move_list" : ["attack"],
+    "bg" : "backgrounds/Ruins2.png",
+    "weakness" : ["ice"]
+  },
+  "floor_boss1": {
+    "name": "Tho'k",
+    "sprites": "sv_enemies/Orc.png",
+    "health": 750,
+    "str": 45,
+    "def": 8,
+    "mag": 30,
+    "gold": 500,
+    "exp": 10000,
+    "move_list" : ["attack"],
+    "bg" : "backgrounds/Ruins2.png",
+    "weakness" : ["water"]
+  },
+  "secret_battle1": {
+    "name" : "Cerberus",
+    "sprites" : "sv_enemies/Cerberus.png",
+    "health" : 2400,
+    "str" : 1500,
+    "def" : 120,
+    "mag" : 1000,
+    "gold" : 10000,
+    "exp" : 5000,
+    "move_list" : ["attack", "thunder"],
+    "bg" : "backgrounds/Ruins2.png",
+    "weakness" : []
+  },
+  "debug_fight": {
+    "name" : "The Debugger",
+    "sprites" : "sv_enemies/Irongiant.png",
+    "health" : 24000,
+    "str" : 1500,
+    "def" : 150,
+    "mag" : 1000,
+    "gold" : 100000,
+    "exp" : 50000,
+    "move_list" : ["attack", "thunder"],
+    "bg" : "backgrounds/Ruins2.png",
+    "weakness" : []
+  }
+}

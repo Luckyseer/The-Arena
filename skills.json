@@ -1,0 +1,44 @@
+{
+  "warrior" : [
+     {
+      "name" : "Burst",
+      "type" : "buff",
+      "desc" : "Greatly strengthen next attack.",
+      "mp_cost" : 20,
+      "level_req" : 1,
+      "animation" : "special"
+    },
+    {
+      "name": "Double Slash",
+      "type": "dmg",
+      "desc": "Attacks the enemy twice.",
+      "mp_cost": 30,
+      "level_req": 5,
+      "animation": "slash"
+    },
+    {
+        "name" : "Defend",
+        "type" : "buff",
+        "desc" : "Greatly strengthen defence.",
+        "mp_cost" : 15,
+        "level_req" : 7,
+        "animation" : "special"
+      },
+    {
+        "name" : "Quake",
+        "type" : "dmg",
+        "desc" : "Attack the enemy with great force.",
+        "mp_cost" : 60,
+        "level_req" : 10,
+        "animation" : "special"
+      },
+    {
+        "name" : "Fire Slash",
+        "type" : "dmg",
+        "desc" : "Attack the enemy with fire damage.",
+        "mp_cost" : 25,
+        "level_req" : 13,
+        "animation" : "special"
+      }
+  ]
+}

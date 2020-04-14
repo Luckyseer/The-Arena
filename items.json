@@ -1,0 +1,189 @@
+{
+  "weapons" : [
+    {
+      "id" : 0,
+      "name": "Wooden Sword",
+      "atk" : 3,
+      "def" : 0,
+      "mag" : 0,
+      "cost" : 0,
+      "attributes" : "Null"
+    },
+    {
+      "id" : 1,
+      "name" : "Iron Sword",
+      "atk" : 10,
+      "def" : 0,
+      "mag" : 0,
+      "cost" : 30,
+      "attributes" : "Null"
+    },
+    {
+      "id" : 2,
+      "name" : "Steel Sword",
+      "atk" : 20,
+      "def" : 0,
+      "mag" : 0,
+      "cost" : 1000,
+      "attributes" : "Null"
+    },
+    {
+      "id" : 3,
+      "name" : "Gold Sword",
+      "atk" : 10,
+      "def" : 10,
+      "mag" : 0,
+      "cost" : 10000,
+      "attributes" : "Null"
+    },
+    {
+      "id" : 4,
+      "name" : "Debug Katana",
+      "atk" : 1000,
+      "def" : 1000,
+      "mag" : 1000,
+      "cost" : 10,
+      "attributes" : "Null"
+    },
+    {
+      "id" : 5,
+      "name" : "Enchanted Stick",
+      "atk" : 5,
+      "def" : 0,
+      "mag" : 5,
+      "cost" : 10,
+      "attributes" : "Null"
+    },
+    {
+      "id" : 6,
+      "name" : "Enchanted Staff",
+      "atk" : 8,
+      "def" : 0,
+      "mag" : 10,
+      "cost" : 10,
+      "attributes" : "Null"
+    }
+  ],
+  "armours" : [
+    {
+      "id" : 0,
+      "name" : "Torn Coat",
+      "atk" : 0,
+      "def" : 3,
+      "mag" : 2,
+      "cost" : 100,
+      "attributes" : "Null"
+    },
+    {
+      "id" : 1,
+      "name" : "Leather Armour",
+      "atk" : 0,
+      "def" : 10,
+      "mag" : 0,
+      "cost" : 200,
+      "attributes" : "Null"
+    },
+    {
+      "id" : 2,
+      "name" : "Iron Chainmail",
+      "atk" : 5,
+      "def" : 15,
+      "mag" : 0,
+      "cost" : 300,
+      "attributes" : "Null"
+    },
+    {
+      "id" : 3,
+      "name" : "Enchanted Robe",
+      "atk" : 0,
+      "def" : 8,
+      "mag" : 10,
+      "cost" : 150,
+      "attributes" : "Null"
+    },
+    {
+      "id" : 4,
+      "name" : "Wizard Robe",
+      "atk" : 0,
+      "def" : 15,
+      "mag" : 25,
+      "cost" : 500,
+      "attributes" : "Null"
+    },
+    {
+      "id" : 5,
+      "name" : "Debug Plate Armour",
+      "atk" : 1000,
+      "def" : 1000,
+      "mag" : 1000,
+      "cost" : 30,
+      "attributes" : "Null"
+    }
+  ],
+  "accessories" : [
+    {
+      "id" : 0,
+      "name" : "Necklace",
+      "atk" : 1,
+      "def" : 0,
+      "mag" : 1,
+      "cost" : 20,
+      "attributes" : "None"
+    },
+    {
+      "id" : 1,
+      "name" : "Debug Amulet2",
+      "atk" : 800,
+      "def" : 900,
+      "mag" : 1000,
+      "cost" : 1000,
+      "attributes" : "Gold 3x"
+    },
+    {
+      "id" : 2,
+      "name" : "Debug Amulet3",
+      "atk" : 800,
+      "def" : 900,
+      "mag" : 1000,
+      "cost" : 1000,
+      "attributes" : "FireDmg Up"
+    },
+    {
+      "id" : 3,
+      "name" : "Debug Amulet4",
+      "atk" : 800,
+      "def" : 900,
+      "mag" : 1000,
+      "cost" : 1000,
+      "attributes" : "IceDmg Up"
+    },
+    {
+      "id" : 4,
+      "name" : "Debug Amulet5",
+      "atk" : 800,
+      "def" : 900,
+      "mag" : 1000,
+      "cost" : 1000,
+      "attributes" : "Death Resist"
+    },
+    {
+      "id" : 5,
+      "name" : "Debug Amulet6",
+      "atk" : 500,
+      "def" : 500,
+      "mag" : 500,
+      "cost" : 1000,
+      "attributes" : "AtkDmg 2x"
+    }
+  ],
+  "consumables" : [
+    {
+      "id" : 0,
+      "name" : "Not ready yet.",
+      "hp" : 50,
+      "mp" : 60,
+      "cost" : 50
+    }
+  ]
+}
+			

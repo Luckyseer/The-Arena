@@ -1,0 +1,17 @@
+{
+  "battle" : {
+    "encounter": "sounds&music/Battle2.ogg",
+    "cure": "sounds&music/Item3.ogg",
+    "ice": "sounds&music/Ice4.ogg",
+    "death": "sounds&music/Darkness5.ogg",
+    "fire": "sounds&music/Fire2.ogg",
+    "tsunami": "sounds&music/Water5.ogg",
+    "slash" : "sounds&music/Slash1.ogg",
+    "slash2" : "sounds&music/Slash2.ogg",
+    "enemy_dead" : "sounds&music/Collapse1.ogg"
+  },
+  "system" : {
+    "cursor" : "sounds&music/Cursor1.ogg",
+    "buzzer" : "sounds&music/Buzzer1.ogg"
+  }
+}
