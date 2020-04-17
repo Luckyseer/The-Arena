@@ -1810,6 +1810,7 @@ class MainUi:
         self.talktxt = self.uitext.render('Talk', False, self.txtcolor)
         self.talkdesc = self.uitext.render('Talk with people around the Arena.', False, self.txtcolor)
         self.talkdesc2 = self.uitext.render('Talk with people around the Inn.', False, self.txtcolor)
+        self.talkdesc3 = self.uitext.render('Talk with people around the Town.', False, self.txtcolor)
         self.battxt = self.uitext.render('Battle', False, self.txtcolor)
         self.batdesc = self.uitext.render('Battle monsters in the Arena.', False, self.txtcolor)
         self.systxt = self.uitext.render('System', False, self.txtcolor)
@@ -2068,29 +2069,34 @@ class MainUi:
         if self.cursorpos == 2:
             surf.blit(self.cursor, (916, 556))
             surf.blit(self.backdesc, (112, 490))
+
     def draw_town(self, player):
             surf.blit(pygame.transform.scale(self.bg, (int(curwidth / 1.5), 300)), (0, 430))  # Description box
-            surf.blit(pygame.transform.scale(self.bg, (170, 50)), (10, 48))  # Gold box
+            surf.blit(pygame.transform.scale(self.bg, (170, 50)), (10, 29))  # Gold box
             surf.blit(pygame.transform.scale(self.bg, (300, 300)), (905, 430))  # Actions box
             surf.blit(self.talktxt, (946, 496))
             surf.blit(self.inntxt, (946, 526))
             surf.blit(self.slumstxt, (946, 556))
             surf.blit(self.backtxt, (946, 586))
-            self.cur = self.uitext2.render('Gold:  %d' % player.gold, False, self.txtcolor)  # Current gold with the player
-            self.coinAnim.blit(surf, (22, 62))  # Gold icon
-            surf.blit(self.cur, (47, 62))
+            gold = self.uitext2.render('Gold:  %d' % player.gold, False, self.txtcolor)  # Current gold with the player
+            self.coinAnim.blit(surf, (22, 45))  # Gold icon
+            surf.blit(gold, (47, 45))
             if self.cursorpos == 0:
                 surf.blit(self.cursor, (916, 496))
-                surf.blit(self.talkdesc2, (112, 490))
-            if self.cursorpos == 1:
+                surf.blit(self.talkdesc3, (112, 490))
+            elif self.cursorpos == 1:
                 surf.blit(self.cursor, (916, 526))
                 surf.blit(self.inndesc, (112, 490))
-            if self.cursorpos == 2:
+            elif self.cursorpos == 2:
                 surf.blit(self.cursor, (916, 556))
                 surf.blit(self.slumsdesc, (112, 490))
-            if self.cursorpos == 3:
+            elif self.cursorpos == 3:
                 surf.blit(self.cursor, (916, 586))
                 surf.blit(self.backdesc, (112, 490))
+            elif self.cursorpos > 3:
+                self.cursorpos = 0
+            elif self.cursorpos < 0:
+                self.cursorpos = 3
             self.clock(player.hours, player.minutes)
 
 
@@ -2516,7 +2522,9 @@ class GameEvents(MainUi):
 
     def __init__(self):
         MainUi.__init__(self)
-        self.town_bg = pygame.image.load('backgrounds/The Medieval Town.jpg').convert_alpha()
+        self.town_bg_day = pygame.image.load('backgrounds/The Medieval Town.jpg').convert_alpha()
+        self.town_bg_eve = pygame.image.load('backgrounds/The Medieval Town_eve.jpg').convert_alpha()
+        self.town_bg_ngt = pygame.image.load('backgrounds/The Medieval Town_night.jpg').convert_alpha()
         self.townDialogue = 0  # Progress for the dialogue while in the town.
         self.arenaDialogue = 0
         self.timekeep = Timer()  # Used to time the events and things
@@ -2528,6 +2536,9 @@ class GameEvents(MainUi):
         self.arena_bg = pygame.image.load('backgrounds/arenaDay.png').convert_alpha()
         self.boss_face1 = pygame.image.load('sprites/Boss1.png')
         self.town_location = 0  # 0-Centre 1-Bar/Inn 2-Slums
+        self.game_clock = GameClock()
+
+
     def town_first_visit(self, player_data):
         event_done = False
         pygame.mixer.music.load('sounds&music/Bustling_Streets.mp3')
@@ -2913,7 +2924,8 @@ class GameEvents(MainUi):
         self.timekeep.reset()
         town_ui = True
         if self.town_location == 0:
-            pygame.mixer.music.load('sounds&music/Bustling_Streets.mp3')
+            area_music = 'sounds&music/Bustling_Streets.mp3'
+            pygame.mixer.music.load(area_music)
             pygame.mixer.music.play()
             pygame.mixer.music.set_volume(0.5)
         self.town_location = 0
@@ -2931,11 +2943,19 @@ class GameEvents(MainUi):
                 if event.type == pygame.constants.USEREVENT:
                     pygame.mixer.music.play()
             if self.town_location == 0:
-                surf.blit(self.town_bg, (0, 0))
+                if self.game_clock.time_state == 'Morning':
+                    surf.blit(self.town_bg_day, (0, 0))
+                elif self.game_clock.time_state == 'Noon':
+                    surf.blit(self.town_bg_eve, (0, 0))
+                else:
+                    surf.blit(self.town_bg_ngt, (0, 0))
                 if town_ui:
                     self.draw_town(player_data)
                 screen.blit(surf, (0, 0))
-
+            self.game_clock.pass_time(player_data, area_music)
+            clock.tick(60)
+            fps = "FPS:%d" % clock.get_fps()
+            pygame.display.set_caption(fps)
             pygame.display.flip()
 
 
@@ -2946,6 +2966,7 @@ class GameClock:
         self.curTime = 0
         self.bellflag = False
         self.fadeoutflag = False
+        self.area_music = 'sounds&music/Infinite_Arena.mp3'  # Music to be played in the area
         self.bell = pygame.mixer.Sound('sounds&music/Bell1.ogg')  # Bell sound during night time
         self.rooster = pygame.mixer.Sound('sounds&music/Roost.ogg')  # Morning sound
         self.paused = False
@@ -2960,50 +2981,53 @@ class GameClock:
     def reset(self):
         self.clockTime.reset()
 
-    def pass_time(self, player_details):
-        player = player_details
-        self.curTime = self.clockTime.timing()  # Current time
-        if not self.paused:     # If clock is not paused
-            if self.curTime >= 10:  # Every 10 seconds 30 minutes passes on the clock
-                player.minutes += 30
-                self.clockTime.reset()
+    def pass_time(self, player_details, area_music='sounds&music/Infinite_Arena.mp3'):
+            player = player_details
+            self.area_music = area_music
+            self.curTime = self.clockTime.timing()  # Current time
+            if not self.paused:     # If clock is not paused
+                if self.curTime >= 10:  # Every 10 seconds 30 minutes passes on the clock
+                    player.minutes += 30
+                    self.clockTime.reset()
 
-        if player.minutes >= 60:  # Self explanatory
-            player.hours += 1
-            player.minutes = 0
-        if player.hours > 23:  # 24 hour clock
-            player.hours = 0
-        if player.hours >= 6 and player.hours < 14:  # Day
-            self.time_state = "Morning"
-            surf.blit(pygame.transform.scale(arena_bg1, (curwidth, curheight)), (0, 0))
-        if player.hours >= 14 and player.hours < 20:  # Afternoon
-            self.time_state = "Noon"
-            surf.blit(pygame.transform.scale(arena_bg2, (curwidth, curheight)), (0, 0))
-        if player.hours >= 20 or player.hours < 6:  # Night
-            self.time_state = "Night"
-            surf.blit(pygame.transform.scale(arena_bg3, (curwidth, curheight)), (0, 0))
-        if (player.hours == 19 and player.minutes == 30) and (not self.bellflag):   # Music fading out
-            if not self.fadeoutflag:
-                pygame.mixer.music.fadeout(6000)  # 8 seconds
-                self.fadeoutflag = True
+            if player.minutes >= 60:  # Self explanatory
+                player.hours += 1
+                player.minutes = 0
+            if player.hours > 23:  # 24 hour clock
+                player.hours = 0
+            if player.hours >= 6 and player.hours < 14:  # Day
+                self.time_state = "Morning"
+                surf.blit(pygame.transform.scale(arena_bg1, (curwidth, curheight)), (0, 0))
 
-        if (player.hours >= 20 or player.hours < 6) and (not self.bellflag):  # Playing bell sound when it becomes night
-            self.bell.play()
-            Currentmusic = 'sounds&music/night.mp3'
-            pygame.mixer.music.stop()
-            pygame.mixer.music.load(Currentmusic)
-            pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
-            pygame.mixer.music.set_volume(0.3)
-            pygame.mixer.music.play()
-            self.bellflag = True
+            if player.hours >= 14 and player.hours < 20:  # Afternoon
+                self.time_state = "Noon"
+                surf.blit(pygame.transform.scale(arena_bg2, (curwidth, curheight)), (0, 0))
 
-        if (player.hours >= 6 and player.hours < 14) and self.bellflag:  # Playing rooster sound when it becomes day
-            self.rooster.play()
-            Currentmusic = 'sounds&music/Infinite_Arena.mp3'
-            pygame.mixer.music.load(Currentmusic)
-            pygame.mixer.music.play()
-            self.bellflag = False
-            self.fadeoutflag = False
+            if player.hours >= 20 or player.hours < 6:  # Night
+                self.time_state = "Night"
+                surf.blit(pygame.transform.scale(arena_bg3, (curwidth, curheight)), (0, 0))
+
+            if (player.hours == 19 and player.minutes == 30) and (not self.bellflag):   # Music fading out
+                if not self.fadeoutflag:
+                    pygame.mixer.music.fadeout(6000)  # 8 seconds
+                    self.fadeoutflag = True
+
+            if (player.hours >= 20 or player.hours < 6) and (not self.bellflag):  # Playing bell sound when it becomes night
+                self.bell.play()
+                Currentmusic = 'sounds&music/night.mp3'
+                pygame.mixer.music.stop()
+                pygame.mixer.music.load(Currentmusic)
+                pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
+                pygame.mixer.music.set_volume(0.3)
+                pygame.mixer.music.play()
+                self.bellflag = True
+
+            if (player.hours >= 6 and player.hours < 14) and self.bellflag:  # Playing rooster sound when it becomes day
+                self.rooster.play()
+                pygame.mixer.music.load(self.area_music)
+                pygame.mixer.music.play()
+                self.bellflag = False
+                self.fadeoutflag = False
 
 if __name__ == "__main__":
     player = Player(item_data=item_data)
