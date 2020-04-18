@@ -10,6 +10,6 @@ Run 'Therpg.py'
 Controls: Arrow keys for moving the cursor around, Enter to select options, RCTRL to exit out of menu or other actions as instructed.
 
 # Screenshots
-![Screenshot](pic1.PNG)
-![Screenshot2](pic2.PNG)
-![Gif](battle.gif)
+![Screenshot](screenshots/pic1.PNG)
+![Screenshot2](screenshots/pic2.PNG)
+![Gif](screenshots/battle.gif)

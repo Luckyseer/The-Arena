@@ -12,16 +12,16 @@ icon = pygame.image.load('sprites/icon2.png')
 pygame.display.set_icon(icon)
 alphatext = "Alpha v3.0 - New Battle System"
 try:
-    with open('items.json', 'r') as items:
+    with open('data/items.json', 'r') as items:
         item_data = json.load(items)
         weapons = item_data['weapons']
-    with open('monsters.json', 'r') as monsters:
+    with open('data/monsters.json', 'r') as monsters:
         monster_data = json.load(monsters)
-    with open('soundeffects.json', 'r') as sounds:
+    with open('data/soundeffects.json', 'r') as sounds:
         sound_effects = json.load(sounds)
-    with open('animations.json', 'r') as anims:
+    with open('data/animations.json', 'r') as anims:
         animations = json.load(anims)
-    with open('skills.json', 'r') as skills:
+    with open('data/skills.json', 'r') as skills:
         skills = json.load(skills)
 except EOFError or IOError:
     print('Could not load item/monster/sound data, Make sure they are in the folder with the game')
@@ -321,8 +321,8 @@ class SideBattle:
         self.ui2 = pygame.image.load('backgrounds/rpgtxt.png').convert_alpha()
         self.cursor = pygame.image.load('sprites/Cursor.png').convert_alpha()
         self.cursormax = 2
-        self.uitext = pygame.font.Font('runescape_uf.ttf', 30)  # Default font for Ui
-        self.uitext2 = pygame.font.Font('Vecna.otf', 30)  # font for damage
+        self.uitext = pygame.font.Font('fonts/runescape_uf.ttf', 30)  # Default font for Ui
+        self.uitext2 = pygame.font.Font('fonts/Vecna.otf', 30)  # font for damage
         self.burstdesc = self.uitext.render('Greatly strengthens next attack for 1 turn. MP COST:15', False,
                                             (37, 61, 36))
         self.firedesc = self.uitext.render('Deal small Fire damage to the enemy. MP COST:5', False, (37, 61, 36))
@@ -612,7 +612,7 @@ class SideBattle:
         dark.set_alpha(128, pygame.RLEACCEL)
         surf.blit(dark, (0, 0))
 
-        deftxt = pygame.font.Font('Daisy_Roots.otf', 70)
+        deftxt = pygame.font.Font('fonts/Daisy_Roots.otf', 70)
         defeat = deftxt.render('Defeat!', True, (255, 0, 0)).convert_alpha()
         cont = self.uitext.render('Your journey isn\'t over yet! Move onward!', True, (255, 255, 0)).convert_alpha()
         surf.blit(defeat, ((curwidth / 3) - 30, curheight / 5))
@@ -758,7 +758,7 @@ class SideBattle:
         win = False
         lose = False
         self.state = 'player'
-        text = pygame.font.Font('runescape_uf.ttf', 30)
+        text = pygame.font.Font('fonts/runescape_uf.ttf', 30)
         ab = text.render(alphatext, False, (255, 255, 0))  # debug
         doneflag = False
         get = True  # monsterpos flag
@@ -1215,9 +1215,9 @@ class NewBattle:
         #  Ui elements and etc.
         self.draw_menu = True
         self.ui_bg = pygame.image.load("backgrounds/rpgtxt.png").convert_alpha()
-        self.ui_font = pygame.font.Font("alagard.ttf", 25)
-        self.title_font = pygame.font.Font("Daisy_Roots.otf", 25)
-        self.dmg_font = pygame.font.Font('Vecna.otf', 30)
+        self.ui_font = pygame.font.Font("fonts/alagard.ttf", 25)
+        self.title_font = pygame.font.Font("fonts/Daisy_Roots.otf", 25)
+        self.dmg_font = pygame.font.Font('fonts/Vecna.otf', 30)
         self.ui_text = ["Menu", "Attack", "Skill", "Item", "HP:", "MP:", "Info", "MP Cost:", "Level required:"]
         self.atk_txt = self.ui_font.render(self.ui_text[1], True, (200, 200, 200))
         self.skill_txt = self.ui_font.render(self.ui_text[2], True, (200, 200, 200))
@@ -1230,7 +1230,7 @@ class NewBattle:
         self.dmg_txt = '0'
         self.cursor = pygame.image.load("sprites/Cursor.png")
         self.vic_img = pygame.image.load('sprites/victory.png').convert_alpha()
-        self.def_font = pygame.font.Font('Daisy_Roots.otf', 70)
+        self.def_font = pygame.font.Font('fonts/Daisy_Roots.otf', 70)
         self.current_title = 0
         #  Sound effects
         self.sound_effect = ''
@@ -1712,8 +1712,8 @@ class TextBox:
         self.bg = pygame.image.load('backgrounds/rpgtxt.png').convert_alpha()  # Ui background
         self.txtcolor = txtcolor  # Default font colour
         self.txtcolor2 = (23, 18, 96)
-        self.uitext = pygame.font.Font('runescape_uf.ttf', 33)  # Default font
-        self.uitext2 = pygame.font.Font('runescape_uf.ttf', 25)  # Choice selection font
+        self.uitext = pygame.font.Font('fonts/runescape_uf.ttf', 33)  # Default font
+        self.uitext2 = pygame.font.Font('fonts/runescape_uf.ttf', 25)  # Choice selection font
         self.cursor = pygame.image.load('sprites/Cursor.png').convert_alpha()
         self.ch_cursorpos = 0  # Position of cursor for choice selection
         self.dialogue_progress = 0  # Current 'Progress' of the dialogue
@@ -1802,8 +1802,8 @@ class MainUi:
         self.txtcolor = (21, 57, 114)
         self.txtcolor2 = (117, 17, 67)
         self.txtcolor3 = (23, 18, 96)
-        self.uitext = pygame.font.Font('runescape_uf.ttf', 35)
-        self.uitext2 = pygame.font.Font('runescape_uf.ttf', 25)  # Smaller font for longer sentences
+        self.uitext = pygame.font.Font('fonts/runescape_uf.ttf', 35)
+        self.uitext2 = pygame.font.Font('fonts/runescape_uf.ttf', 25)  # Smaller font for longer sentences
         self.cursor = pygame.image.load('sprites/Cursor.png').convert_alpha()
         self.cursorsound = pygame.mixer.Sound('sounds&music/Cursor1.ogg')
         self.cursorpos = 0
@@ -2170,7 +2170,7 @@ class SelectOptions(MainUi):
             self.rowpos = 0
         if self.colpos < 0:
             self.colpos = 2
-        if self.rowpos < 0:
+        if self.rowpos < 0 and no > 3:
             self.rowpos = 1
         if self.rowpos == 0:  # Goes to exit when trying to go right on the end of row 1
             if self.colpos > 2:
@@ -2222,7 +2222,7 @@ class Shop(MainUi):
         self.pluck = 1
         self.shoptxt = ['Weapons', 'Armour', 'Accessories', 'Items']
         self.shoptxt2 = ['Name', 'Cost']
-        self.title_text = pygame.font.Font('Daisy_Roots.otf', 50)
+        self.title_text = pygame.font.Font('fonts/Daisy_Roots.otf', 50)
         self.shop_cursor_pos1 = 0  # for choosing the type of item
         self.shop_cursor_pos2 = 0  # for choosing from the list of items
         self.min_pos = 0  # minimum position for the item in the list
@@ -2537,8 +2537,8 @@ class GameEvents(MainUi):
         self.boss_face1 = pygame.image.load('sprites/Boss1.png')
         self.town_location = 0  # 0-Centre 1-Bar/Inn 2-Slums
         self.game_clock = GameClock()
-
-
+        self.option_selector = SelectOptions()
+        self.town_talk1 = False  # Flag for drawing options menu for the 'Talk' Screen
     def town_first_visit(self, player_data):
         event_done = False
         pygame.mixer.music.load('sounds&music/Bustling_Streets.mp3')
@@ -2940,6 +2940,15 @@ class GameEvents(MainUi):
                         self.cursorpos += 1
                     elif event.key == pygame.K_UP:
                         self.cursorpos -= 1
+                    if event.key == pygame.K_RETURN:
+                        if self.cursorpos == 0:  # Talk option
+                            if self.town_location == 0:  # In main town square
+                                self.town_talk1 = True
+                                self.town_ui = False
+                    if event.key == pygame.K_RCTRL:
+                        if self.town_talk1:
+                            self.town_talk1 = False
+                            self.town_ui = True
                 if event.type == pygame.constants.USEREVENT:
                     pygame.mixer.music.play()
             if self.town_location == 0:
@@ -2951,6 +2960,8 @@ class GameEvents(MainUi):
                     surf.blit(self.town_bg_ngt, (0, 0))
                 if town_ui:
                     self.draw_town(player_data)
+                if self.town_talk1:
+                    self.option_selector.drawUi(3, 'Citizen', 'Rich Lady', 'Fan boy')
                 screen.blit(surf, (0, 0))
             self.game_clock.pass_time(player_data, area_music)
             clock.tick(60)
@@ -3064,8 +3075,8 @@ if __name__ == "__main__":
     post_battle = False  # After battle shenanigans
     controlui = True  # Flag to check if player can control ui
     talkval = 0
-    text = pygame.font.Font('runescape_uf.ttf', 30)
-    seltext = pygame.font.Font('runescape_uf.ttf', 40)
+    text = pygame.font.Font('fonts/runescape_uf.ttf', 30)
+    seltext = pygame.font.Font('fonts/runescape_uf.ttf', 40)
     secretbattle = SideBattle(monster_data, 'mage', castanim, 'backgrounds/LavaCave.png',
                               'sounds&music/Battle3.ogg', phealth=1000, pmana=100, pstr=1000, pstrmod=14, pdef=100,
                               pmag=2000, pluck=9)
@@ -3077,7 +3088,7 @@ if __name__ == "__main__":
     healsound = pygame.mixer.Sound('sounds&music/Recovery.ogg')
     mage.play()
     warrior.play()
-    menutext = pygame.font.Font('Daisy_Roots.otf', 40)
+    menutext = pygame.font.Font('fonts/Daisy_Roots.otf', 40)
     ab = text.render(alphatext, False, (255, 255, 0))  # debug
     sel1 = seltext.render('Enter your name:', False, (255, 255, 0))
     sel2 = seltext.render('Press RCTRL to continue..', False, (255, 255, 0))
