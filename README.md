@@ -10,8 +10,10 @@ Run `Therpg.py`
 
 `Controls: Arrow keys for moving the cursor around, Enter to select options, RCTRL to exit out of menu or other actions as instructed.`
 
-Read `changelog.txt` In order to see what's new after an update/
+Read `changelog.txt` In order to see what's new after an update.
 # Screenshots
 ![Screenshot](screenshots/pic1.PNG)
 ![Screenshot2](screenshots/pic2.PNG)
 ![Gif](screenshots/battle.gif)
+
+## [Changelog](Changelog.md)
