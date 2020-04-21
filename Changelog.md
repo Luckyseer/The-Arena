@@ -1,4 +1,5 @@
 # - Alpha v2.1
+
  - Added a Health bar to enemies.
  - Added a Day/Night cycle. Events can happen/change depending on the time on the in-game clock.
  + Fixed a few minor bugs.

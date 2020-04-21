@@ -4,7 +4,7 @@ import pickle
 import random
 from math import floor
 import pygame
-import pyganim
+from data import pyganim
 import json
 from pygame.locals import *
 

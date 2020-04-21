@@ -1,239 +1,239 @@
 {
   "burst": [
     [
-      "sprites/Special1.png",
+      "data/sprites/Special1.png",
       0.1
     ],
     [
-      "sprites/Special2.png",
+      "data/sprites/Special2.png",
       0.1
     ],
     [
-      "sprites/Special3.png",
+      "data/sprites/Special3.png",
       0.1
     ],
     [
-      "sprites/Special4.png",
+      "data/sprites/Special4.png",
       0.1
     ],
     [
-      "sprites/Special5.png",
+      "data/sprites/Special5.png",
       0.1
     ],
     [
-      "sprites/Special6.png",
+      "data/sprites/Special6.png",
       0.1
     ],
     [
-      "sprites/Special7.png",
+      "data/sprites/Special7.png",
       0.1
     ],
     [
-      "sprites/Special8.png",
+      "data/sprites/Special8.png",
       0.1
     ],
     [
-      "sprites/Special9.png",
+      "data/sprites/Special9.png",
       0.1
     ],
     [
-      "sprites/Special10.png",
+      "data/sprites/Special10.png",
       0.1
     ],
     [
-      "sprites/Special11.png",
+      "data/sprites/Special11.png",
       0.1
     ],
     [
-      "sprites/Special12.png",
+      "data/sprites/Special12.png",
       0.1
     ],
     [
-      "sprites/Special13.png",
+      "data/sprites/Special13.png",
       0.1
     ],
     [
-      "sprites/Special14.png",
+      "data/sprites/Special14.png",
       0.1
     ],
     [
-      "sprites/Special15.png",
+      "data/sprites/Special15.png",
       0.1
     ],
     [
-      "sprites/Special16.png",
+      "data/sprites/Special16.png",
       0.1
     ],
     [
-      "sprites/Special17.png",
+      "data/sprites/Special17.png",
       0.1
     ],
     [
-      "sprites/Special18.png",
+      "data/sprites/Special18.png",
       0.1
     ],
     [
-      "sprites/Special19.png",
+      "data/sprites/Special19.png",
       0.1
     ],
     [
-      "sprites/Special20.png",
+      "data/sprites/Special20.png",
       0.1
     ]
   ],
   "slash": [
     [
-      "sprites/Slash1.png",
+      "data/sprites/Slash1.png",
       0.1
     ],
     [
-      "sprites/Slash2.png",
+      "data/sprites/Slash2.png",
       0.1
     ],
     [
-      "sprites/Slash3.png",
+      "data/sprites/Slash3.png",
       0.1
     ],
     [
-      "sprites/Slash4.png",
+      "data/sprites/Slash4.png",
       0.1
     ],
     [
-      "sprites/Slash5.png",
+      "data/sprites/Slash5.png",
       0.1
     ]
   ],
   "claw": [
     [
-      "sprites/Claw1.png",
+      "data/sprites/Claw1.png",
       0.1
     ],
     [
-      "sprites/Claw2.png",
+      "data/sprites/Claw2.png",
       0.1
     ],
     [
-      "sprites/Claw3.png",
+      "data/sprites/Claw3.png",
       0.1
     ],
     [
-      "sprites/Claw4.png",
+      "data/sprites/Claw4.png",
       0.1
     ],
     [
-      "sprites/Claw5.png",
+      "data/sprites/Claw5.png",
       0.1
     ]
   ],
   "fire": [
     [
-      "sprites/Fire1.png",
+      "data/sprites/Fire1.png",
       0.1
     ],
     [
-      "sprites/Fire2.png",
+      "data/sprites/Fire2.png",
       0.1
     ],
     [
-      "sprites/Fire3.png",
+      "data/sprites/Fire3.png",
       0.1
     ],
     [
-      "sprites/Fire4.png",
+      "data/sprites/Fire4.png",
       0.1
     ],
     [
-      "sprites/Fire5.png",
+      "data/sprites/Fire5.png",
       0.1
     ],
     [
-      "sprites/Fire6.png",
+      "data/sprites/Fire6.png",
       0.1
     ]
   ],
   "meteor": [
     [
-      "sprites/meteor/tile000.png",
+      "data/sprites/meteor/tile000.png",
       0.5
     ],
     [
-      "sprites/meteor/tile001.png",
+      "data/sprites/meteor/tile001.png",
       0.5
     ],
     [
-      "sprites/meteor/tile002.png",
+      "data/sprites/meteor/tile002.png",
       0.5
     ],
     [
-      "sprites/meteor/tile003.png",
+      "data/sprites/meteor/tile003.png",
       0.1
     ],
     [
-      "sprites/meteor/tile004.png",
+      "data/sprites/meteor/tile004.png",
       0.1
     ],
     [
-      "sprites/meteor/tile005.png",
+      "data/sprites/meteor/tile005.png",
       0.1
     ],
     [
-      "sprites/meteor/tile006.png",
+      "data/sprites/meteor/tile006.png",
       0.1
     ],
     [
-      "sprites/meteor/tile007.png",
+      "data/sprites/meteor/tile007.png",
       0.1
     ],
     [
-      "sprites/meteor/tile008.png",
+      "data/sprites/meteor/tile008.png",
       0.1
     ],
     [
-      "sprites/meteor/tile010.png",
+      "data/sprites/meteor/tile010.png",
       0.1
     ],
     [
-      "sprites/meteor/tile011.png",
+      "data/sprites/meteor/tile011.png",
       0.1
     ],
     [
-      "sprites/meteor/tile012.png",
+      "data/sprites/meteor/tile012.png",
       0.1
     ],
     [
-      "sprites/meteor/tile013.png",
+      "data/sprites/meteor/tile013.png",
       0.1
     ],
     [
-      "sprites/meteor/tile014.png",
+      "data/sprites/meteor/tile014.png",
       0.1
     ],
     [
-      "sprites/meteor/tile015.png",
+      "data/sprites/meteor/tile015.png",
       0.1
     ],
     [
-      "sprites/meteor/tile016.png",
+      "data/sprites/meteor/tile016.png",
       0.1
     ],
     [
-      "sprites/meteor/tile017.png",
+      "data/sprites/meteor/tile017.png",
       0.1
     ],
     [
-      "sprites/meteor/tile018.png",
+      "data/sprites/meteor/tile018.png",
       0.1
     ],
     [
-      "sprites/meteor/tile019.png",
+      "data/sprites/meteor/tile019.png",
       0.1
     ],
     [
-      "sprites/meteor/tile020.png",
+      "data/sprites/meteor/tile020.png",
       0.1
     ],
     [
-      "sprites/meteor/tile021.png",
+      "data/sprites/meteor/tile021.png",
       0.1
     ]
   ]
