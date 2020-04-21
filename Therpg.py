@@ -8,7 +8,7 @@ import pyganim
 import json
 from pygame.locals import *
 
-icon = pygame.image.load('sprites/icon2.png')
+icon = pygame.image.load("data/sprites/icon2.png")
 pygame.display.set_icon(icon)
 alphatext = "Alpha v3.0 - New Battle System"
 try:
@@ -75,6 +75,7 @@ class Player:
         self.tkills = 0  # Total Kills
         self.scene = 'menu'
         self.town_first_flag = True  # Flag to check if player visited town or not.
+        self.paid_girl_flag = False  # Flag for whether the player paid the girl during the town scene
 
     def xp_till_levelup(self, currentlevel):  # Experience needed to level up
 
@@ -197,72 +198,72 @@ class SideBattle:
         self.monsters = ''
         self.inventory = {'Potion': 1, 'Mana Potion': 1}
         self.mhurt = pyganim.PygAnimation(
-            [('sprites/mhurt1.png', 0.3), ('sprites/mhurt2.png', 0.3), ('sprites/mhurt3.png', 0.3)])
-        self.staticon1 = pygame.image.load('sprites/attack+.png').convert_alpha()
-        self.pshadow = pygame.image.load('sprites/Shadow1.png').convert_alpha()
-        self.encountersound = pygame.mixer.Sound('sounds&music/Battle2.ogg')
-        self.cursorsound = pygame.mixer.Sound('sounds&music/Cursor1.ogg')
-        self.buzzer = pygame.mixer.Sound('sounds&music/Buzzer1.ogg')
+            [("data/sprites/mhurt1.png", 0.3), ("data/sprites/mhurt2.png", 0.3), ("data/sprites/mhurt3.png", 0.3)])
+        self.staticon1 = pygame.image.load("data/sprites/attack+.png").convert_alpha()
+        self.pshadow = pygame.image.load("data/sprites/Shadow1.png").convert_alpha()
+        self.encountersound = pygame.mixer.Sound('data/sounds&music/Battle2.ogg')
+        self.cursorsound = pygame.mixer.Sound('data/sounds&music/Cursor1.ogg')
+        self.buzzer = pygame.mixer.Sound('data/sounds&music/Buzzer1.ogg')
         self.bg = pygame.image.load(bg).convert_alpha()
         self.players[1].convert_alpha()
         self.turn = 1
         self.burstanim = pyganim.PygAnimation(
-            [('sprites/burst1.png', 0.3), ('sprites/burst2.png', 0.3), ('sprites/burst3.png', 0.3)])
+            [("data/sprites/burst1.png", 0.3), ("data/sprites/burst2.png", 0.3), ("data/sprites/burst3.png", 0.3)])
         self.castanim = pyganim.PygAnimation(
-            [('sprites/cast1.png', 0.1), ('sprites/cast2.png', 0.1), ('sprites/cast3.png', 0.1),
-             ('sprites/cast4.png', 0.1), ('sprites/cast5.png', 0.5)], False)
+            [("data/sprites/cast1.png", 0.1), ("data/sprites/cast2.png", 0.1), ("data/sprites/cast3.png", 0.1),
+             ("data/sprites/cast4.png", 0.1), ("data/sprites/cast5.png", 0.5)], False)
         self.coinanim = pyganim.PygAnimation(
-            [('sprites/coin1.png', 0.1), ('sprites/coin2.png', 0.1), ('sprites/coin3.png', 0.1),
-             ('sprites/coin4.png', 0.1), ('sprites/coin5.png', 0.1), ('sprites/coin6.png', 0.1),
-             ('sprites/coin7.png', 0.1), ('sprites/coin8.png', 0.1), ('sprites/coin9.png', 0.1)])
+            [("data/sprites/coin1.png", 0.1), ("data/sprites/coin2.png", 0.1), ("data/sprites/coin3.png", 0.1),
+             ("data/sprites/coin4.png", 0.1), ("data/sprites/coin5.png", 0.1), ("data/sprites/coin6.png", 0.1),
+             ("data/sprites/coin7.png", 0.1), ("data/sprites/coin8.png", 0.1), ("data/sprites/coin9.png", 0.1)])
         self.fireanim = pyganim.PygAnimation(
-            [('sprites/Fire1.png', 0.1), ('sprites/Fire2.png', 0.1), ('sprites/Fire3.png', 0.1),
-             ('sprites/Fire4.png', 0.1), ('sprites/Fire5.png', 0.1), ('sprites/Fire6.png', 0.1),
-             ('sprites/Fire7.png', 0.1), ('sprites/Fire8.png', 0.1)], False)
+            [("data/sprites/Fire1.png", 0.1), ("data/sprites/Fire2.png", 0.1), ("data/sprites/Fire3.png", 0.1),
+             ("data/sprites/Fire4.png", 0.1), ("data/sprites/Fire5.png", 0.1), ("data/sprites/Fire6.png", 0.1),
+             ("data/sprites/Fire7.png", 0.1), ("data/sprites/Fire8.png", 0.1)], False)
         self.iceanim = pyganim.PygAnimation(
-            [('sprites/Ice1.png', 0.09), ('sprites/Ice2.png', 0.09), ('sprites/Ice3.png', 0.09),
-             ('sprites/Ice4.png', 0.09), ('sprites/Ice5.png', 0.09), ('sprites/Ice6.png', 0.09),
-             ('sprites/Ice7.png', 0.09), ('sprites/Ice8.png', 0.09), ('sprites/Ice9.png', 0.09),
-             ('sprites/Ice10.png', 0.09), ('sprites/Ice11.png', 0.09), ('sprites/Ice12.png', 0.09),
-             ('sprites/Ice13.png', 0.09), ('sprites/Ice14.png', 0.09), ('sprites/Ice15.png', 0.09),
-             ('sprites/Ice16.png', 0.09), ('sprites/Ice17.png', 0.09), ('sprites/Ice18.png', 0.1)], False)
+            [("data/sprites/Ice1.png", 0.09), ("data/sprites/Ice2.png", 0.09), ("data/sprites/Ice3.png", 0.09),
+             ("data/sprites/Ice4.png", 0.09), ("data/sprites/Ice5.png", 0.09), ("data/sprites/Ice6.png", 0.09),
+             ("data/sprites/Ice7.png", 0.09), ("data/sprites/Ice8.png", 0.09), ("data/sprites/Ice9.png", 0.09),
+             ("data/sprites/Ice10.png", 0.09), ("data/sprites/Ice11.png", 0.09), ("data/sprites/Ice12.png", 0.09),
+             ("data/sprites/Ice13.png", 0.09), ("data/sprites/Ice14.png", 0.09), ("data/sprites/Ice15.png", 0.09),
+             ("data/sprites/Ice16.png", 0.09), ("data/sprites/Ice17.png", 0.09), ("data/sprites/Ice18.png", 0.1)], False)
         self.deathanim = pyganim.PygAnimation(
-            [('sprites/Death1.png', 0.1), ('sprites/Death2.png', 0.1), ('sprites/Death3.png', 0.1),
-             ('sprites/Death4.png', 0.1), ('sprites/Death5.png', 0.1), ('sprites/Death6.png', 0.1),
-             ('sprites/Death7.png', 0.1), ('sprites/Death8.png', 0.1), ('sprites/Death9.png', 0.1),
-             ('sprites/Death10.png', 0.1), ('sprites/Death11.png', 0.1), ('sprites/Death12.png', 0.1)], False)
+            [("data/sprites/Death1.png", 0.1), ("data/sprites/Death2.png", 0.1), ("data/sprites/Death3.png", 0.1),
+             ("data/sprites/Death4.png", 0.1), ("data/sprites/Death5.png", 0.1), ("data/sprites/Death6.png", 0.1),
+             ("data/sprites/Death7.png", 0.1), ("data/sprites/Death8.png", 0.1), ("data/sprites/Death9.png", 0.1),
+             ("data/sprites/Death10.png", 0.1), ("data/sprites/Death11.png", 0.1), ("data/sprites/Death12.png", 0.1)], False)
         self.cureanim = pyganim.PygAnimation(
-            [('sprites/Cure1.png', 0.1), ('sprites/Cure2.png', 0.1), ('sprites/Cure3.png', 0.1),
-             ('sprites/Cure4.png', 0.1), ('sprites/Cure5.png', 0.1), ('sprites/Cure6.png', 0.1),
-             ('sprites/Cure7.png', 0.1), ('sprites/Cure8.png', 0.1), ('sprites/Cure9.png', 0.1),
-             ('sprites/Cure10.png', 0.1), ('sprites/Cure11.png', 0.1), ('sprites/Cure12.png', 0.1),
-             ('sprites/Cure13.png', 0.1), ('sprites/Cure14.png', 0.1), ('sprites/Cure15.png', 0.1)], False)
-        self.curesound = pygame.mixer.Sound('sounds&music/Item3.ogg')
-        self.icesound = pygame.mixer.Sound('sounds&music/Ice4.ogg')
-        self.deathmagsound = pygame.mixer.Sound('sounds&music/Darkness5.ogg')
-        self.firesound = pygame.mixer.Sound('sounds&music/Fire2.ogg')
-        self.watersound1 = pygame.mixer.Sound('sounds&music/Water5.ogg')
-        self.watersound2 = pygame.mixer.Sound('sounds&music/Water1.ogg')
-        self.levelupsound = pygame.mixer.Sound('sounds&music/levelup.wav')
+            [("data/sprites/Cure1.png", 0.1), ("data/sprites/Cure2.png", 0.1), ("data/sprites/Cure3.png", 0.1),
+             ("data/sprites/Cure4.png", 0.1), ("data/sprites/Cure5.png", 0.1), ("data/sprites/Cure6.png", 0.1),
+             ("data/sprites/Cure7.png", 0.1), ("data/sprites/Cure8.png", 0.1), ("data/sprites/Cure9.png", 0.1),
+             ("data/sprites/Cure10.png", 0.1), ("data/sprites/Cure11.png", 0.1), ("data/sprites/Cure12.png", 0.1),
+             ("data/sprites/Cure13.png", 0.1), ("data/sprites/Cure14.png", 0.1), ("data/sprites/Cure15.png", 0.1)], False)
+        self.curesound = pygame.mixer.Sound('data/sounds&music/Item3.ogg')
+        self.icesound = pygame.mixer.Sound('data/sounds&music/Ice4.ogg')
+        self.deathmagsound = pygame.mixer.Sound('data/sounds&music/Darkness5.ogg')
+        self.firesound = pygame.mixer.Sound('data/sounds&music/Fire2.ogg')
+        self.watersound1 = pygame.mixer.Sound('data/sounds&music/Water5.ogg')
+        self.watersound2 = pygame.mixer.Sound('data/sounds&music/Water1.ogg')
+        self.levelupsound = pygame.mixer.Sound('data/sounds&music/levelup.wav')
         self.coinanim.convert_alpha()
-        self.castsound = pygame.mixer.Sound('sounds&music/Magic4.ogg')
-        self.attacksound = pygame.mixer.Sound('sounds&music/Slash1.ogg')
+        self.castsound = pygame.mixer.Sound('data/sounds&music/Magic4.ogg')
+        self.attacksound = pygame.mixer.Sound('data/sounds&music/Slash1.ogg')
         self.thunderanim = pyganim.PygAnimation(
-            [('sprites/Thunder1.png', 0.2), ('sprites/Thunder2.png', 0.1), ('sprites/Thunder3.png', 0.1),
-             ('sprites/Thunder4.png', 0.1), ('sprites/Thunder5.png', 0.1)], False)
+            [("data/sprites/Thunder1.png", 0.2), ("data/sprites/Thunder2.png", 0.1), ("data/sprites/Thunder3.png", 0.1),
+             ("data/sprites/Thunder4.png", 0.1), ("data/sprites/Thunder5.png", 0.1)], False)
         self.thunderanim.convert_alpha()
         self.wateranim = pyganim.PygAnimation(
-            [('sprites/Water1.png', 0.1), ('sprites/Water2.png', 0.1), ('sprites/Water3.png', 0.1),
-             ('sprites/Water4.png', 0.1), ('sprites/Water5.png', 0.1), ('sprites/Water6.png', 0.1),
-             ('sprites/Water7.png', 0.1), ('sprites/Water8.png', 0.1), ('sprites/Water9.png', 0.1),
-             ('sprites/Water10.png', 0.1), ('sprites/Water11.png', 0.1), ('sprites/Water12.png', 0.1),
-             ('sprites/Water13.png', 0.1), ('sprites/Water14.png', 0.1), ('sprites/Water15.png', 0.1),
-             ('sprites/Water16.png', 0.1), ('sprites/Water17.png', 0.1), ('sprites/Water18.png', 0.1)], False)
-        self.thundersound = pygame.mixer.Sound('sounds&music/Thunder9.ogg')
-        self.deathsprite = pygame.image.load('sprites/death.png').convert_alpha()
-        self.attacksound2 = pygame.mixer.Sound('sounds&music/Slash2.ogg')
-        self.deadsound = pygame.mixer.Sound('sounds&music/Collapse1.ogg')
-        self.skillsound = pygame.mixer.Sound('sounds&music/Skill1.ogg')
+            [("data/sprites/Water1.png", 0.1), ("data/sprites/Water2.png", 0.1), ("data/sprites/Water3.png", 0.1),
+             ("data/sprites/Water4.png", 0.1), ("data/sprites/Water5.png", 0.1), ("data/sprites/Water6.png", 0.1),
+             ("data/sprites/Water7.png", 0.1), ("data/sprites/Water8.png", 0.1), ("data/sprites/Water9.png", 0.1),
+             ("data/sprites/Water10.png", 0.1), ("data/sprites/Water11.png", 0.1), ("data/sprites/Water12.png", 0.1),
+             ("data/sprites/Water13.png", 0.1), ("data/sprites/Water14.png", 0.1), ("data/sprites/Water15.png", 0.1),
+             ("data/sprites/Water16.png", 0.1), ("data/sprites/Water17.png", 0.1), ("data/sprites/Water18.png", 0.1)], False)
+        self.thundersound = pygame.mixer.Sound('data/sounds&music/Thunder9.ogg')
+        self.deathsprite = pygame.image.load("data/sprites/death.png").convert_alpha()
+        self.attacksound2 = pygame.mixer.Sound('data/sounds&music/Slash2.ogg')
+        self.deadsound = pygame.mixer.Sound('data/sounds&music/Collapse1.ogg')
+        self.skillsound = pygame.mixer.Sound('data/sounds&music/Skill1.ogg')
         self.attack = 'attack'
         self.state = 'player'
         self.enemymovelist = ['attack']
@@ -272,26 +273,26 @@ class SideBattle:
         self.curpmana = self.pmana
         self.pstr = pstr
         self.slashanim = pyganim.PygAnimation(
-            [['sprites/Slash1.png', 0.1], ('sprites/Slash2.png', 0.1), ('sprites/Slash3.png', 0.1),
-             ('sprites/Slash4.png', 0.1), ('sprites/Slash5.png', 0.1)], False)
+            [["data/sprites/Slash1.png", 0.1], ("data/sprites/Slash2.png", 0.1), ("data/sprites/Slash3.png", 0.1),
+             ("data/sprites/Slash4.png", 0.1), ("data/sprites/Slash5.png", 0.1)], False)
         self.slashanim.convert_alpha()
         self.clawanim = pyganim.PygAnimation(
-            [('sprites/Claw1.png', 0.1), ('sprites/Claw2.png', 0.1), ('sprites/Claw3.png', 0.1),
-             ('sprites/Claw4.png', 0.1), ('sprites/Claw5.png', 0.1)], False)
+            [("data/sprites/Claw1.png", 0.1), ("data/sprites/Claw2.png", 0.1), ("data/sprites/Claw3.png", 0.1),
+             ("data/sprites/Claw4.png", 0.1), ("data/sprites/Claw5.png", 0.1)], False)
         self.clawanim.convert_alpha()
         self.xpanim = pyganim.PygAnimation(
-            [('sprites/xp1.png', 0.1), ('sprites/xp2.png', 0.1), ('sprites/xp3.png', 0.1), ('sprites/xp4.png', 0.1),
-             ('sprites/xp5.png', 0.1), ('sprites/xp6.png', 0.1), ('sprites/xp7.png', 0.1), ('sprites/xp8.png', 0.1),
-             ('sprites/xp9.png', 0.1)])
+            [("data/sprites/xp1.png", 0.1), ("data/sprites/xp2.png", 0.1), ("data/sprites/xp3.png", 0.1), ("data/sprites/xp4.png", 0.1),
+             ("data/sprites/xp5.png", 0.1), ("data/sprites/xp6.png", 0.1), ("data/sprites/xp7.png", 0.1), ("data/sprites/xp8.png", 0.1),
+             ("data/sprites/xp9.png", 0.1)])
         self.xpanim.convert_alpha()
         self.specialanim = pyganim.PygAnimation(
-            [('sprites/Special1.png', 0.1), ('sprites/Special2.png', 0.1), ('sprites/Special3.png', 0.1),
-             ('sprites/Special4.png', 0.1), ('sprites/Special5.png', 0.1), ('sprites/Special6.png', 0.1),
-             ('sprites/Special7.png', 0.1), ('sprites/Special8.png', 0.1), ('sprites/Special9.png', 0.1),
-             ('sprites/Special10.png', 0.1), ('sprites/Special11.png', 0.1), ('sprites/Special12.png', 0.1),
-             ('sprites/Special13.png', 0.1), ('sprites/Special14.png', 0.1), ('sprites/Special15.png', 0.1),
-             ('sprites/Special16.png', 0.1), ('sprites/Special17.png', 0.1), ('sprites/Special18.png', 0.1),
-             ('sprites/Special19.png', 0.1), ('sprites/Special20.png', 0.1), ], False)
+            [("data/sprites/Special1.png", 0.1), ("data/sprites/Special2.png", 0.1), ("data/sprites/Special3.png", 0.1),
+             ("data/sprites/Special4.png", 0.1), ("data/sprites/Special5.png", 0.1), ("data/sprites/Special6.png", 0.1),
+             ("data/sprites/Special7.png", 0.1), ("data/sprites/Special8.png", 0.1), ("data/sprites/Special9.png", 0.1),
+             ("data/sprites/Special10.png", 0.1), ("data/sprites/Special11.png", 0.1), ("data/sprites/Special12.png", 0.1),
+             ("data/sprites/Special13.png", 0.1), ("data/sprites/Special14.png", 0.1), ("data/sprites/Special15.png", 0.1),
+             ("data/sprites/Special16.png", 0.1), ("data/sprites/Special17.png", 0.1), ("data/sprites/Special18.png", 0.1),
+             ("data/sprites/Special19.png", 0.1), ("data/sprites/Special20.png", 0.1), ], False)
         self.specialanim.convert_alpha()
         self.enemyattacking = False
         self.bgm = bgm
@@ -317,12 +318,12 @@ class SideBattle:
         self.gotmagic = False
         self.gotitems = False
         self.battleflow = Timer()
-        self.ui1 = pygame.image.load('backgrounds/rpgtxt.png').convert_alpha()
-        self.ui2 = pygame.image.load('backgrounds/rpgtxt.png').convert_alpha()
-        self.cursor = pygame.image.load('sprites/Cursor.png').convert_alpha()
+        self.ui1 = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()
+        self.ui2 = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()
+        self.cursor = pygame.image.load("data/sprites/Cursor.png").convert_alpha()
         self.cursormax = 2
-        self.uitext = pygame.font.Font('fonts/runescape_uf.ttf', 30)  # Default font for Ui
-        self.uitext2 = pygame.font.Font('fonts/Vecna.otf', 30)  # font for damage
+        self.uitext = pygame.font.Font("data/fonts/runescape_uf.ttf", 30)  # Default font for Ui
+        self.uitext2 = pygame.font.Font("data/fonts/Vecna.otf", 30)  # font for damage
         self.burstdesc = self.uitext.render('Greatly strengthens next attack for 1 turn. MP COST:15', False,
                                             (37, 61, 36))
         self.firedesc = self.uitext.render('Deal small Fire damage to the enemy. MP COST:5', False, (37, 61, 36))
@@ -348,11 +349,11 @@ class SideBattle:
         self.bgtxt = self.uitext.render('', False, self.txtcolor).convert_alpha()  # Action bg txt
         self.bgflag = False  # action bg flag
         self.actionbg = pygame.transform.scale(self.ui1, (300, 50))
-        self.vicimg = pygame.image.load('sprites/victory.png').convert_alpha()
+        self.vicimg = pygame.image.load("data/sprites/victory.png").convert_alpha()
         self.mdeathresist = False  # Check if monster resists the 'death' spell or not
         self.extraheight = 0  # Extra height for position of monster image if needed
-        self.hpbarEmpty = pygame.image.load('sprites/hpbar1.png').convert_alpha()
-        self.hpbarFull = pygame.image.load('sprites/hpbar2.png').convert_alpha()
+        self.hpbarEmpty = pygame.image.load("data/sprites/hpbar1.png").convert_alpha()
+        self.hpbarFull = pygame.image.load("data/sprites/hpbar2.png").convert_alpha()
 
         self.virtualMonsterHealth = self.mhealth  # 'Virtual Health' of monster, for the displaying of hp on the hp bar.
         self.post_victory = False
@@ -606,13 +607,13 @@ class SideBattle:
     def defeat(self):  # raises the defeat flag,ends the match when set to true and sends player back to main menu.
         timer = Timer()
         pygame.mixer.music.pause()
-        pygame.mixer.music.load('sounds&music/Gameover2.ogg')
+        pygame.mixer.music.load('data/sounds&music/Gameover2.ogg')
         pygame.mixer.music.play()
         dark = pygame.Surface(surf.get_size(), 32)
         dark.set_alpha(128, pygame.RLEACCEL)
         surf.blit(dark, (0, 0))
 
-        deftxt = pygame.font.Font('fonts/Daisy_Roots.otf', 70)
+        deftxt = pygame.font.Font("data/fonts/Daisy_Roots.otf", 70)
         defeat = deftxt.render('Defeat!', True, (255, 0, 0)).convert_alpha()
         cont = self.uitext.render('Your journey isn\'t over yet! Move onward!', True, (255, 255, 0)).convert_alpha()
         surf.blit(defeat, ((curwidth / 3) - 30, curheight / 5))
@@ -626,7 +627,7 @@ class SideBattle:
                     if event.key == pygame.K_DOWN or event.key == pygame.K_RCTRL:
                         self.defeatflag = False
                         self.battling = False
-                        pygame.mixer.music.load('sounds&music/Theme2.ogg')
+                        pygame.mixer.music.load('data/sounds&music/Theme2.ogg')
                         self.mhealth = self.mmaxhealth  # reseting instance
                         self.state = 'player'
                         self.virtualMonsterHealth = self.mmaxhealth
@@ -652,7 +653,7 @@ class SideBattle:
     def victory(self):  # raises the victory flag,ends the match when set to true.
         timer = Timer()
         pygame.mixer.music.pause()
-        pygame.mixer.music.load('sounds&music/Victory_and_Respite.mp3')
+        pygame.mixer.music.load('data/sounds&music/Victory_and_Respite.mp3')
         pygame.mixer.music.play()
         dark = pygame.Surface(surf.get_size(), 32)
         dark.set_alpha(128, pygame.RLEACCEL)
@@ -676,7 +677,7 @@ class SideBattle:
                         self.victoryflag = False
                         self.post_victory = True
                         self.battling = False
-                        pygame.mixer.music.load('sounds&music/Infinite_Arena.mp3')
+                        pygame.mixer.music.load('data/sounds&music/Infinite_Arena.mp3')
                         pygame.mixer.music.play()
                         self.mhealth = self.mmaxhealth  # reseting instance
                         self.virtualMonsterHealth = self.mmaxhealth
@@ -734,17 +735,17 @@ class SideBattle:
         self.enemymovelist = self.mondata[monster_name]['move_list']
 
     def battle(self, monstername, offset=0, resist_death=False,
-               bgm='sounds&music/yousayrun.mp3'):  # The main battle scene
+               bgm='data/sounds&music/yousayrun.mp3'):  # The main battle scene
         self.extraheight = offset
         self.mdeathresist = resist_death
         self.bgm = bgm
         self.set_monster(monstername)
         if self.pclass == 'warrior':
             self.players[0] = pyganim.PygAnimation(
-                [('sprites/idle1.png', 0.2), ('sprites/idle2.png', 0.2), ('sprites/idle3.png', 0.2)])
+                [("data/sprites/idle1.png", 0.2), ("data/sprites/idle2.png", 0.2), ("data/sprites/idle3.png", 0.2)])
         elif self.pclass == 'mage':
             self.players[0] = pyganim.PygAnimation(
-                [('sprites/midle1.png', 0.3), ('sprites/midle2.png', 0.3), ('sprites/midle3.png', 0.3)])
+                [("data/sprites/midle1.png", 0.3), ("data/sprites/midle2.png", 0.3), ("data/sprites/midle3.png", 0.3)])
         self.players[0].play()
         self.players[0].convert_alpha()
         pygame.mixer.music.stop()
@@ -758,7 +759,7 @@ class SideBattle:
         win = False
         lose = False
         self.state = 'player'
-        text = pygame.font.Font('fonts/runescape_uf.ttf', 30)
+        text = pygame.font.Font("data/fonts/runescape_uf.ttf", 30)
         ab = text.render(alphatext, False, (255, 255, 0))  # debug
         doneflag = False
         get = True  # monsterpos flag
@@ -1214,10 +1215,10 @@ class NewBattle:
         self.m_weakness = []
         #  Ui elements and etc.
         self.draw_menu = True
-        self.ui_bg = pygame.image.load("backgrounds/rpgtxt.png").convert_alpha()
-        self.ui_font = pygame.font.Font("fonts/alagard.ttf", 25)
-        self.title_font = pygame.font.Font("fonts/Daisy_Roots.otf", 25)
-        self.dmg_font = pygame.font.Font('fonts/Vecna.otf', 30)
+        self.ui_bg = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()
+        self.ui_font = pygame.font.Font("data/fonts/alagard.ttf", 25)
+        self.title_font = pygame.font.Font("data/fonts/Daisy_Roots.otf", 25)
+        self.dmg_font = pygame.font.Font("data/fonts/Vecna.otf", 30)
         self.ui_text = ["Menu", "Attack", "Skill", "Item", "HP:", "MP:", "Info", "MP Cost:", "Level required:"]
         self.atk_txt = self.ui_font.render(self.ui_text[1], True, (200, 200, 200))
         self.skill_txt = self.ui_font.render(self.ui_text[2], True, (200, 200, 200))
@@ -1228,9 +1229,9 @@ class NewBattle:
         self.player_y = 270
         self.add_flag = False  # flag for the gold and exp adding up on the victory screen
         self.dmg_txt = '0'
-        self.cursor = pygame.image.load("sprites/Cursor.png")
-        self.vic_img = pygame.image.load('sprites/victory.png').convert_alpha()
-        self.def_font = pygame.font.Font('fonts/Daisy_Roots.otf', 70)
+        self.cursor = pygame.image.load("data/sprites/Cursor.png")
+        self.vic_img = pygame.image.load("data/sprites/victory.png").convert_alpha()
+        self.def_font = pygame.font.Font("data/fonts/Daisy_Roots.otf", 70)
         self.current_title = 0
         #  Sound effects
         self.sound_effect = ''
@@ -1255,29 +1256,29 @@ class NewBattle:
         #  Temp stuff remove later
         self.crit_chance = 1
         self.loaded_anim = pyganim.PygAnimation(
-            [('sprites/idle1.png', 0.2), ('sprites/idle2.png', 0.2), ('sprites/idle3.png', 0.2)])
+            [("data/sprites/idle1.png", 0.2), ("data/sprites/idle2.png", 0.2), ("data/sprites/idle3.png", 0.2)])
         self.anim_pos = [300, 300]
         # Loaded animation for the animation function
         self.player_sprites = pyganim.PygAnimation(
-            [('sprites/idle1.png', 0.2), ('sprites/idle2.png', 0.2), ('sprites/idle3.png', 0.2)])
+            [("data/sprites/idle1.png", 0.2), ("data/sprites/idle2.png", 0.2), ("data/sprites/idle3.png", 0.2)])
         self.player_sprites.play()
-        self.death_sprite = pygame.image.load('sprites/death.png').convert_alpha()  # player death sprite
+        self.death_sprite = pygame.image.load("data/sprites/death.png").convert_alpha()  # player death sprite
         self.player_pos = 1200
         self.window_pos = 1400
         self.initial_window_pos = 0  # For the description window
         self.monster_pos = -1600
         self.shake = False
         #  images to load
-        self.battle_ui = pygame.transform.scale(pygame.image.load("backgrounds/battle_menu.png").convert_alpha(),
+        self.battle_ui = pygame.transform.scale(pygame.image.load("data/backgrounds/battle_menu.png").convert_alpha(),
                                                 (175, 200))
-        self.battle_ui2 = pygame.transform.scale(pygame.image.load("backgrounds/battle_menu.png").convert_alpha(),
+        self.battle_ui2 = pygame.transform.scale(pygame.image.load("data/backgrounds/battle_menu.png").convert_alpha(),
                                                 (500, 200))
-        self.battle_ui3 = pygame.transform.scale(pygame.image.load("backgrounds/UiElement.png").convert_alpha(),
+        self.battle_ui3 = pygame.transform.scale(pygame.image.load("data/backgrounds/UiElement.png").convert_alpha(),
                                                  (400, 400))# player info ui
-        self.title_bar = pygame.image.load("backgrounds/titlebar.png").convert_alpha()
+        self.title_bar = pygame.image.load("data/backgrounds/titlebar.png").convert_alpha()
         self.background = ""
-        self.hp_bar_Empty = pygame.image.load('sprites/hpbar1.png').convert_alpha()
-        self.hp_bar_Full = pygame.image.load('sprites/hpbar2.png').convert_alpha()
+        self.hp_bar_Empty = pygame.image.load("data/sprites/hpbar1.png").convert_alpha()
+        self.hp_bar_Full = pygame.image.load("data/sprites/hpbar2.png").convert_alpha()
         self.virtualMonsterHealth = self.m_cur_health
         self.skill_min = 0  # The minimum value for the top position of the skill selection window
         self.skill_desc = ""  # Description of skill
@@ -1605,7 +1606,7 @@ class NewBattle:
             self.f_exp = 0
             self.add_flag = True
             pygame.mixer.music.pause()
-            pygame.mixer.music.load('sounds&music/Victory_and_Respite.mp3')  # victory music
+            pygame.mixer.music.load('data/sounds&music/Victory_and_Respite.mp3')  # victory music
             pygame.mixer.music.play()
         dark_surf = pygame.Surface(surf.get_size(), 32)  # making a transparent dark surface
         dark_surf.set_alpha(128, pygame.RLEACCEL)
@@ -1633,7 +1634,7 @@ class NewBattle:
     def defeat(self):
         if not self.add_flag:
             pygame.mixer.music.pause()
-            pygame.mixer.music.load('sounds&music/Gameover2.ogg')  # defeat music
+            pygame.mixer.music.load('data/sounds&music/Gameover2.ogg')  # defeat music
             pygame.mixer.music.play()
             self.add_flag = True
         dark_surf = pygame.Surface(surf.get_size(), 32)  # making a transparent dark surface
@@ -1675,10 +1676,10 @@ class NewBattle:
         self.set_instance(player_data)
         fadein(255)
         if set_music == 0:
-            pygame.mixer_music.load("sounds&music/03_Endless_Battle.ogg")
+            pygame.mixer_music.load("data/sounds&music/03_Endless_Battle.ogg")
             pygame.mixer_music.play()
         else:
-            pygame.mixer_music.load("sounds&music/03_Endless_Battle.ogg")
+            pygame.mixer_music.load("data/sounds&music/03_Endless_Battle.ogg")
             pygame.mixer_music.play()
         pygame.mixer_music.set_endevent(pygame.constants.USEREVENT)
         self.player_pos = 1200  # make the player 'move'
@@ -1709,12 +1710,12 @@ class TextBox:
     """The textbox class, used to draw textboxes and anything related to dialogue."""
 
     def __init__(self, txtcolor=(21, 57, 114), convo_flag=False):
-        self.bg = pygame.image.load('backgrounds/rpgtxt.png').convert_alpha()  # Ui background
+        self.bg = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()  # Ui background
         self.txtcolor = txtcolor  # Default font colour
         self.txtcolor2 = (23, 18, 96)
-        self.uitext = pygame.font.Font('fonts/runescape_uf.ttf', 33)  # Default font
-        self.uitext2 = pygame.font.Font('fonts/runescape_uf.ttf', 25)  # Choice selection font
-        self.cursor = pygame.image.load('sprites/Cursor.png').convert_alpha()
+        self.uitext = pygame.font.Font("data/fonts/runescape_uf.ttf", 33)  # Default font
+        self.uitext2 = pygame.font.Font("data/fonts/runescape_uf.ttf", 25)  # Choice selection font
+        self.cursor = pygame.image.load("data/sprites/Cursor.png").convert_alpha()
         self.ch_cursorpos = 0  # Position of cursor for choice selection
         self.dialogue_progress = 0  # Current 'Progress' of the dialogue
         self.txtbox_height = 300
@@ -1798,14 +1799,14 @@ class MainUi:
     """The Main UI of the game(outside of battle.)"""
 
     def __init__(self):
-        self.bg = pygame.image.load('backgrounds/rpgtxt.png').convert_alpha()
+        self.bg = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()
         self.txtcolor = (21, 57, 114)
         self.txtcolor2 = (117, 17, 67)
         self.txtcolor3 = (23, 18, 96)
-        self.uitext = pygame.font.Font('fonts/runescape_uf.ttf', 35)
-        self.uitext2 = pygame.font.Font('fonts/runescape_uf.ttf', 25)  # Smaller font for longer sentences
-        self.cursor = pygame.image.load('sprites/Cursor.png').convert_alpha()
-        self.cursorsound = pygame.mixer.Sound('sounds&music/Cursor1.ogg')
+        self.uitext = pygame.font.Font("data/fonts/runescape_uf.ttf", 35)
+        self.uitext2 = pygame.font.Font("data/fonts/runescape_uf.ttf", 25)  # Smaller font for longer sentences
+        self.cursor = pygame.image.load("data/sprites/Cursor.png").convert_alpha()
+        self.cursorsound = pygame.mixer.Sound('data/sounds&music/Cursor1.ogg')
         self.cursorpos = 0
         self.talktxt = self.uitext.render('Talk', False, self.txtcolor)
         self.talkdesc = self.uitext.render('Talk with people around the Arena.', False, self.txtcolor)
@@ -1829,29 +1830,29 @@ class MainUi:
         self.sleepdesc = self.uitext.render('Spend the night at the Inn. (20 Gold)', False, self.txtcolor)
         self.txtbox = TextBox()
         self.statustxt = self.uitext.render('- STATUS -', True, self.txtcolor)
-        self.face = pygame.image.load('sprites/f1.png').convert_alpha()
-        self.wepicon = pygame.image.load('sprites/wepicon.png').convert_alpha()
-        self.armicon = pygame.image.load('sprites/armicon.png').convert_alpha()
-        self.accicon = pygame.image.load('sprites/accicon.png').convert_alpha()
-        self.sunIcon = pygame.image.load('sprites/sun.png').convert_alpha()  # Icon for clock
-        self.eveIcon = pygame.image.load('sprites/eve.png').convert_alpha()  # Icon for clock
-        self.moonIcon = pygame.image.load('sprites/moon.png').convert_alpha()  # Icon for clock
+        self.face = pygame.image.load("data/sprites/f1.png").convert_alpha()
+        self.wepicon = pygame.image.load("data/sprites/wepicon.png").convert_alpha()
+        self.armicon = pygame.image.load("data/sprites/armicon.png").convert_alpha()
+        self.accicon = pygame.image.load("data/sprites/accicon.png").convert_alpha()
+        self.sunIcon = pygame.image.load("data/sprites/sun.png").convert_alpha()  # Icon for clock
+        self.eveIcon = pygame.image.load("data/sprites/eve.png").convert_alpha()  # Icon for clock
+        self.moonIcon = pygame.image.load("data/sprites/moon.png").convert_alpha()  # Icon for clock
         self.talked = False
         self.coinAnim = pyganim.PygAnimation(
-            [('sprites/coin1.png', 0.1), ('sprites/coin2.png', 0.1), ('sprites/coin3.png', 0.1),
-             ('sprites/coin4.png', 0.1), ('sprites/coin5.png', 0.1), ('sprites/coin6.png', 0.1),
-             ('sprites/coin7.png', 0.1), ('sprites/coin8.png', 0.1), ('sprites/coin9.png', 0.1)])
+            [("data/sprites/coin1.png", 0.1), ("data/sprites/coin2.png", 0.1), ("data/sprites/coin3.png", 0.1),
+             ("data/sprites/coin4.png", 0.1), ("data/sprites/coin5.png", 0.1), ("data/sprites/coin6.png", 0.1),
+             ("data/sprites/coin7.png", 0.1), ("data/sprites/coin8.png", 0.1), ("data/sprites/coin9.png", 0.1)])
         self.coinAnim.play()
         self.shopkeep = True
         self.loaditems = False
-        self.buysound = pygame.mixer.Sound('sounds&music/Shop1.ogg')
+        self.buysound = pygame.mixer.Sound('data/sounds&music/Shop1.ogg')
         self.shoplist = {'Potion': 20, 'Iron Sword': 60, 'Iron Armour': 100}
         self.Talk = -1
         self.sysopt1 = self.uitext.render('Save Game', False, self.txtcolor)
         self.sysopt2 = self.uitext.render('Quit Game', False, self.txtcolor)
         self.sysopt3 = self.uitext.render('Cancel', False, self.txtcolor)
         self.syscursorpos = 0
-        self.savesound = pygame.mixer.Sound('sounds&music/Save.ogg')
+        self.savesound = pygame.mixer.Sound('data/sounds&music/Save.ogg')
         self.batopt1 = self.uitext.render('Fight a regular enemy', False, self.txtcolor)
         self.battalk = True
         self.batcursorpos = False
@@ -1910,27 +1911,27 @@ class MainUi:
         if not self.talked:
             if self.Talk == 0 and player.progress == 1:
 
-                self.txtbox.draw_textbox('sprites/oldman.png', 'Old Man',
+                self.txtbox.draw_textbox("data/sprites/oldman.png", 'Old Man',
                                          'I heard the monsters on the first floor are quite weak.',
                                          'You mustn\'t underestimate them However!',
                                          'Consider Equipping yourself with new equipment from the Shop.',
                                          line6='Press RCTRL to continue...')
             elif self.Talk == 1 and player.progress == 1:
 
-                self.txtbox.draw_textbox('sprites/boy.png', 'Boy',
+                self.txtbox.draw_textbox("data/sprites/boy.png", 'Boy',
                                          'Wow mister, you\'re going to fight in the Arena? So cool!',
                                          line6='Press RCTRL to continue...')
 
             elif self.Talk == 2 and player.progress == 1:
 
-                self.txtbox.draw_textbox('sprites/youngman.png', 'Young Man',
+                self.txtbox.draw_textbox("data/sprites/youngman.png", 'Young Man',
                                          'In the 50 years that the Arena has been open, there has been only one winner.',
                                          ' It was the legendary Hero known as Zen.',
                                          'That was 2 years ago though, nobody has seen him since.',
                                          line6='Press RCTRL to continue...')
             elif self.Talk == 3 and player.progress == 1:
 
-                self.txtbox.draw_textbox('sprites/mysteryman.png', 'Stranger',
+                self.txtbox.draw_textbox("data/sprites/mysteryman.png", 'Stranger',
                                          'You...', 'Nevermind. Good luck in the Arena, I\'ll be keeping an eye on you.',
                                          line6='              Press RCTRL to continue...')
             if self.Talk > 3:
@@ -1998,11 +1999,11 @@ class MainUi:
         if self.battalk:
             montokill = 5 - monkill
             if monkill < 5:
-                self.txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                          'You have %d monter(s) left to kill. You\'re almost there!' % montokill,
                                          line6='Press RCTRL to continue...')
             if monkill >= 5:
-                self.txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                          'You can challenge the floor boss! Are you prepared for it?',
                                          line6='Press RCTRL to continue...')
 
@@ -2031,22 +2032,22 @@ class MainUi:
             self.pbtalk = random.randrange(0, 4)
         if self.pbtalk == 0 and progress == 1:
             self.pb_dialogue = True
-            ui.txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+            ui.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                    'That was a good battle! If you\'re injured make sure to rest up at the inn.',
                                    line6='Press RCTRL to continue...')
         elif self.pbtalk == 1 and progress == 1:
             self.pb_dialogue = True
-            ui.txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+            ui.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                    'Good job! Make sure to use the gold from your battle to buy equipment from',
                                    'our Shop.', line6='Press RCTRL to continue...')
         elif self.pbtalk == 2 and progress == 1:
             self.pb_dialogue = True
-            ui.txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+            ui.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                    'Nice work! You\'re pretty skilled, are you sure you haven\'t done this before?',
                                    line6='Press RCTRL to continue...')
         elif self.pbtalk == 3 and progress == 1:
             self.pb_dialogue = True
-            ui.txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+            ui.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                    'Good work out there! I overheard some strange people talking about you.',
                                    'Something about.. A debt?', line6='Press RCTRL to continue...')
 
@@ -2111,7 +2112,7 @@ class SelectOptions(MainUi):
         self.alert4 = True  # Flag for whether that option is new/updated
         self.alert5 = True  # Flag for whether that option is new/updated
         self.alert6 = True  # Flag for whether that option is new/updated
-        self.alertAnim = pyganim.PygAnimation([('sprites/alert1.png', 0.4), ('sprites/alert2.png', 0.4)])
+        self.alertAnim = pyganim.PygAnimation([("data/sprites/alert1.png", 0.4), ("data/sprites/alert2.png", 0.4)])
         self.alertAnim.scale([35, 35])
         self.alertAnim.play()
 
@@ -2170,7 +2171,7 @@ class SelectOptions(MainUi):
             self.rowpos = 0
         if self.colpos < 0:
             self.colpos = 2
-        if self.rowpos < 0 and no > 3:
+        if self.rowpos < 0:
             self.rowpos = 1
         if self.rowpos == 0:  # Goes to exit when trying to go right on the end of row 1
             if self.colpos > 2:
@@ -2215,14 +2216,14 @@ class Shop(MainUi):
         self.acc_list = item_data['accessories']
         self.consume_list = item_data['consumables']
         self.player_data = Player()
-        self.shopbg = pygame.image.load('backgrounds/shopbg.png').convert_alpha()
+        self.shopbg = pygame.image.load("data/backgrounds/shopbg.png").convert_alpha()
         self.pstr = 1
         self.pdef = 1
         self.pmag = 1
         self.pluck = 1
         self.shoptxt = ['Weapons', 'Armour', 'Accessories', 'Items']
         self.shoptxt2 = ['Name', 'Cost']
-        self.title_text = pygame.font.Font('fonts/Daisy_Roots.otf', 50)
+        self.title_text = pygame.font.Font("data/fonts/Daisy_Roots.otf", 50)
         self.shop_cursor_pos1 = 0  # for choosing the type of item
         self.shop_cursor_pos2 = 0  # for choosing from the list of items
         self.min_pos = 0  # minimum position for the item in the list
@@ -2235,7 +2236,7 @@ class Shop(MainUi):
         self.red_rgb = (200, 0, 0)
         self.box_pos = 2000
         self.current_list = []  # which set of items u are currently viewing
-        self.buzzer = pygame.mixer.Sound('sounds&music/Buzzer1.ogg')
+        self.buzzer = pygame.mixer.Sound('data/sounds&music/Buzzer1.ogg')
 
     def get_player_stats(self, player_data):
         self.player_data = player_data
@@ -2341,7 +2342,7 @@ class Shop(MainUi):
             shop_title = self.title_text.render(shop_name, True, self.txtcolor2)
 
         if self.shopkeep:
-            self.txtbox.draw_textbox('sprites/shopkeep.png', 'Shopkeeper',
+            self.txtbox.draw_textbox("data/sprites/shopkeep.png", 'Shopkeeper',
                                      'Welcome to the Arena shop! How can I help you?',
                                      line6='              Press RCTRL to continue...')
         if not self.shopkeep:
@@ -2522,31 +2523,31 @@ class GameEvents(MainUi):
 
     def __init__(self):
         MainUi.__init__(self)
-        self.town_bg_day = pygame.image.load('backgrounds/The Medieval Town.jpg').convert_alpha()
-        self.town_bg_eve = pygame.image.load('backgrounds/The Medieval Town_eve.jpg').convert_alpha()
-        self.town_bg_ngt = pygame.image.load('backgrounds/The Medieval Town_night.jpg').convert_alpha()
+        self.town_bg_day = pygame.image.load("data/backgrounds/The Medieval Town.jpg").convert_alpha()
+        self.town_bg_eve = pygame.image.load("data/backgrounds/The Medieval Town_eve.jpg").convert_alpha()
+        self.town_bg_ngt = pygame.image.load("data/backgrounds/The Medieval Town_night.jpg").convert_alpha()
         self.townDialogue = 0  # Progress for the dialogue while in the town.
         self.arenaDialogue = 0
         self.timekeep = Timer()  # Used to time the events and things
         self.dialoguecontrol = False
         self.startEvent = False
-        self.thudSound = pygame.mixer.Sound('sounds&music/thud.wav')
-        self.applauseSound = pygame.mixer.Sound('sounds&music/Applause1.ogg')
-        self.bossRoar = pygame.mixer.Sound('sounds&music/Monster2.ogg')
-        self.arena_bg = pygame.image.load('backgrounds/arenaDay.png').convert_alpha()
-        self.boss_face1 = pygame.image.load('sprites/Boss1.png')
+        self.thudSound = pygame.mixer.Sound('data/sounds&music/thud.wav')
+        self.applauseSound = pygame.mixer.Sound('data/sounds&music/Applause1.ogg')
+        self.bossRoar = pygame.mixer.Sound('data/sounds&music/Monster2.ogg')
+        self.arena_bg = pygame.image.load("data/backgrounds/arenaDay.png").convert_alpha()
+        self.boss_face1 = pygame.image.load("data/sprites/Boss1.png")
         self.town_location = 0  # 0-Centre 1-Bar/Inn 2-Slums
         self.game_clock = GameClock()
         self.option_selector = SelectOptions()
         self.town_talk1 = False  # Flag for drawing options menu for the 'Talk' Screen
     def town_first_visit(self, player_data):
         event_done = False
-        pygame.mixer.music.load('sounds&music/Bustling_Streets.mp3')
+        pygame.mixer.music.load('data/sounds&music/Bustling_Streets.mp3')
         pygame.mixer.music.play()
         pygame.mixer.music.set_volume(0.5)
         global surf
         global screen
-        runningsound = pygame.mixer.Sound('sounds&music/Person_running.wav')
+        runningsound = pygame.mixer.Sound('data/sounds&music/Person_running.wav')
         runningsound.set_volume(0.3)
         pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
         timedflag1 = False  # To be activated for certain timed events
@@ -2575,7 +2576,7 @@ class GameEvents(MainUi):
                         self.txtbox.ch_cursorpos += 1
                         self.cursorsound.play()
                     if event.key == pygame.K_RETURN and choice_select:
-                        if self.txtbox.ch_cursorpos == 0:
+                        if self.txtbox.ch_cursorpos == 0:   # Pay the girl
                             dialogue_choice = 0
                             dialogue_choice2 = 0
                             choice_select = False
@@ -2590,7 +2591,7 @@ class GameEvents(MainUi):
                 if event.type == pygame.constants.USEREVENT:
                     pygame.mixer.music.play()
 
-            surf.blit(pygame.transform.scale(self.town_bg, (curwidth, curheight)), (0, 0))
+            surf.blit(pygame.transform.scale(self.town_bg_day, (curwidth, curheight)), (0, 0))
 
             if not self.startEvent:
                 if self.timekeep.timing() == 2 and self.townDialogue < 1:
@@ -2640,7 +2641,7 @@ class GameEvents(MainUi):
                                          'You see a young girl running towards your direction.',
                                          line6='Press RCTRL to continue...')
             elif self.townDialogue == 8:
-                self.txtbox.draw_textbox('sprites/girl.png', '???',
+                self.txtbox.draw_textbox("data/sprites/girl.png", '???',
                                          'Oh no, I\'m so late, Grandpa\'s gonna get so mad!',
                                          line6='Press RCTRL to continue...')
                 timedflag1 = False
@@ -2651,7 +2652,7 @@ class GameEvents(MainUi):
                 self.dialoguecontrol = False
                 self.timekeep.reset()
             elif self.townDialogue == 10 and timedflag1:
-                self.txtbox.draw_textbox('sprites/girl.png', '???',
+                self.txtbox.draw_textbox("data/sprites/girl.png", '???',
                                          'Ouch!',
                                          line6='Press RCTRL to continue...')
                 self.dialoguecontrol = True
@@ -2660,7 +2661,7 @@ class GameEvents(MainUi):
                                          'The girl crashes into you at full speed and topples over onto the gravel road.',
                                          line6='Press RCTRL to continue...')
             elif self.townDialogue == 12:
-                self.txtbox.draw_textbox('sprites/girl.png', '???',
+                self.txtbox.draw_textbox("data/sprites/girl.png", '???',
                                          'Hey, watch where you\'re going!',
                                          line6='Press RCTRL to continue...')
 
@@ -2669,7 +2670,7 @@ class GameEvents(MainUi):
                                          'The girl gets up and brushes off her skirt.',
                                          line6='Press RCTRL to continue...')
             elif self.townDialogue == 14:
-                self.txtbox.draw_textbox('sprites/girl.png', '???',
+                self.txtbox.draw_textbox("data/sprites/girl.png", '???',
                                          'There\'s a tear in my new dress! What are you going to do about this?',
                                          line6='Press RCTRL to continue...')
                 choice_select = True
@@ -2681,7 +2682,7 @@ class GameEvents(MainUi):
                 self.dialoguecontrol = False
             elif dialogue_choice == 0 and self.townDialogue >= 16:  # Pay money dialogue tree
                 if self.townDialogue == 16:
-                    self.txtbox.draw_textbox('sprites/girl.png', '???',
+                    self.txtbox.draw_textbox("data/sprites/girl.png", '???',
                                              'Oh you\'re willing to pay? I\'m going to need atleast 150 gold for the dress.',
                                              line6='Press RCTRL to continue...')
                     choice_select = True
@@ -2694,22 +2695,24 @@ class GameEvents(MainUi):
                 elif self.townDialogue >= 18 and dialogue_choice2 == 0:  # Pay her
                     if player_data.gold < 150 and not paid_girl:  # if player doesn't have enough gold
                         if self.townDialogue == 18:
-                            self.txtbox.draw_textbox('sprites/girl.png', '???',
+                            self.txtbox.draw_textbox("data/sprites/girl.png", '???',
                                                      'Hey you don\'t even have enough gold to pay me!')
                         if self.townDialogue == 19:
-                            self.txtbox.draw_textbox('sprites/girl.png', '???',
+                            self.txtbox.draw_textbox("data/sprites/girl.png", '???',
                                                      'Don\'t waste my time if you don\'t have any money!')
                         if self.townDialogue == 20:
                             self.townDialogue = 21
                             dialogue_choice2 = 1
                     else:
-                        player_data.gold -= 150
+                        if not paid_girl:
+                            player_data.gold -= 150
+                            player_data.paid_girl_flag = True
                         paid_girl = True
                         if self.townDialogue == 18:
-                            self.txtbox.draw_textbox('sprites/girl.png', '???',
+                            self.txtbox.draw_textbox("data/sprites/girl.png", '???',
                                                      'Well, I guess this will have to do.')
                         if self.townDialogue == 19:
-                            self.txtbox.draw_textbox('sprites/girl.png', '???',
+                            self.txtbox.draw_textbox("data/sprites/girl.png", '???',
                                                      'You better be careful next time! Be grateful that I let you off easily!')
                         elif self.townDialogue == 20:
                             self.txtbox.draw_textbox(None, '',
@@ -2721,25 +2724,25 @@ class GameEvents(MainUi):
 
                 elif self.townDialogue >= 18 and dialogue_choice2 == 1:  # Don't pay her
                     if self.townDialogue == 18:
-                        self.txtbox.draw_textbox('sprites/girl.png', '???',
+                        self.txtbox.draw_textbox("data/sprites/girl.png", '???',
                                                  '...You\'re not going to pay?',
                                                  line6='Press RCTRL to continue...')
                     if self.townDialogue == 19:
-                        self.txtbox.draw_textbox('sprites/girl.png', '???',
+                        self.txtbox.draw_textbox("data/sprites/girl.png", '???',
                                                  'Tch.. he didn\'t fall for it')
                     elif self.townDialogue == 20:
-                        self.txtbox.draw_textbox('sprites/girl.png', '???',
+                        self.txtbox.draw_textbox("data/sprites/girl.png", '???',
                                                  'Well don\'t waste my time then, get out of my way!')
                     elif self.townDialogue == 21:
                         self.txtbox.draw_textbox(None, '',
                                                  'The girl storms off and disappears into the crowd.')
             elif dialogue_choice == 1 and self.townDialogue >= 16:  # ignore girl tree
                 if self.townDialogue == 16:
-                    self.txtbox.draw_textbox('sprites/girl.png', '???',
+                    self.txtbox.draw_textbox("data/sprites/girl.png", '???',
                                              '....',
                                              line6='Press RCTRL to continue...')
                 elif self.townDialogue == 17:
-                    self.txtbox.draw_textbox('sprites/girl.png', '???',
+                    self.txtbox.draw_textbox("data/sprites/girl.png", '???',
                                              'Don\'t just ignore me!',
                                              line6='Press RCTRL to continue...')
                 elif self.townDialogue == 18:
@@ -2769,7 +2772,7 @@ class GameEvents(MainUi):
     def firstfloor_boss(self, name='Zen'):
         '''Cutscene when challenging the first_floor boss'''
         event_done = False
-        pygame.mixer.music.load('sounds&music/Dungeon3.ogg')
+        pygame.mixer.music.load('data/sounds&music/Dungeon3.ogg')
         global surf
         global screen
         pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
@@ -2828,40 +2831,40 @@ class GameEvents(MainUi):
                     post_applause = True
 
             if self.arenaDialogue == 1:
-                self.txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                          'Ladies and gentlemen!',
                                          line6='Press RCTRL to continue...')
 
             elif self.arenaDialogue == 2:
-                self.txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                          'It seems like it\'s been ages since we\'ve had a challenger strong enough to',
                                          'finally get to this point!',
                                          line6='Press RCTRL to continue...')
             elif self.arenaDialogue == 3:
-                self.txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                          'But we finally have him here, someone who is both brave and foolish enough',
                                          'to step up and fight his way through some of the most powerful monsters, to',
                                          'be able to stand before you at this very moment and face against what many',
                                          'would consider suicide! ',
                                          line6='Press RCTRL to continue...')
             elif self.arenaDialogue == 4:
-                self.txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                          'Please put your hands together for.. ' + name + '!',
                                          line6='Press RCTRL to continue...')
                 applause_flag2 = True
             elif self.arenaDialogue == 5:
-                self.txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                          'And his opponent.. A beast that has destroyed the dreams of many young',
                                          'adventurers, said to be the \'Gatekeeper\' of the Arena.',
                                          line6='Press RCTRL to continue...')
             elif self.arenaDialogue == 6:
-                self.txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                          'Please put your hands together for.. Tho\'k!',
                                          line6='Press RCTRL to continue...')
                 boss_roar = True
 
             elif self.arenaDialogue == 7:
-                self.txtbox.draw_textbox('sprites/Boss1.png', 'Tho\'k',
+                self.txtbox.draw_textbox("data/sprites/Boss1.png", 'Tho\'k',
                                          'RAAAAAAAAAAAAAAAAAARRGGHHHHHH!!!!!',
                                          line6='Press RCTRL to continue...')
                 if boss_roar:
@@ -2873,7 +2876,7 @@ class GameEvents(MainUi):
                     self.dialoguecontrol = True
 
             elif self.arenaDialogue == 8:
-                self.txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                          'Now, the time has come. ' + name + ', I assume you are ready?',
                                          line6='Press ENTER to select a choice...')
                 self.txtbox.select_choice('Yes, I am ready.',
@@ -2882,15 +2885,15 @@ class GameEvents(MainUi):
                 choice_select = True
             elif self.arenaDialogue == 9:
                 if dialogue_choice == 0:
-                    self.txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                    self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                              'Good! That\'s what I expected from you!',
                                              line6='Press RCTRL to continue...')
                 if dialogue_choice == 1:
-                    self.txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                    self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                              'Well unfortunately it\'s too late to turn back now!',
                                              line6='Press RCTRL to continue...')
             elif self.arenaDialogue == 10:
-                self.txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                          'It is time! Fight!',
                                          line6='Press RCTRL to continue...')
             elif self.arenaDialogue == 11:
@@ -2904,7 +2907,7 @@ class GameEvents(MainUi):
 
     def intro_scene(self):
         event_done = False
-        pygame.mixer.music.load('sounds&music/Dungeon3.ogg')
+        pygame.mixer.music.load('data/sounds&music/Dungeon3.ogg')
         global surf
         global screen
         pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
@@ -2924,7 +2927,7 @@ class GameEvents(MainUi):
         self.timekeep.reset()
         town_ui = True
         if self.town_location == 0:
-            area_music = 'sounds&music/Bustling_Streets.mp3'
+            area_music = 'data/sounds&music/Bustling_Streets.mp3'
             pygame.mixer.music.load(area_music)
             pygame.mixer.music.play()
             pygame.mixer.music.set_volume(0.5)
@@ -2936,19 +2939,31 @@ class GameEvents(MainUi):
                     global done
                     done = True
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_DOWN:
-                        self.cursorpos += 1
-                    elif event.key == pygame.K_UP:
-                        self.cursorpos -= 1
+                    if town_ui:
+                        if event.key == pygame.K_DOWN:
+                            self.cursorpos += 1
+                            self.cursorsound.play()
+                        elif event.key == pygame.K_UP:
+                            self.cursorpos -= 1
+                            self.cursorsound.play()
+                    if self.town_talk1:
+                        if event.key == pygame.K_DOWN:
+                            self.option_selector.rowpos += 1
+                        elif event.key == pygame.K_UP:
+                            self.option_selector.rowpos -= 1
+                        elif event.key == pygame.K_RIGHT:
+                            self.option_selector.colpos += 1
+                        elif event.key == pygame.K_LEFT:
+                            self.option_selector.colpos -= 1
                     if event.key == pygame.K_RETURN:
                         if self.cursorpos == 0:  # Talk option
                             if self.town_location == 0:  # In main town square
                                 self.town_talk1 = True
-                                self.town_ui = False
+                                town_ui = False
                     if event.key == pygame.K_RCTRL:
                         if self.town_talk1:
                             self.town_talk1 = False
-                            self.town_ui = True
+                            town_ui = True
                 if event.type == pygame.constants.USEREVENT:
                     pygame.mixer.music.play()
             if self.town_location == 0:
@@ -2977,9 +2992,9 @@ class GameClock:
         self.curTime = 0
         self.bellflag = False
         self.fadeoutflag = False
-        self.area_music = 'sounds&music/Infinite_Arena.mp3'  # Music to be played in the area
-        self.bell = pygame.mixer.Sound('sounds&music/Bell1.ogg')  # Bell sound during night time
-        self.rooster = pygame.mixer.Sound('sounds&music/Roost.ogg')  # Morning sound
+        self.area_music = 'data/sounds&music/Infinite_Arena.mp3'  # Music to be played in the area
+        self.bell = pygame.mixer.Sound('data/sounds&music/Bell1.ogg')  # Bell sound during night time
+        self.rooster = pygame.mixer.Sound('data/sounds&music/Roost.ogg')  # Morning sound
         self.paused = False
         self.time_state = "Morning"  # The time of day
 
@@ -2992,7 +3007,7 @@ class GameClock:
     def reset(self):
         self.clockTime.reset()
 
-    def pass_time(self, player_details, area_music='sounds&music/Infinite_Arena.mp3'):
+    def pass_time(self, player_details, area_music='data/sounds&music/Infinite_Arena.mp3'):
             player = player_details
             self.area_music = area_music
             self.curTime = self.clockTime.timing()  # Current time
@@ -3025,7 +3040,7 @@ class GameClock:
 
             if (player.hours >= 20 or player.hours < 6) and (not self.bellflag):  # Playing bell sound when it becomes night
                 self.bell.play()
-                Currentmusic = 'sounds&music/night.mp3'
+                Currentmusic = 'data/sounds&music/night.mp3'
                 pygame.mixer.music.stop()
                 pygame.mixer.music.load(Currentmusic)
                 pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
@@ -3043,13 +3058,13 @@ class GameClock:
 if __name__ == "__main__":
     player = Player(item_data=item_data)
     eventManager = GameEvents()
-    warrior = pyganim.PygAnimation([('sprites/idle1.png', 0.2), ('sprites/idle2.png', 0.2), ('sprites/idle3.png', 0.2)])
+    warrior = pyganim.PygAnimation([("data/sprites/idle1.png", 0.2), ("data/sprites/idle2.png", 0.2), ("data/sprites/idle3.png", 0.2)])
 
-    mage = pyganim.PygAnimation([('sprites/midle1.png', 0.3), ('sprites/midle2.png', 0.3), ('sprites/midle3.png', 0.3)])
+    mage = pyganim.PygAnimation([("data/sprites/midle1.png", 0.3), ("data/sprites/midle2.png", 0.3), ("data/sprites/midle3.png", 0.3)])
 
-    castanim = [('sprites/b1.png', 0.3), ('sprites/b2.png', 0.3), ('sprites/b3.png', 0.3)]
-    battler = SideBattle(monster_data, 'mage', castanim, 'backgrounds/Ruins2.png',
-                         'sounds&music/yousayrun2.mp3')
+    castanim = [("data/sprites/b1.png", 0.3), ("data/sprites/b2.png", 0.3), ("data/sprites/b3.png", 0.3)]
+    battler = SideBattle(monster_data, 'mage', castanim, "data/backgrounds/Ruins2.png",
+                         'data/sounds&music/yousayrun2.mp3')
 
     floor1_talk = SelectOptions()  # Choices for 'Talk' in floor 1
     arena_shop = Shop(item_data)
@@ -3058,12 +3073,12 @@ if __name__ == "__main__":
     randbattle = 0
     timepassed = False  # Flag to check if the time passed or not
     newgtxtbox = 0
-    pygame.mixer.music.load('sounds&music/Theme2.ogg')
+    pygame.mixer.music.load('data/sounds&music/Theme2.ogg')
     pygame.mixer.music.play()
     vol = 0.5
     surf = pygame.Surface((1366, 768))
     pygame.mixer.music.set_volume(vol)
-    innsong = pygame.mixer.Sound('sounds&music/Town2.ogg')
+    innsong = pygame.mixer.Sound('data/sounds&music/Town2.ogg')
     # I deeply apologize for the code below(and above)
     talked = False  # Ui flags
     options = False
@@ -3075,20 +3090,20 @@ if __name__ == "__main__":
     post_battle = False  # After battle shenanigans
     controlui = True  # Flag to check if player can control ui
     talkval = 0
-    text = pygame.font.Font('fonts/runescape_uf.ttf', 30)
-    seltext = pygame.font.Font('fonts/runescape_uf.ttf', 40)
-    secretbattle = SideBattle(monster_data, 'mage', castanim, 'backgrounds/LavaCave.png',
-                              'sounds&music/Battle3.ogg', phealth=1000, pmana=100, pstr=1000, pstrmod=14, pdef=100,
+    text = pygame.font.Font("data/fonts/runescape_uf.ttf", 30)
+    seltext = pygame.font.Font("data/fonts/runescape_uf.ttf", 40)
+    secretbattle = SideBattle(monster_data, 'mage', castanim, "data/backgrounds/LavaCave.png",
+                              'data/sounds&music/Battle3.ogg', phealth=1000, pmana=100, pstr=1000, pstrmod=14, pdef=100,
                               pmag=2000, pluck=9)
     secretbattle.plevel = 50
-    debugbattle = SideBattle(monster_data, 'mage', castanim, 'backgrounds/DemonicWorld.png',
-                             'sounds&music/Dungeon2.ogg', phealth=10000, pmana=1000, pstr=1000, pstrmod=14, pdef=100,
+    debugbattle = SideBattle(monster_data, 'mage', castanim, "data/backgrounds/DemonicWorld.png",
+                             'data/sounds&music/Dungeon2.ogg', phealth=10000, pmana=1000, pstr=1000, pstrmod=14, pdef=100,
                              pmag=2000, pluck=9)
     debugbattle.plevel = 50
-    healsound = pygame.mixer.Sound('sounds&music/Recovery.ogg')
+    healsound = pygame.mixer.Sound('data/sounds&music/Recovery.ogg')
     mage.play()
     warrior.play()
-    menutext = pygame.font.Font('fonts/Daisy_Roots.otf', 40)
+    menutext = pygame.font.Font("data/fonts/Daisy_Roots.otf", 40)
     ab = text.render(alphatext, False, (255, 255, 0))  # debug
     sel1 = seltext.render('Enter your name:', False, (255, 255, 0))
     sel2 = seltext.render('Press RCTRL to continue..', False, (255, 255, 0))
@@ -3098,10 +3113,10 @@ if __name__ == "__main__":
     sel3 = seltext.render('Select your class:', False, secretbattle.txtcolor)
     sel4 = text.render('Mage', False, secretbattle.txtcolor)
     sel5 = text.render('Warrior', False, secretbattle.txtcolor)
-    door = pygame.mixer.Sound('sounds&music/Door1.ogg')  # Door sound during newgame sequence
-    gate = pygame.mixer.Sound('sounds&music/Door4.ogg')  # Gate sound  "          "     "
-    bell = pygame.mixer.Sound('sounds&music/Bell1.ogg')  # Bell sound during night time
-    rooster = pygame.mixer.Sound('sounds&music/Roost.ogg')  # Morning sound
+    door = pygame.mixer.Sound('data/sounds&music/Door1.ogg')  # Door sound during newgame sequence
+    gate = pygame.mixer.Sound('data/sounds&music/Door4.ogg')  # Gate sound  "          "     "
+    bell = pygame.mixer.Sound('data/sounds&music/Bell1.ogg')  # Bell sound during night time
+    rooster = pygame.mixer.Sound('data/sounds&music/Roost.ogg')  # Morning sound
     loadgamecolor = (255, 255, 0)
     nosavefile = True  # Check if a savefile is already present or not
     load_flag = False
@@ -3120,19 +3135,19 @@ if __name__ == "__main__":
     loadgame = menutext.render('Load Game', True, loadgamecolor)
     quitgame = menutext.render('Quit Game', True, (255, 255, 0))
     namelist = ['']
-    menubg1 = pygame.image.load('backgrounds/bg2.jpg').convert_alpha()
-    arena_bg1 = pygame.image.load('backgrounds/arenaDay.png').convert_alpha()  # day time arena
-    arena_bg2 = pygame.image.load('backgrounds/arenaEvening.png').convert_alpha()
-    arena_bg3 = pygame.image.load('backgrounds/arenaNight.png').convert_alpha()
-    inn_bg = pygame.image.load('backgrounds/inn.png').convert_alpha()
-    logo = pygame.image.load('backgrounds/logo3.png').convert_alpha()  # Main menu logo
-    cursor = pygame.image.load('sprites/Cursor.png').convert_alpha()
-    newgbg = pygame.image.load('backgrounds/Meadow.png').convert_alpha()  # New game screen background
-    loadsound = pygame.mixer.Sound('sounds&music/Load.ogg')
+    menubg1 = pygame.image.load("data/backgrounds/bg2.jpg").convert_alpha()
+    arena_bg1 = pygame.image.load("data/backgrounds/arenaDay.png").convert_alpha()  # day time arena
+    arena_bg2 = pygame.image.load("data/backgrounds/arenaEvening.png").convert_alpha()
+    arena_bg3 = pygame.image.load("data/backgrounds/arenaNight.png").convert_alpha()
+    inn_bg = pygame.image.load("data/backgrounds/inn.png").convert_alpha()
+    logo = pygame.image.load("data/backgrounds/logo3.png").convert_alpha()  # Main menu logo
+    cursor = pygame.image.load("data/sprites/Cursor.png").convert_alpha()
+    newgbg = pygame.image.load("data/backgrounds/Meadow.png").convert_alpha()  # New game screen background
+    loadsound = pygame.mixer.Sound('data/sounds&music/Load.ogg')
     cursorpos = 0
-    Textbox = pygame.image.load('backgrounds/rpgtxt.png').convert_alpha()
+    Textbox = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()
     scene = 'menu'
-    Currentmusic = 'sounds&music/Infinite_Arena.mp3'
+    Currentmusic = 'data/sounds&music/Infinite_Arena.mp3'
     ui = MainUi()
     shh = []
     newTest = NewBattle(monster_data, item_data, sound_effects, animations, skills)  # New battle tester
@@ -3183,7 +3198,7 @@ if __name__ == "__main__":
                     loadsound.play()
                     fadeout(surf)
                     pygame.time.wait(1000)
-                    pygame.mixer.music.load('sounds&music/Castle1.ogg')
+                    pygame.mixer.music.load('data/sounds&music/Castle1.ogg')
                     pygame.mixer.music.play()
                     load_flag = False
                     scene = 'new_game'
@@ -3199,7 +3214,7 @@ if __name__ == "__main__":
                         scene = 'arena'
                         load_flag = False
                         ui.cursorpos = 9
-                        pygame.mixer.music.load('sounds&music/Infinite_Arena.mp3')
+                        pygame.mixer.music.load('data/sounds&music/Infinite_Arena.mp3')
                         pygame.mixer.music.play()
                     except:
                         print("Could not open")
@@ -3527,7 +3542,7 @@ if __name__ == "__main__":
                         battler.getplayerdetails(player)
                         fadein(255)
                         eventManager.firstfloor_boss(player.name)
-                        battler.battle('floor_boss1', -50, True, bgm='sounds&music/boss_music.mp3')
+                        battler.battle('floor_boss1', -50, True, bgm='data/sounds&music/boss_music.mp3')
                         player.curhp = battler.curphealth
                         player.curmp = battler.curpmana
                         player.exp += battler.exp
@@ -3575,10 +3590,10 @@ if __name__ == "__main__":
             surf.blit(quitgame, (474, 471))
             if shh == ['b', 'o', 's', 's'] and scene == 'menu':
                 shh = []
-                secretbattle.battle('secret_battle1', -10, False, bgm='sounds&music/Battle3.ogg')
+                secretbattle.battle('secret_battle1', -10, False, bgm='data/sounds&music/Battle3.ogg')
             if shh == ['t', 'e', 's', 't'] and scene == 'menu':
                 shh = []
-                debugbattle.battle('debug_fight', -120, bgm='sounds&music/Dungeon2.ogg')
+                debugbattle.battle('debug_fight', -120, bgm='data/sounds&music/Dungeon2.ogg')
             if shh == ['t', 'o', 'w', 'n'] and scene == 'menu':
                 shh = []
                 fadeout(surf)
@@ -3653,34 +3668,34 @@ if __name__ == "__main__":
             if timepassed:
                 surf.fill((0, 0, 0))
                 if newgtxtbox == 1:
-                    txtbox.draw_textbox('sprites/host_face.png', '???', 'Oh? who do we have here?')
+                    txtbox.draw_textbox("data/sprites/host_face.png", '???', 'Oh? who do we have here?')
                 if newgtxtbox == 2:
-                    txtbox.draw_textbox('sprites/host_face.png', '???', 'A new challenger? You seem quite young!')
+                    txtbox.draw_textbox("data/sprites/host_face.png", '???', 'A new challenger? You seem quite young!')
                 if newgtxtbox == 3:
-                    txtbox.draw_textbox('sprites/host_face.png', '???',
+                    txtbox.draw_textbox("data/sprites/host_face.png", '???',
                                         'Me? I\'m the one they call the host of the arena.')
                 if newgtxtbox == 4:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance', 'But you can call me Chance!')
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'But you can call me Chance!')
                 if newgtxtbox == 5:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                         'Well, if you want to register I\'m not stopping you.')
                 if newgtxtbox == 6:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                         'So far only one warrior has emerged victorius from the arena, 2 years ago.')
                 if newgtxtbox == 7:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance', 'Countless others have tried and failed.',
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'Countless others have tried and failed.',
                                         'Many have lost their lives beyond these gates.')
                 if newgtxtbox == 8:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                         'This is your last chance, there is no shame in turning back.')
                 if newgtxtbox == 9:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance', '...')
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', '...')
                 if newgtxtbox == 10:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance', 'You are an interesting fellow.')
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'You are an interesting fellow.')
                 if newgtxtbox == 11:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance', 'Very well, you may step forward..')
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'Very well, you may step forward..')
                 if newgtxtbox == 12:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance', '..And enter the Arena!')
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', '..And enter the Arena!')
                 if newgtxtbox > 12:
                     gate.play()
                     fadein(255, 0.005)
@@ -3690,56 +3705,56 @@ if __name__ == "__main__":
                     newgtxtbox = 1
         if scene == 'new_game4':
             if timer.timing() == 1 and (not timepassed):
-                pygame.mixer.music.load('sounds&music/Infinite_Arena.mp3')
+                pygame.mixer.music.load('data/sounds&music/Infinite_Arena.mp3')
                 pygame.mixer.music.play()
                 timepassed = True
             surf.blit(pygame.transform.scale(arena_bg1, (curwidth, curheight)), (0, 0))
             if timepassed:
                 if newgtxtbox == 1:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance', 'Welcome to the Arena my friend!')
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'Welcome to the Arena my friend!')
                 if newgtxtbox == 2:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance', 'Let me explain to you how this works.')
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'Let me explain to you how this works.')
                 if newgtxtbox == 3:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                         'The Arena has 3 floors. Each floor has 5 regular enemies and 1 \'Floor Boss\'.')
                 if newgtxtbox == 4:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                         'After your preparations, you can come to me if you are ready to fight.')
                 if newgtxtbox == 5:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                         'I will let you fight a regular enemy in the floor you are on.')
                 if newgtxtbox == 6:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                         'After you defeat 5 regular enemies you can challenge the Floor boss.')
                 if newgtxtbox == 7:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                         'If you don\'t feel like you\'re ready you can fight more regular enemies before',
                                         'challenging the boss.')
                 if newgtxtbox == 8:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                         'After you defeat the floor boss, you can proceed to the next floor.')
                 if newgtxtbox == 9:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                         'Also, Enemies drop gold when they\'re defeated.',
                                         'You can use the gold to buy items and equipment from',
                                         'our shop after every battle!')
                 if newgtxtbox == 10:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                         'If you\'re able to defeat the final Floor boss you will be crowned',
                                         'the \'Arena Champion!\'')
                 if newgtxtbox == 11:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance', 'One more thing..')
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'One more thing..')
                 if newgtxtbox == 12:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                         'Before a battle you may talk with people around the Arena.')
                 if newgtxtbox == 13:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                         'Who knows, maybe you may learn a useful tip or two from them!')
                 if newgtxtbox == 14:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance', 'Well, I\'m sure you\'re raring to go.',
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'Well, I\'m sure you\'re raring to go.',
                                         'Let me know when you\'re ready for your first battle!')
                 if newgtxtbox == 15:
-                    txtbox.draw_textbox('sprites/host_face.png', 'Chance', 'Good luck friend, lord knows you need it!')
+                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'Good luck friend, lord knows you need it!')
                     clockTime.reset()
                 if newgtxtbox > 15:
                     scene = 'arena'
@@ -3784,14 +3799,14 @@ if __name__ == "__main__":
         if scene == 'credits':
             surf.fill((0, 0, 0))
             if newgtxtbox == 1:
-                txtbox.draw_textbox('sprites/host_face.png', 'Chance', 'Hey congrats you beat the demo!')
+                txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'Hey congrats you beat the demo!')
             if newgtxtbox == 2:
-                txtbox.draw_textbox('sprites/host_face.png', 'Chance',
+                txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
                                     'There is more to come but ill save that for another time.')
             if newgtxtbox == 3:
-                txtbox.draw_textbox('sprites/host_face.png', 'Chance', 'This was a project made by Hameel and Nihal!')
+                txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'This was a project made by Hameel and Nihal!')
             if newgtxtbox == 4:
-                txtbox.draw_textbox('sprites/host_face.png', 'Chance', 'Stay tuned for the final project!')
+                txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'Stay tuned for the final project!')
 
             if newgtxtbox > 4:
                 scene = 'menu'

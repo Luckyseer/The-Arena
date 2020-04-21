@@ -6,9 +6,11 @@ Was made for a school project that required the code to be in a single 'file', w
 You'll need pygame to run this
 
 # Instructions
-Run 'Therpg.py'
-Controls: Arrow keys for moving the cursor around, Enter to select options, RCTRL to exit out of menu or other actions as instructed.
+Run `Therpg.py` 
 
+`Controls: Arrow keys for moving the cursor around, Enter to select options, RCTRL to exit out of menu or other actions as instructed.`
+
+Read `changelog.txt` In order to see what's new after an update/
 # Screenshots
 ![Screenshot](screenshots/pic1.PNG)
 ![Screenshot2](screenshots/pic2.PNG)
