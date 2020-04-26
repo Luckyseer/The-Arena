@@ -1254,6 +1254,7 @@ class NewBattle:
         self.camera_x = 0
         self.camera_y = 0
         #  Temp stuff remove later
+        self.crit_text = self.dmg_font.render("Critical!", True, (225, 0, 100))
         self.crit_chance = 1
         self.loaded_anim = pyganim.PygAnimation(
             [("data/sprites/idle1.png", 0.2), ("data/sprites/idle2.png", 0.2), ("data/sprites/idle3.png", 0.2)])
@@ -1397,6 +1398,8 @@ class NewBattle:
                 self.global_timer.reset()
         if self.game_state == 'player_attack_done':  # Player regular attack is done
             surf.blit(self.dmg_txt, (self.monster_pos, 270))
+            if self.crit_chance == 10:
+                surf.blit(self.crit_text, (self.monster_pos, 240))
             self.draw_healthbar(self.m_cur_health)
             if self.global_timer.timing(1) >= 1.5 and self.virtualMonsterHealth == self.m_cur_health:
                 self.turn = 'enemy'
@@ -2260,6 +2263,7 @@ class Shop(MainUi):
             def_txt = self.uitext.render('DEF: ' + str(self.pdef), False, self.txtcolor3)
             mag_txt = self.uitext.render('MAG: ' + str(self.pmag), False, self.txtcolor3)
             luk_txt = self.uitext.render('LUCK: ' + str(self.pluck), False, self.txtcolor3)
+            item_desc = self.uitext2.render(item['description'], False, self.txtcolor2)
             if self.current_list == self.weapons_list:
                 player_item = player_data.cur_weapon
 
@@ -2289,7 +2293,7 @@ class Shop(MainUi):
             else:
                 mag_diftxt = self.uitext.render('(' + str(mag_dif) + ')', False, self.red_rgb)
                 surf.blit(mag_diftxt, (1120, 440))
-
+            surf.blit(item_desc, (120, 645))
             surf.blit(str_txt, (1000, 300))
             surf.blit(def_txt, (1000, 370))
             surf.blit(mag_txt, (1000, 440))

@@ -7,7 +7,8 @@
       "def" : 0,
       "mag" : 0,
       "cost" : 0,
-      "attributes" : "Null"
+      "attributes" : "null",
+      "description" : "A regular wooden sword used for training."
     },
     {
       "id" : 1,
@@ -16,7 +17,8 @@
       "def" : 0,
       "mag" : 0,
       "cost" : 30,
-      "attributes" : "Null"
+      "attributes" : "null",
+      "description" : "A slightly flimsy sword made of iron."
     },
     {
       "id" : 2,
@@ -25,7 +27,8 @@
       "def" : 0,
       "mag" : 0,
       "cost" : 1000,
-      "attributes" : "Null"
+      "attributes" : "null",
+      "description" : "A sword made of solid steel."
     },
     {
       "id" : 3,
@@ -34,7 +37,8 @@
       "def" : 10,
       "mag" : 0,
       "cost" : 10000,
-      "attributes" : "Null"
+      "attributes" : "null",
+      "description" : "Shiny! Maybe not an effective weapon though."
     },
     {
       "id" : 4,
@@ -43,7 +47,8 @@
       "def" : 1000,
       "mag" : 1000,
       "cost" : 10,
-      "attributes" : "Null"
+      "attributes" : "null",
+      "description" : "A katana that will destroy your shit."
     },
     {
       "id" : 5,
@@ -52,7 +57,8 @@
       "def" : 0,
       "mag" : 5,
       "cost" : 10,
-      "attributes" : "Null"
+      "attributes" : "null",
+      "description" : "A slightly magical stick."
     },
     {
       "id" : 6,
@@ -61,7 +67,8 @@
       "def" : 0,
       "mag" : 10,
       "cost" : 10,
-      "attributes" : "Null"
+      "attributes" : "null",
+      "description" : "A staff with some magical power."
     }
   ],
   "armours" : [
@@ -72,7 +79,8 @@
       "def" : 3,
       "mag" : 2,
       "cost" : 100,
-      "attributes" : "Null"
+      "attributes" : "null",
+      "description" : "A shabby old coat."
     },
     {
       "id" : 1,
@@ -81,7 +89,8 @@
       "def" : 10,
       "mag" : 0,
       "cost" : 200,
-      "attributes" : "Null"
+      "attributes" : "null",
+      "description" : "An armour made of leather."
     },
     {
       "id" : 2,
@@ -90,7 +99,8 @@
       "def" : 15,
       "mag" : 0,
       "cost" : 300,
-      "attributes" : "Null"
+      "attributes" : "null",
+      "description" : "Provides adequate protection without restricting movement."
     },
     {
       "id" : 3,
@@ -99,7 +109,8 @@
       "def" : 8,
       "mag" : 10,
       "cost" : 150,
-      "attributes" : "Null"
+      "attributes" : "null",
+      "description" : "This robe has some magic in it. Probably."
     },
     {
       "id" : 4,
@@ -108,7 +119,8 @@
       "def" : 15,
       "mag" : 25,
       "cost" : 500,
-      "attributes" : "Null"
+      "attributes" : "null",
+      "description" : "This robe is said to have been used by a wise old sage."
     },
     {
       "id" : 5,
@@ -117,7 +129,8 @@
       "def" : 1000,
       "mag" : 1000,
       "cost" : 30,
-      "attributes" : "Null"
+      "attributes" : "null",
+      "description" : "Ass-kicking outfit."
     }
   ],
   "accessories" : [
@@ -128,7 +141,8 @@
       "def" : 0,
       "mag" : 1,
       "cost" : 20,
-      "attributes" : "None"
+      "attributes" : "null",
+      "description" : "A shiny necklace."
     },
     {
       "id" : 1,
@@ -137,7 +151,8 @@
       "def" : 900,
       "mag" : 1000,
       "cost" : 1000,
-      "attributes" : "Gold 3x"
+      "attributes" : "Gold 3x",
+      "description" : ""
     },
     {
       "id" : 2,
@@ -146,7 +161,8 @@
       "def" : 900,
       "mag" : 1000,
       "cost" : 1000,
-      "attributes" : "FireDmg Up"
+      "attributes" : "FireDmg Up",
+      "description" : ""
     },
     {
       "id" : 3,
@@ -155,7 +171,8 @@
       "def" : 900,
       "mag" : 1000,
       "cost" : 1000,
-      "attributes" : "IceDmg Up"
+      "attributes" : "IceDmg Up",
+      "description" : ""
     },
     {
       "id" : 4,
@@ -164,7 +181,8 @@
       "def" : 900,
       "mag" : 1000,
       "cost" : 1000,
-      "attributes" : "Death Resist"
+      "attributes" : "Death Resist",
+      "description" : ""
     },
     {
       "id" : 5,
@@ -173,7 +191,18 @@
       "def" : 500,
       "mag" : 500,
       "cost" : 1000,
-      "attributes" : "AtkDmg 2x"
+      "attributes" : "AtkDmg 2x",
+      "description" : ""
+    },
+    {
+      "id" : 6,
+      "name" : "Rabbit's foot",
+      "atk" : 500,
+      "def" : 500,
+      "mag" : 500,
+      "cost" : 1000,
+      "attributes" : "Luck 2x",
+      "description" : "Said to be a symbol of luck."
     }
   ],
   "consumables" : [
@@ -182,7 +211,8 @@
       "name" : "Not ready yet.",
       "hp" : 50,
       "mp" : 60,
-      "cost" : 50
+      "cost" : 50,
+      "description" : ""
     }
   ]
 }
