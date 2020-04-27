@@ -2217,6 +2217,7 @@ class Shop(MainUi):
         self.weapons_list = item_data['weapons']
         self.armour_list = item_data['armours']
         self.acc_list = item_data['accessories']
+        self.cursor_down = pygame.transform.rotate(self.cursor, -90)
         self.consume_list = item_data['consumables']
         self.player_data = Player()
         self.shopbg = pygame.image.load("data/backgrounds/shopbg.png").convert_alpha()
@@ -2293,7 +2294,9 @@ class Shop(MainUi):
             else:
                 mag_diftxt = self.uitext.render('(' + str(mag_dif) + ')', False, self.red_rgb)
                 surf.blit(mag_diftxt, (1120, 440))
-            surf.blit(item_desc, (120, 645))
+            if self.min_pos + 5 != self.max_pos:
+                surf.blit(self.cursor_down, (212, 623)) # Downward facing arrow to show that more items are there
+            surf.blit(item_desc, (120, 660))
             surf.blit(str_txt, (1000, 300))
             surf.blit(def_txt, (1000, 370))
             surf.blit(mag_txt, (1000, 440))
