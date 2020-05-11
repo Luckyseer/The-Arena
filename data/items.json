@@ -146,13 +146,13 @@
     },
     {
       "id" : 1,
-      "name" : "Debug Amulet2",
-      "atk" : 800,
-      "def" : 900,
-      "mag" : 1000,
+      "name" : "Berserker's Necklace",
+      "atk" : 0,
+      "def" : -10,
+      "mag" : 0,
       "cost" : 1000,
-      "attributes" : "Gold 3x",
-      "description" : ""
+      "attributes" : "AtkDmg 2x",
+      "description" : "Doubles the users regular attack damage."
     },
     {
       "id" : 2,
@@ -192,7 +192,7 @@
       "mag" : 500,
       "cost" : 1000,
       "attributes" : "AtkDmg 2x",
-      "description" : ""
+      "description" : "Doubles attack"
     },
     {
       "id" : 6,

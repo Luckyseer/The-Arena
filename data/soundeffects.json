@@ -3,6 +3,7 @@
     "encounter": "data/sounds&music/Battle2.ogg",
     "cure": "data/sounds&music/Item3.ogg",
     "ice": "data/sounds&music/Ice4.ogg",
+    "burst": "data/sounds&music/Skill1.ogg",
     "death": "data/sounds&music/Darkness5.ogg",
     "fire": "data/sounds&music/Fire2.ogg",
     "tsunami": "data/sounds&music/Water5.ogg",

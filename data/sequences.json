@@ -1,0 +1,5 @@
+{
+  "invalid" : [["alert_box", "Invalid!", 2], ["end_sequence"]],
+  "burst" : [["alert_box", "    Burst", 0], ["sound", "burst", 0], ["animation", "burst", 2], ["add_status", "burst", 0], ["end_sequence"]],
+  "double slash" : [["alert_box", "Double Slash", 0], ["sound", "slash", 0], ["animation", "slash", 0], ["deal_damage", "attack", 2], ["sound", "slash", 0], ["animation", "slash", 0], ["deal_damage", "attack", 2], ["end_sequence"]]
+}

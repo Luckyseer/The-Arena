@@ -33,14 +33,16 @@
  * The 'Fading in' effect should work properly now.
  * Changed formatting to be more PEP-8 compliant(getting there).
 # - Alpha v3.0(WIP)
- + Added the town
- + Updated Battle system(incomplete, not implemented)
- * Cleaned up a lot of old code
-
+ + Added the town. (Not implemented)
+ + Updated Battle system(incomplete, not implemented).
+ + Cleaned up a lot of old code.
+ + Added descriptions to items in the shop.
+ + Added an indicator when there are more items than shown in the shop.
+ + Made the player and monster move while attacking just to make it look a bit more lively.
+ + Added skills and the fuctionality to easily make more with 'sequences'!
 # Known issues:
- - Shop incomplete.
  - Items not implemented.
 # TODO:
- - The town.
+ - Finish the town.
  - Items in battle.
- - Changing equipment in status screen
+ - Changing equipment in status screen.

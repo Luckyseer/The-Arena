@@ -23,6 +23,8 @@ try:
         animations = json.load(anims)
     with open('data/skills.json', 'r') as skills:
         skills = json.load(skills)
+    with open('data/sequences.json', 'r') as sequences:
+        sequences = json.load(sequences)
 except EOFError or IOError:
     print('Could not load item/monster/sound data, Make sure they are in the folder with the game')
     raise FileNotFoundError
@@ -37,9 +39,9 @@ class Player:
         self.curhp = self.hp
         self.mp = mana
         self.curmp = self.mp
-        self.cur_weapon = 4  # set the id of the item
-        self.cur_armour = 5  # NOTE TO SELF: DON'T FORGET TO CHANGE DEFAULT ITEMS BACK!!
-        self.cur_accessory = 5
+        self.cur_weapon = 0  # set the id of the item
+        self.cur_armour = 0  # NOTE TO SELF: DON'T FORGET TO CHANGE DEFAULT ITEMS BACK!!
+        self.cur_accessory = 0
         self.stre = strength  # Player's base stats
         self.defe = defence
         self.mag = magic
@@ -1172,17 +1174,20 @@ class SideBattle:
 
 
 class NewBattle:
-    """The new battle system written from the ground up. About time."""
+    """The new battle system. Returns True on victory"""
 
-    def __init__(self, monsterdata, itemdata, sounddata, animationdata, skilldata):
+    def __init__(self, monsterdata, itemdata, sounddata, animationdata, skilldata, sequences):
         #  Data
         self.monster_data = monsterdata
         self.consumable_data = itemdata['consumables']
         self.weapon_data = itemdata['weapons']
+        self.armour_data = itemdata['armours']
+        self.acc_data = itemdata['accessories']
         self.sound_data = sounddata['battle']
         self.animation_data = animationdata
         self.skill_data = skilldata
         self.warrior_skills = skilldata['warrior']
+        self.sequences = sequences
         #  Player Details
         self.p_name = 'Zen'
         self.p_level = 5
@@ -1196,6 +1201,8 @@ class NewBattle:
         self.p_luck = 2
         self.p_class = 'warrior'
         self.p_status = []
+        self.p_item_equipped = []
+        self.p_item_effects = []    # Attributes from items
         #  Monster Details
         self.m_name = ""
         self.m_str = 30
@@ -1216,6 +1223,7 @@ class NewBattle:
         #  Ui elements and etc.
         self.draw_menu = True
         self.ui_bg = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()
+        self.alert_box = pygame.image.load("data/backgrounds/titlebar.png").convert_alpha()
         self.ui_font = pygame.font.Font("data/fonts/alagard.ttf", 25)
         self.title_font = pygame.font.Font("data/fonts/Daisy_Roots.otf", 25)
         self.dmg_font = pygame.font.Font("data/fonts/Vecna.otf", 30)
@@ -1243,7 +1251,17 @@ class NewBattle:
         self.game_state = 'player'
         self.ui_state = 'main'
         self.ui_flag = True
+        self.alert_box_flag = False  # Flag to know whether the alert box should be drawn or not
+        self.alert_text = "Undefined"
         self.player_flag = True
+        self.sequence_flag = False
+        self.sequence_done = False
+        self.healthbar_flag = False
+        self.wait_time = 0
+        self.sequence_to_play = ""
+        self.sequence_timer = Timer()
+        self.sequence_target = ""
+        self.action_count = 0
         self.monster_flag = True
         self.focus = False
         self.focus_target = 'player'
@@ -1253,6 +1271,7 @@ class NewBattle:
         self.global_timer = Timer()
         self.camera_x = 0
         self.camera_y = 0
+        self.victory_flag = False
         #  Temp stuff remove later
         self.crit_text = self.dmg_font.render("Critical!", True, (225, 0, 100))
         self.crit_chance = 1
@@ -1262,6 +1281,9 @@ class NewBattle:
         # Loaded animation for the animation function
         self.player_sprites = pyganim.PygAnimation(
             [("data/sprites/idle1.png", 0.2), ("data/sprites/idle2.png", 0.2), ("data/sprites/idle3.png", 0.2)])
+        self.player_sprites_burst = pyganim.PygAnimation(
+            [("data/sprites/burst1.png", 0.2), ("data/sprites/burst2.png", 0.2), ("data/sprites/burst3.png", 0.2)])
+        self.player_sprites_burst.play()
         self.player_sprites.play()
         self.death_sprite = pygame.image.load("data/sprites/death.png").convert_alpha()  # player death sprite
         self.player_pos = 1200
@@ -1275,7 +1297,7 @@ class NewBattle:
         self.battle_ui2 = pygame.transform.scale(pygame.image.load("data/backgrounds/battle_menu.png").convert_alpha(),
                                                 (500, 200))
         self.battle_ui3 = pygame.transform.scale(pygame.image.load("data/backgrounds/UiElement.png").convert_alpha(),
-                                                 (400, 400))# player info ui
+                                                 (250, 250))  # player info ui
         self.title_bar = pygame.image.load("data/backgrounds/titlebar.png").convert_alpha()
         self.background = ""
         self.hp_bar_Empty = pygame.image.load("data/sprites/hpbar1.png").convert_alpha()
@@ -1300,7 +1322,7 @@ class NewBattle:
         self.focus = False
         self.shake = False
 
-    def check_inputs(self):
+    def check_inputs(self, player_data=Player()):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.battling = False
@@ -1343,8 +1365,9 @@ class NewBattle:
                                 self.initial_window_pos = 0
                                 self.cursor_pos = 0
                         elif self.ui_state == 'skill':
-                            if self.cursor_pos == 0:
-                                pass
+                                self.game_state = 'player_skill'
+                                self.global_timer.reset()
+                                self.draw_menu = False
                     if event.key == pygame.K_RCTRL:
                         if self.ui_state == 'skill':
                             self.ui_state = 'main'
@@ -1358,9 +1381,13 @@ class NewBattle:
                                 self.f_gold = self.m_gold
                             elif self.f_exp == self.m_exp:
                                 self.battling = False
+                                self.update_player_details(player_data)
+                                self.victory_flag = True
+
                         else:
                             self.battling = False
                             fadeout(surf, 0.001)
+                            self.victory_flag = False
 
     def draw_sprites(self):
         surf.blit(self.background, (0, 0))
@@ -1368,6 +1395,11 @@ class NewBattle:
             self.player_sprites.blit(surf, (self.player_pos, 300))
             if self.player_pos > 950:
                 self.player_pos -= 50
+        if "burst" in self.p_status:
+            self.player_sprites_burst.blit(surf, (self.player_pos, 300))
+            self.player_flag = False
+        else:
+            self.player_flag = True
         if self.monster_flag:
             surf.blit(self.m_sprite, (self.monster_pos, 300))
             self.loaded_anim.blit(surf, self.anim_pos)  # Loaded animation
@@ -1384,9 +1416,12 @@ class NewBattle:
         self.loaded_anim.play()
 
     def check_state(self):
-        """Keeps track of the game state"""
+        """Keeps track of the game state and updates it accordingly"""
         if self.game_state == 'player_attack':  # Player regular attack
             player_attacking = False
+            if self.player_pos > 900:
+                self.player_pos -= 5
+                self.global_timer.reset()
             if self.global_timer.timing(1) >= 0.4 and not player_attacking:
                 self.play_animation('slash', (self.monster_pos, 300))
                 self.play_sound('slash')
@@ -1397,15 +1432,39 @@ class NewBattle:
                 self.game_state = 'player_attack_done'
                 self.global_timer.reset()
         if self.game_state == 'player_attack_done':  # Player regular attack is done
-            surf.blit(self.dmg_txt, (self.monster_pos, 270))
-            if self.crit_chance == 10:
-                surf.blit(self.crit_text, (self.monster_pos, 240))
-            self.draw_healthbar(self.m_cur_health)
+            self.healthbar_flag = True
+            if self.player_pos < 950:
+                self.player_pos += 5
+                self.global_timer.reset()
             if self.global_timer.timing(1) >= 1.5 and self.virtualMonsterHealth == self.m_cur_health:
                 self.turn = 'enemy'
+                self.healthbar_flag = False
                 self.game_state = 'enemy_turn'
                 self.global_timer.reset()
+        if self.game_state == 'player_skill':
+            if self.sequence_done:
+                self.sequence_done = False
+                self.global_timer.reset()
+                self.game_state = 'player_skill_done'
+            else:
+                self.sequence_flag = True
+                self.sequence_to_play = self.skill_data[self.p_class][self.skill_min + self.cursor_pos]['name'].lower()
+                if self.skill_data[self.p_class][self.skill_min + self.cursor_pos]['type'] != 'buff':
+                    self.sequence_target = (self.monster_pos, 300)
+                else:
+                    self.sequence_target = (900, 270)
+
+        if self.game_state == 'player_skill_done':
+            if self.global_timer.timing(1) >= 1.5:
+                self.turn = 'enemy'
+                self.game_state = 'enemy_turn'
+        if self.game_state == 'player_skill_invalid':
+            if self.global_timer.timing(1) >= 3.5:
+                self.sequence_done = False
+                self.turn = 'enemy'
+                self.game_state = 'enemy_turn'
         if self.game_state == 'enemy_turn' and self.m_cur_health > 0:  # Enemy turn begins
+
             choose_move = random.randrange(0, len(self.m_move_list))
             enemy_action = self.m_move_list[choose_move]
             if enemy_action == 'attack':
@@ -1413,6 +1472,9 @@ class NewBattle:
                 self.global_timer.reset()
         if self.game_state == 'enemy_attack':  # Enemy regular attack
             enemy_attacking = False
+            if self.monster_pos < 250:
+                self.monster_pos += 5
+                self.global_timer.reset()
             if self.global_timer.timing(1) >= 0.4 and not enemy_attacking:
                 self.play_animation('claw', (self.player_pos, 300))
                 self.play_sound('slash2')
@@ -1424,6 +1486,8 @@ class NewBattle:
                 self.global_timer.reset()
         if self.game_state == 'enemy_attack_done':  # Enemy regular attack done
             surf.blit(self.dmg_txt, (self.player_pos, 270))
+            if self.monster_pos > 200:
+                self.monster_pos -= 5
             if self.global_timer.timing(1) >= 1.5:
                 self.turn = 'player'
                 self.game_state = ''
@@ -1453,17 +1517,45 @@ class NewBattle:
         if self.m_cur_health < 0:
             self.m_cur_health = 0
 
-    def skill_anim(self, skill, target):
-        """Plays the animation and sound for the skill"""
-        if skill == 'burst':
-            if target == 'player':
-                self.play_animation('burst')
-                self.play_sound('ice')  # test sound change later
+    def play_sequence(self, sequence, target=(920, 270)):
+        """A sequence is a set of actions/things that should happen in a row ie. something like a skill
+        All sequences are defined in sequences.json, Can be used for things like cutscenes as well"""
+        if self.sequence_flag:
+            if sequence in self.sequences:
+                if self.action_count < len(self.sequences[sequence]):
+                    action = self.sequences[sequence][self.action_count]
+                    if self.sequence_timer.timing(1) >= self.wait_time:
+                        if action[0] == "end_sequence":     # ALL sequences must end with "end_sequence"
+                            self.action_count = 0
+                            self.wait_time = 0
+                            self.sequence_flag = False
+                            self.sequence_done = True
+                            self.healthbar_flag = False
+                            self.alert_box_flag = False
+                        elif action[0] == "alert_box":
+                            self.alert_box_flag = True
+                            self.alert_text = action[1]
+                        elif action[0] == "animation":
+                            self.play_animation(action[1], target)
+                        elif action[0] == "sound":
+                            self.play_sound(action[1])
+                        elif action[0] == "add_status":
+                            if action[1] not in self.p_status:
+                                self.p_status.append(action[1])
+                        elif action[0] == "deal_damage":
+                            dmg = self.calc_damage(self.turn, action[1])
+                            self.m_cur_health -= dmg
+                            self.dmg_txt = self.dmg_font.render(str(dmg), True, (200, 200, 200))
+                            self.healthbar_flag = True
+                        if action[0] != "end_sequence":
+                            self.action_count += 1
+                            self.sequence_timer.reset()
+                            self.wait_time = action[2]   # Getting the time to wait for the next action in the sequence
 
-    def skill_logic(self, skill, target):
-        if skill == 'burst':
-            self.p_status.append('burst')
-            self.skill_anim('burst', target)
+            else:
+                self.sequence_to_play = "invalid"
+                self.game_state = "player_skill_invalid"
+                print("Invalid Sequence!")
 
     def draw_cursor(self):
         if self.ui_state == 'main':
@@ -1492,15 +1584,22 @@ class NewBattle:
             else:
                 self.virtualMonsterHealth -= 1
         health_percent = (self.virtualMonsterHealth / self.m_max_health) * 100
-        if health_percent < 0:
+        if health_percent <= 0:
             health_percent = 0.1
         surf.blit(pygame.transform.scale(self.hp_bar_Empty, (260, 18)), (self.monster_pos, 300))
         surf.blit(pygame.transform.scale(self.hp_bar_Full, (int(246 * (health_percent / 100)), 18)),
                   (self.monster_pos + 7, 301))
 
+    def draw_alertbox(self):
+        """The alert box or the skill box that gets drawn when a skill is used."""
+        if self.alert_box_flag:
+            surf.blit(self.alert_box, (430, 80))
+            txt = self.ui_font.render(self.alert_text, False, (55, 0, 200))
+            surf.blit(txt, (500, 120))
+
     def draw_ui(self):
         surf.blit(self.battle_ui, (self.window_pos, 400))
-        surf.blit(self.battle_ui3, (self.window_pos - 50, -70))
+        surf.blit(self.battle_ui3, (self.window_pos - 30, -10))
         if self.window_pos > 900:
             self.window_pos -= 50
         if self.window_pos <= 900:  # when the 'animation' finishes
@@ -1553,6 +1652,32 @@ class NewBattle:
                                                  (1280, 720))
         self.m_weakness = monster_data[monster_name]['weakness']
 
+    def get_player_details(self, player_data=Player()):
+        player_data.update_stats()
+        self.p_health = player_data.curhp
+        self.p_max_health = player_data.hp
+        self.p_mana = player_data.curmp
+        self.p_max_mana = player_data.mp
+        self.p_class = player_data.pclass
+        self.p_luck = player_data.luck
+        self.p_level = player_data.level
+        self.p_mag = player_data.mag + player_data.add_mag
+        self.p_str = player_data.stre + player_data.add_stre
+        self.p_def = player_data.defe + player_data.add_defe
+        self.p_name = player_data.name
+        self.p_item_effects = []
+        self.p_item_equipped = [self.weapon_data[player_data.cur_weapon],
+                                self.armour_data[player_data.cur_armour], self.acc_data[player_data.cur_accessory]]
+        for items in self.p_item_equipped:
+            if items['attributes'] != 'null':
+                self.p_item_effects.append(items['attributes'])
+
+    def update_player_details(self, player_data=Player()):  # Updates the player object with the cur hp and mana
+        player_data.curhp = self.p_health
+        player_data.curmp = self.p_mana
+        player_data.gold += self.m_gold
+        player_data.exp += self.m_exp
+
     def calc_damage(self, turn, atk_type='atk'):
         # WIP CHANGE A LOT OF THINGS
         element = 'Normal'
@@ -1575,8 +1700,16 @@ class NewBattle:
                 #   damage = (self.pstr * (100 / (100 + self.mdef))) * 5 - random.randrange(0, 10)
                 if self.crit_chance == 10:
                     damage = (self.p_str * (100 / (100 + self.m_def))) * 4 - random.randrange(0, 10)
+
                 else:
                     damage = (self.p_str * (100 / (100 + self.m_def))) * 2 - random.randrange(0, 10)
+                    print(self.p_str)
+                for attribute in self.p_item_effects:
+                    if attribute == 'AtkDmg 2x':
+                        damage *= 2  # Doubles damage
+                if "burst" in self.p_status:
+                    damage *= 1.5
+                    self.p_status.remove("burst")
                 """elif atk_type == 'death':
                             if self.mdeathresist:
                                 return 'Resist!'
@@ -1598,6 +1731,7 @@ class NewBattle:
             damage = 99999
         if element in self.m_weakness:  # If enemy is weak to the element
             damage *= 2
+
         return int(damage)
 
     def shake_screen(self):
@@ -1654,20 +1788,21 @@ class NewBattle:
         self.game_state = ""
         self.ui_state = "main"
         self.turn = "player"
-        self.p_name = player_data.name
-        self.p_level = player_data.level
-        self.p_max_health = player_data.hp
-        self.p_health = player_data.curhp
-        self.p_max_mana = player_data.mp
-        self.p_mana = player_data.curmp
-        self.p_str = player_data.stre
-        self.p_def = player_data.defe
-        self.p_mag = player_data.mag
-        self.p_luck = player_data.luck
-        self.p_class = player_data.pclass
-        self.p_status = []
+        self.get_player_details(player_data)
+        self.sequence_flag = False
+        self.sequence_done = False
+        self.healthbar_flag = False
+        self.victory_flag = False
 
-    def battle(self, monster_name, set_music=0, player_data=Player()):
+    def check_victory(self):
+        """Checks if player won the battle or not"""
+        if self.victory_flag:
+            self.victory_flag = False
+            return True
+        else:
+            return False
+
+    def battle(self, monster_name, player_data=Player(), set_music=0):
         #  Main loop, starts the battle
         alpha = text.render(alphatext, False, (255, 255, 0))
         self.battling = True
@@ -1675,11 +1810,15 @@ class NewBattle:
         self.draw_menu = True
         self.add_flag = False
         self.get_monster_details(monster_name)
+        self.get_player_details(player_data)
         self.play_sound('encounter')
         self.set_instance(player_data)
         fadein(255)
         if set_music == 0:
             pygame.mixer_music.load("data/sounds&music/03_Endless_Battle.ogg")
+            pygame.mixer_music.play()
+        elif set_music == 1:
+            pygame.mixer_music.load("data/sounds&music/boss_music.mp3")
             pygame.mixer_music.play()
         else:
             pygame.mixer_music.load("data/sounds&music/03_Endless_Battle.ogg")
@@ -1699,15 +1838,21 @@ class NewBattle:
                 self.camera_x, self.camera_y = 0, 0
             if self.focus:
                 self.focus_cam(self.focus_target)
+            self.draw_alertbox()
+            if self.healthbar_flag:
+                surf.blit(self.dmg_txt, (self.monster_pos, 270))
+                if self.crit_chance == 10:
+                    surf.blit(self.crit_text, (self.monster_pos, 240))
+                self.draw_healthbar(self.m_cur_health)
+            self.play_sequence(self.sequence_to_play, self.sequence_target)
             self.check_state()  # To check the current game state
-            self.check_inputs()
+            self.check_inputs(player_data)
             surf.blit(alpha, (0, 0))
             screen.blit(surf, (self.camera_x, self.camera_y))
             pygame.display.update()
             clock.tick(60)
             fps = "FPS:%d" % clock.get_fps()
             pygame.display.set_caption(fps)
-
 
 class TextBox:
     """The textbox class, used to draw textboxes and anything related to dialogue."""
@@ -2295,7 +2440,7 @@ class Shop(MainUi):
                 mag_diftxt = self.uitext.render('(' + str(mag_dif) + ')', False, self.red_rgb)
                 surf.blit(mag_diftxt, (1120, 440))
             if self.min_pos + 5 != self.max_pos:
-                surf.blit(self.cursor_down, (212, 623)) # Downward facing arrow to show that more items are there
+                surf.blit(self.cursor_down, (212, 623))  # Downward facing arrow to show that more items are available
             surf.blit(item_desc, (120, 660))
             surf.blit(str_txt, (1000, 300))
             surf.blit(def_txt, (1000, 370))
@@ -3070,7 +3215,7 @@ if __name__ == "__main__":
     mage = pyganim.PygAnimation([("data/sprites/midle1.png", 0.3), ("data/sprites/midle2.png", 0.3), ("data/sprites/midle3.png", 0.3)])
 
     castanim = [("data/sprites/b1.png", 0.3), ("data/sprites/b2.png", 0.3), ("data/sprites/b3.png", 0.3)]
-    battler = SideBattle(monster_data, 'mage', castanim, "data/backgrounds/Ruins2.png",
+    old_battler = SideBattle(monster_data, 'mage', castanim, "data/backgrounds/Ruins2.png",
                          'data/sounds&music/yousayrun2.mp3')
 
     floor1_talk = SelectOptions()  # Choices for 'Talk' in floor 1
@@ -3099,7 +3244,7 @@ if __name__ == "__main__":
     talkval = 0
     text = pygame.font.Font("data/fonts/runescape_uf.ttf", 30)
     seltext = pygame.font.Font("data/fonts/runescape_uf.ttf", 40)
-    secretbattle = SideBattle(monster_data, 'mage', castanim, "data/backgrounds/LavaCave.png",
+    secretbattle = SideBattle(monster_data, 'warrior', castanim, "data/backgrounds/LavaCave.png",
                               'data/sounds&music/Battle3.ogg', phealth=1000, pmana=100, pstr=1000, pstrmod=14, pdef=100,
                               pmag=2000, pluck=9)
     secretbattle.plevel = 50
@@ -3157,7 +3302,7 @@ if __name__ == "__main__":
     Currentmusic = 'data/sounds&music/Infinite_Arena.mp3'
     ui = MainUi()
     shh = []
-    newTest = NewBattle(monster_data, item_data, sound_effects, animations, skills)  # New battle tester
+    battler = NewBattle(monster_data, item_data, sound_effects, animations, skills, sequences)  # New battle tester
     bellflag = False  # Flag for bell sound to play during time change
     txtbox = TextBox()
     timer = Timer()
@@ -3351,8 +3496,7 @@ if __name__ == "__main__":
                 if (event.key == pygame.K_UP and scene == 'arena') and battle_choice:
                     ui.cursorsound.play()
                     ui.batcursorpos -= 1
-                if (
-                        event.key == pygame.K_RETURN and ui.cursorpos == 0) and scene == 'arena' and controlui:  # Talk option
+                if (event.key == pygame.K_RETURN and ui.cursorpos == 0) and scene == 'arena' and controlui:  # Talk option
                     options = True
                     drawUi = False
                     controlui = False
@@ -3406,8 +3550,7 @@ if __name__ == "__main__":
                         options = False
                         talking = False
 
-                if (
-                        event.key == pygame.K_RETURN and ui.cursorpos == 1) and scene == 'arena' and controlui:  # Battle option
+                if (event.key == pygame.K_RETURN and ui.cursorpos == 1) and scene == 'arena' and controlui:  # Battle option
                     drawui = False
                     controlui = False
                     battle_choice = True
@@ -3415,8 +3558,7 @@ if __name__ == "__main__":
                     ui.battalk = True
                     ui.batcursorpos = 4
 
-                if (
-                        event.key == pygame.K_RETURN and ui.cursorpos == 2) and scene == 'arena' and controlui:  # Status option
+                if (event.key == pygame.K_RETURN and ui.cursorpos == 2) and scene == 'arena' and controlui:  # Status option
                     drawui = False
                     controlui = False
                     status = True
@@ -3424,8 +3566,7 @@ if __name__ == "__main__":
                     drawui = True
                     controlui = True
                     status = False
-                if (
-                        event.key == pygame.K_RETURN and ui.cursorpos == 3) and scene == 'arena' and controlui:  # Shop option
+                if (event.key == pygame.K_RETURN and ui.cursorpos == 3) and scene == 'arena' and controlui:  # Shop option
                     drawui = False
                     controlui = False
                     arena_shop.txtbox.popup_reset()
@@ -3441,8 +3582,7 @@ if __name__ == "__main__":
                         arena_shop.shopkeep = True
                     else:
                         arena_shop.shop_selection_flag = True
-                if (
-                        event.key == pygame.K_RETURN and shop) and not arena_shop.shopkeep and arena_shop.shop_selection_flag:
+                if (event.key == pygame.K_RETURN and shop) and not arena_shop.shopkeep and arena_shop.shop_selection_flag:
                     arena_shop.shop_selection_flag = False
                     event.key = 0
                 if (event.key == pygame.K_LEFT and shop) and not arena_shop.shopkeep:
@@ -3526,36 +3666,9 @@ if __name__ == "__main__":
                         rand_mon = 'hornet'
                     if randbattle == 3:
                         rand_mon = 'imp'
-                    battler.getplayerdetails(player)
-                    battler.battle(rand_mon)
-                    player.curhp = battler.curphealth
-                    player.curmp = battler.curpmana
-                    player.exp += battler.exp
-                    player.gold += battler.gold
-                    while player.check_levelup():
-                        player.level += 1
-                        player.hp += 25
-                        player.mp += 10
-                        player.str += 2
-                        player.mag += 2
-                        player.defe += 2
-
-                    player.fkills += 1
-                    player.tkills += 1
-                    battle_choice = False
-                    post_battle = True
-                if (event.key == pygame.K_RETURN and ui.batcursorpos == 1) and battle_choice:
-                    if player.fkills >= 5 and player.progress == 1:
-                        battler.getplayerdetails(player)
-                        fadein(255)
-                        eventManager.firstfloor_boss(player.name)
-                        battler.battle('floor_boss1', -50, True, bgm='data/sounds&music/boss_music.mp3')
-                        player.curhp = battler.curphealth
-                        player.curmp = battler.curpmana
-                        player.exp += battler.exp
-                        player.fkills = 0
-                        player.tkills += 1
-                        player.progress += 1
+                    battler.battle(rand_mon, player_data=player)
+                    fight = battler.check_victory()
+                    if fight:
                         while player.check_levelup():
                             player.level += 1
                             player.hp += 25
@@ -3563,6 +3676,43 @@ if __name__ == "__main__":
                             player.str += 2
                             player.mag += 2
                             player.defe += 2
+
+                        player.fkills += 1
+                        player.tkills += 1
+                        battle_choice = False
+                        post_battle = True
+                    else:
+                        scene = 'menu'
+                        pygame.mixer_music.load('data/sounds&music/Theme2.ogg')
+                        pygame.mixer_music.play()
+                        battle_choice = False
+                        post_battle = False
+                        drawui = True
+                        controlui = True
+                        ui.pb_dialogue = False
+                if (event.key == pygame.K_RETURN and ui.batcursorpos == 1) and battle_choice:
+                    if player.fkills >= 5 and player.progress == 1:
+                        fadein(255)
+                        eventManager.firstfloor_boss(player.name)
+                        battler.battle('floor_boss1', player, set_music=1)
+                        if battler.check_victory():
+                            player.progress += 1
+                            while player.check_levelup():
+                                player.level += 1
+                                player.hp += 25
+                                player.mp += 10
+                                player.str += 2
+                                player.mag += 2
+                                player.defe += 2
+                        else:
+                            scene = 'menu'
+                            pygame.mixer_music.load('data/sounds&music/Theme2.ogg')
+                            pygame.mixer_music.play()
+                            battle_choice = False
+                            post_battle = False
+                            drawui = True
+                            controlui = True
+                            ui.pb_dialogue = False
                     else:
                         secretbattle.buzzer.play()
                 if (event.key == pygame.K_RETURN and ui.batcursorpos == 2) and battle_choice:
@@ -3609,7 +3759,7 @@ if __name__ == "__main__":
                 pygame.mixer_music.load(Currentmusic)
                 pygame.mixer_music.play()
             if shh == ['t', 'e', 't'] and scene == 'menu':
-                newTest.battle('rat')
+                battler.battle('rat')
                 shh = []
             if shh == ['t', 'o', 't'] and scene == 'menu':
                 player.town_first_flag = False
