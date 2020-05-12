@@ -19,7 +19,7 @@
     {
         "name" : "Defend",
         "type" : "buff",
-        "desc" : "Greatly strengthen defence.",
+        "desc" : "Greatly strengthen defence(2 turns).",
         "mp_cost" : 15,
         "level_req" : 7,
         "animation" : "special"

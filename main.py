@@ -1214,12 +1214,14 @@ class NewBattle:
         self.m_sprite = ""
         self.m_gold = 1
         self.m_exp = 1
+        self.m_luck = 1
         self.f_gold = 0
         self.f_exp = 0
         self.m_gold = 0
         self.m_move_list = []
         self.m_status = []
         self.m_weakness = []
+        self.m_strengths = []
         #  Ui elements and etc.
         self.draw_menu = True
         self.ui_bg = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()
@@ -1248,6 +1250,7 @@ class NewBattle:
         #  State control
         self.battling = True
         self.turn = 'player'
+        self.turn_count = 0
         self.game_state = 'player'
         self.ui_state = 'main'
         self.ui_flag = True
@@ -1257,6 +1260,7 @@ class NewBattle:
         self.sequence_flag = False
         self.sequence_done = False
         self.healthbar_flag = False
+        self.player_dmg_flag = False    # Flag to display damage dealt to player
         self.wait_time = 0
         self.sequence_to_play = ""
         self.sequence_timer = Timer()
@@ -1290,6 +1294,7 @@ class NewBattle:
         self.window_pos = 1400
         self.initial_window_pos = 0  # For the description window
         self.monster_pos = -1600
+        self.monster_y = 300    # monster y position
         self.shake = False
         #  images to load
         self.battle_ui = pygame.transform.scale(pygame.image.load("data/backgrounds/battle_menu.png").convert_alpha(),
@@ -1298,6 +1303,9 @@ class NewBattle:
                                                 (500, 200))
         self.battle_ui3 = pygame.transform.scale(pygame.image.load("data/backgrounds/UiElement.png").convert_alpha(),
                                                  (250, 250))  # player info ui
+        self.status_icons = {"burst": pygame.image.load("data/sprites/attack+.png"),
+                             "defend": pygame.image.load("data/sprites/defence+.png")
+                             }
         self.title_bar = pygame.image.load("data/backgrounds/titlebar.png").convert_alpha()
         self.background = ""
         self.hp_bar_Empty = pygame.image.load("data/sprites/hpbar1.png").convert_alpha()
@@ -1395,13 +1403,14 @@ class NewBattle:
             self.player_sprites.blit(surf, (self.player_pos, 300))
             if self.player_pos > 950:
                 self.player_pos -= 50
-        if "burst" in self.p_status:
-            self.player_sprites_burst.blit(surf, (self.player_pos, 300))
-            self.player_flag = False
+        for status in self.p_status:
+            if "burst" in status[0]:
+                self.player_sprites_burst.blit(surf, (self.player_pos, 300))
+                self.player_flag = False
         else:
             self.player_flag = True
         if self.monster_flag:
-            surf.blit(self.m_sprite, (self.monster_pos, 300))
+            surf.blit(self.m_sprite, (self.monster_pos, self.monster_y))
             self.loaded_anim.blit(surf, self.anim_pos)  # Loaded animation
             if self.monster_pos < 200:
                 self.monster_pos += 50
@@ -1425,8 +1434,8 @@ class NewBattle:
             if self.global_timer.timing(1) >= 0.4 and not player_attacking:
                 self.play_animation('slash', (self.monster_pos, 300))
                 self.play_sound('slash')
-                dmg = self.calc_damage(self.turn, 'attack')
-                self.dmg_txt = self.dmg_font.render(str(dmg), True, (200, 200, 200))
+                dmg = self.calc_damage('attack')
+                self.dmg_txt = self.dmg_font.render(str(dmg), True, (255, 255, 255))
                 self.m_cur_health -= dmg
                 player_attacking = True
                 self.game_state = 'player_attack_done'
@@ -1453,18 +1462,19 @@ class NewBattle:
                     self.sequence_target = (self.monster_pos, 300)
                 else:
                     self.sequence_target = (900, 270)
+                self.global_timer.reset()
 
         if self.game_state == 'player_skill_done':
             if self.global_timer.timing(1) >= 1.5:
                 self.turn = 'enemy'
                 self.game_state = 'enemy_turn'
+                self.global_timer.reset()
         if self.game_state == 'player_skill_invalid':
             if self.global_timer.timing(1) >= 3.5:
                 self.sequence_done = False
                 self.turn = 'enemy'
                 self.game_state = 'enemy_turn'
         if self.game_state == 'enemy_turn' and self.m_cur_health > 0:  # Enemy turn begins
-
             choose_move = random.randrange(0, len(self.m_move_list))
             enemy_action = self.m_move_list[choose_move]
             if enemy_action == 'attack':
@@ -1478,17 +1488,19 @@ class NewBattle:
             if self.global_timer.timing(1) >= 0.4 and not enemy_attacking:
                 self.play_animation('claw', (self.player_pos, 300))
                 self.play_sound('slash2')
-                dmg = self.calc_damage(self.turn, 'attack')
-                self.dmg_txt = self.dmg_font.render(str(dmg), True, (200, 200, 200))
+                dmg = self.calc_damage('attack')
+                self.dmg_txt = self.dmg_font.render(str(dmg), True, (255, 255, 255))
                 self.p_health -= dmg
                 enemy_attacking = True
                 self.game_state = 'enemy_attack_done'
                 self.global_timer.reset()
         if self.game_state == 'enemy_attack_done':  # Enemy regular attack done
-            surf.blit(self.dmg_txt, (self.player_pos, 270))
+            self.player_dmg_flag = True
             if self.monster_pos > 200:
                 self.monster_pos -= 5
             if self.global_timer.timing(1) >= 1.5:
+                self.player_dmg_flag = False
+                self.turn_count += 1
                 self.turn = 'player'
                 self.game_state = ''
                 self.draw_menu = True
@@ -1503,12 +1515,19 @@ class NewBattle:
         if self.game_state == 'defeat_done':
             surf.blit(self.death_sprite, (self.player_x + 20, self.player_y + 20))
             if self.global_timer.timing(1) >= 1:
+                self.player_dmg_flag = False
                 self.defeat()
-        if self.p_health <= 0 and self.game_state != 'defeat_done':
-            self.player_sprites.stop()
-            surf.blit(self.death_sprite, (self.player_x, self.player_y))
-            self.game_state = 'defeat_done'
-            self.global_timer.reset()
+        if self.p_health <= 0 and (self.game_state != 'defeat_done' and self.game_state != 'defeat'):
+                self.game_state = 'defeat'
+                self.global_timer.reset()
+        if self.game_state == 'defeat':
+            if self.global_timer.timing(1) >= 1.5:
+                self.player_sprites.stop()
+                self.player_sprites_burst.stop()
+                surf.blit(self.death_sprite, (self.player_x + 20, self.player_y + 20))
+                self.game_state = 'defeat_done'
+                print('dead')
+                self.global_timer.reset()
         if 0 >= self.m_cur_health == self.virtualMonsterHealth and self.game_state != 'victory':
             if self.global_timer.timing(1) >= 1.5:
                 self.game_state = 'enemy_death'
@@ -1532,6 +1551,7 @@ class NewBattle:
                             self.sequence_done = True
                             self.healthbar_flag = False
                             self.alert_box_flag = False
+                            self.player_dmg_flag = False
                         elif action[0] == "alert_box":
                             self.alert_box_flag = True
                             self.alert_text = action[1]
@@ -1540,13 +1560,35 @@ class NewBattle:
                         elif action[0] == "sound":
                             self.play_sound(action[1])
                         elif action[0] == "add_status":
-                            if action[1] not in self.p_status:
-                                self.p_status.append(action[1])
+                            status_in = False
+                            duration = 0
+                            if self.turn == "player":
+                                for status in self.p_status:
+                                    if action[1] in status:
+                                        status_in = True  # statuses don't stack or refresh
+                            elif self.turn == "enemy":
+                                for status in self.m_status:
+                                    if action[1] in status:
+                                        status_in = True  # statuses don't stack or refresh
+                            if not status_in:
+                                if action[1] == "burst":
+                                    duration = self.turn_count + 1  # the amount of time the effect lasts
+                                elif action[1] == "defend":
+                                    duration = self.turn_count + 2
+                                if self.turn == "player":
+                                    self.p_status.append([action[1], duration])
+                                elif self.turn == "enemy":
+                                    self.m_status.append([action[1], duration])
                         elif action[0] == "deal_damage":
-                            dmg = self.calc_damage(self.turn, action[1])
-                            self.m_cur_health -= dmg
-                            self.dmg_txt = self.dmg_font.render(str(dmg), True, (200, 200, 200))
-                            self.healthbar_flag = True
+                            dmg = self.calc_damage(action[1])
+                            if self.turn == "player":
+                                self.m_cur_health -= dmg
+                                self.dmg_txt = self.dmg_font.render(str(dmg), True, (255, 255, 255))
+                                self.healthbar_flag = True
+                            else:
+                                self.player_dmg_flag = True
+                                self.p_health -= dmg
+                                self.dmg_txt = self.dmg_font.render(str(dmg), True, (200, 200, 200))
                         if action[0] != "end_sequence":
                             self.action_count += 1
                             self.sequence_timer.reset()
@@ -1575,6 +1617,17 @@ class NewBattle:
         if self.cursor_pos < 0:
             self.cursor_pos = self.cursor_max
 
+    def update_status_effects(self):
+        """Updating and removing status effects according to duration"""
+        if self.turn == "enemy":    # At end of enemies turn update player's effects
+            for status in self.p_status:
+                if status[1] <= self.turn_count:
+                    self.p_status.remove(status)
+        elif self.turn == "player":   # At end of player's turn update enemy's effects
+            for status in self.m_status:
+                if status[1] <= self.turn_count:
+                    self.p_status.remove(status)
+
     def draw_healthbar(self, cur_health):  # Enemy health bar
         if cur_health > self.virtualMonsterHealth:
             self.virtualMonsterHealth += 1
@@ -1586,9 +1639,9 @@ class NewBattle:
         health_percent = (self.virtualMonsterHealth / self.m_max_health) * 100
         if health_percent <= 0:
             health_percent = 0.1
-        surf.blit(pygame.transform.scale(self.hp_bar_Empty, (260, 18)), (self.monster_pos, 300))
+        surf.blit(pygame.transform.scale(self.hp_bar_Empty, (260, 18)), (self.monster_pos, self.monster_y))
         surf.blit(pygame.transform.scale(self.hp_bar_Full, (int(246 * (health_percent / 100)), 18)),
-                  (self.monster_pos + 7, 301))
+                  (self.monster_pos + 7, self.monster_y + 1))
 
     def draw_alertbox(self):
         """The alert box or the skill box that gets drawn when a skill is used."""
@@ -1602,12 +1655,16 @@ class NewBattle:
         surf.blit(self.battle_ui3, (self.window_pos - 30, -10))
         if self.window_pos > 900:
             self.window_pos -= 50
+
         if self.window_pos <= 900:  # when the 'animation' finishes
             hp_text = self.ui_font.render("HP: %d/%d" % (self.p_health, self.p_max_health), True, (230, 0, 50))
             mp_text = self.ui_font.render("MP: %d/%d" % (self.p_mana, self.p_max_mana), True, (20, 0, 230))
 
-            surf.blit(hp_text, (930, 100))  # Text for hp
-            surf.blit(mp_text, (930, 130))  # Text for mp
+            surf.blit(hp_text, (930, 90))  # Text for hp
+            surf.blit(mp_text, (930, 110))  # Text for mp
+            for index, status in enumerate(self.p_status):
+                if status[0] in self.status_icons:
+                    surf.blit(self.status_icons[status[0]], (900 + (40 * index), 140))
             if self.ui_state == 'main':
                 self.current_title = 0
                 surf.blit(self.atk_txt, (945, 475))
@@ -1644,6 +1701,7 @@ class NewBattle:
         self.m_str = monster_data[monster_name]['str']
         self.m_def = monster_data[monster_name]['def']
         self.m_mag = monster_data[monster_name]['mag']
+        self.m_luck = monster_data[monster_name]['luck']
         self.m_sprite = pygame.image.load(monster_data[monster_name]['sprites'])
         self.m_move_list = monster_data[monster_name]['move_list']
         self.m_gold = monster_data[monster_name]['gold']
@@ -1651,6 +1709,13 @@ class NewBattle:
         self.background = pygame.transform.scale(pygame.image.load(monster_data[monster_name]['bg']).convert_alpha(),
                                                  (1280, 720))
         self.m_weakness = monster_data[monster_name]['weakness']
+        self.m_strengths = monster_data[monster_name]['strengths']
+        self.m_status = []
+        height = self.m_sprite.get_height()
+        if height > 220:
+            self.monster_y = 200
+        else:
+            self.monster_y = 300
 
     def get_player_details(self, player_data=Player()):
         player_data.update_stats()
@@ -1678,7 +1743,7 @@ class NewBattle:
         player_data.gold += self.m_gold
         player_data.exp += self.m_exp
 
-    def calc_damage(self, turn, atk_type='atk'):
+    def old_calc_damage(self, turn, atk_type='atk'):
         # WIP CHANGE A LOT OF THINGS
         element = 'Normal'
         if turn == 'player':
@@ -1732,6 +1797,49 @@ class NewBattle:
         if element in self.m_weakness:  # If enemy is weak to the element
             damage *= 2
 
+        return int(damage)
+
+    def calc_damage(self, atk_type):
+        if self.turn == "player":
+            strength = self.p_str
+            defence = self.m_def    # Monster's defence
+            magic = self.p_mag
+            luck = self.p_luck
+            status = self.p_status
+            e_status = self.m_status    # Monster's status
+        else:
+            strength = self.m_str
+            defence = self.p_def    # Player's defence
+            magic = self.m_mag
+            luck = self.m_luck
+            status = self.m_status
+            e_status = self.p_status    # Player's status
+        for effect in status:
+            if effect[0] == "burst":
+                strength += strength + (strength * 0.5)  # increase strength by 50%
+                if self.turn == "player":
+                    self.p_status.remove(effect)
+                else:
+                    self.m_status.remove(effect)
+        for effect in e_status:
+            if effect[0] == "defend":
+                defence = defence + (defence * 2.0)   # increase defence by 200%
+        if atk_type == "attack":    # Regular attack
+            dmg_range = strength + random.randrange(-3, 3)  # Will take a range of their current strength
+            if dmg_range <= 0:
+                dmg_range = 1
+            if luck >= 10:
+                luck = 10
+            self.crit_chance = random.randrange(luck, 11)  # will always crit with 10 luck.
+
+            if self.crit_chance == 10:
+                damage = (dmg_range * strength / (strength + defence)) * 4
+            else:
+                damage = (dmg_range * strength / (strength + defence)) * 2
+            if self.turn == "player":
+                for attribute in self.p_item_effects:
+                    if attribute == 'AtkDmg 2x':
+                        damage *= 2  # Doubles damage
         return int(damage)
 
     def shake_screen(self):
@@ -1789,8 +1897,14 @@ class NewBattle:
         self.ui_state = "main"
         self.turn = "player"
         self.get_player_details(player_data)
+        self.p_status = []
         self.sequence_flag = False
         self.sequence_done = False
+        self.player_dmg_flag = False
+        self.player_flag = True
+        self.player_sprites.play()
+        self.player_sprites_burst.play()
+        self.turn_count = 0
         self.healthbar_flag = False
         self.victory_flag = False
 
@@ -1839,11 +1953,16 @@ class NewBattle:
             if self.focus:
                 self.focus_cam(self.focus_target)
             self.draw_alertbox()
-            if self.healthbar_flag:
-                surf.blit(self.dmg_txt, (self.monster_pos, 270))
+            if self.player_dmg_flag:
+                surf.blit(self.dmg_txt, (self.player_pos, 270))
                 if self.crit_chance == 10:
-                    surf.blit(self.crit_text, (self.monster_pos, 240))
+                    surf.blit(self.crit_text, (self.player_pos, 240))
+            if self.healthbar_flag:
+                surf.blit(self.dmg_txt, (self.monster_pos , self.monster_y - 40))
+                if self.crit_chance == 10:
+                    surf.blit(self.crit_text, (self.monster_pos, self.monster_y - 60))
                 self.draw_healthbar(self.m_cur_health)
+            self.update_status_effects()
             self.play_sequence(self.sequence_to_play, self.sequence_target)
             self.check_state()  # To check the current game state
             self.check_inputs(player_data)

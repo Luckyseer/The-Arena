@@ -6,11 +6,13 @@
     "str" : 15,
     "def" : 5,
     "mag" : 10,
-    "gold" : 10000,
+    "luck": 1,
+    "gold" : 100,
     "exp" : 5000,
     "move_list" : ["attack"],
     "bg" : "data/backgrounds/Ruins2.png",
-    "weakness" : []
+    "weakness" : [],
+    "strengths" : []
   },
   "snake": {
     "name" : "Snake",
@@ -19,11 +21,13 @@
     "str" : 20,
     "def" : 11,
     "mag" : 5,
+    "luck": 1,
     "gold" : 75,
     "exp" : 5000,
     "move_list" : ["attack"],
     "bg" : "data/backgrounds/Ruins2.png",
-    "weakness" : []
+    "weakness" : [],
+    "strengths" : []
   },
   "imp": {
     "name" : "Imp",
@@ -32,11 +36,13 @@
     "str" : 7,
     "def" : 10,
     "mag" : 34,
+    "luck": 1,
     "gold" : 120,
     "exp" : 5000,
     "move_list" : ["attack", "thunder"],
     "bg" : "data/backgrounds/Ruins2.png",
-    "weakness" : ["fire"]
+    "weakness" : ["fire"],
+    "strengths" : []
   },
   "hornet": {
     "name" : "Hornet",
@@ -45,11 +51,13 @@
     "str" : 37,
     "def" : 10,
     "mag" : 3,
+    "luck": 2,
     "gold" : 100,
     "exp" : 5000,
     "move_list" : ["attack"],
     "bg" : "data/backgrounds/Ruins2.png",
-    "weakness" : ["ice"]
+    "weakness" : ["ice"],
+    "strengths" : []
   },
   "floor_boss1": {
     "name": "Tho'k",
@@ -58,11 +66,13 @@
     "str": 45,
     "def": 8,
     "mag": 30,
+    "luck": 3,
     "gold": 500,
     "exp": 10000,
     "move_list" : ["attack"],
     "bg" : "data/backgrounds/Ruins2.png",
-    "weakness" : ["water"]
+    "weakness" : ["water"],
+    "strengths" : []
   },
   "secret_battle1": {
     "name" : "Cerberus",
@@ -71,11 +81,13 @@
     "str" : 1500,
     "def" : 120,
     "mag" : 1000,
+    "luck": 1,
     "gold" : 10000,
     "exp" : 5000,
     "move_list" : ["attack", "thunder"],
     "bg" : "data/backgrounds/Ruins2.png",
-    "weakness" : []
+    "weakness" : [],
+    "strengths" : []
   },
   "debug_fight": {
     "name" : "The Debugger",
@@ -84,10 +96,12 @@
     "str" : 1500,
     "def" : 150,
     "mag" : 1000,
+    "luck": 1,
     "gold" : 100000,
     "exp" : 50000,
     "move_list" : ["attack", "thunder"],
     "bg" : "data/backgrounds/Ruins2.png",
-    "weakness" : []
+    "weakness" : [],
+    "strengths" : []
   }
 }
