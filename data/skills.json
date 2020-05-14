@@ -35,7 +35,7 @@
     {
         "name" : "Fire Slash",
         "type" : "dmg",
-        "desc" : "Attack the enemy with fire damage.",
+        "desc" : "Deal magical fire damage to the enemy.",
         "mp_cost" : 25,
         "level_req" : 13,
         "animation" : "special"

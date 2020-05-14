@@ -1230,6 +1230,11 @@ class NewBattle:
         self.title_font = pygame.font.Font("data/fonts/Daisy_Roots.otf", 25)
         self.dmg_font = pygame.font.Font("data/fonts/Vecna.otf", 30)
         self.ui_text = ["Menu", "Attack", "Skill", "Item", "HP:", "MP:", "Info", "MP Cost:", "Level required:"]
+        self.dmg_font_colour = {"none": (255, 255, 255),
+                                "fire": (209, 63, 10),
+                                "water": (22, 104, 219),
+                                "light": (221, 237, 38),
+                                "dark": (39, 14, 74)}   # Colour of font changes with element
         self.atk_txt = self.ui_font.render(self.ui_text[1], True, (200, 200, 200))
         self.skill_txt = self.ui_font.render(self.ui_text[2], True, (200, 200, 200))
         self.item_txt = self.ui_font.render(self.ui_text[3], True, (200, 200, 200))
@@ -1275,9 +1280,12 @@ class NewBattle:
         self.global_timer = Timer()
         self.camera_x = 0
         self.camera_y = 0
+        self.element = "none"
         self.victory_flag = False
         #  Temp stuff remove later
         self.crit_text = self.dmg_font.render("Critical!", True, (225, 0, 100))
+        self.weak_text = self.dmg_font.render("Weak!", True, (225, 0, 100))
+        self.strong_text = self.dmg_font.render("Strong!", True, (4, 19, 219))
         self.crit_chance = 1
         self.loaded_anim = pyganim.PygAnimation(
             [("data/sprites/idle1.png", 0.2), ("data/sprites/idle2.png", 0.2), ("data/sprites/idle3.png", 0.2)])
@@ -1435,7 +1443,7 @@ class NewBattle:
                 self.play_animation('slash', (self.monster_pos, 300))
                 self.play_sound('slash')
                 dmg = self.calc_damage('attack')
-                self.dmg_txt = self.dmg_font.render(str(dmg), True, (255, 255, 255))
+                self.dmg_txt = self.dmg_font.render(str(dmg), True, self.dmg_font_colour[self.element])
                 self.m_cur_health -= dmg
                 player_attacking = True
                 self.game_state = 'player_attack_done'
@@ -1489,7 +1497,7 @@ class NewBattle:
                 self.play_animation('claw', (self.player_pos, 300))
                 self.play_sound('slash2')
                 dmg = self.calc_damage('attack')
-                self.dmg_txt = self.dmg_font.render(str(dmg), True, (255, 255, 255))
+                self.dmg_txt = self.dmg_font.render(str(dmg), True, self.dmg_font_colour[self.element])
                 self.p_health -= dmg
                 enemy_attacking = True
                 self.game_state = 'enemy_attack_done'
@@ -1583,12 +1591,12 @@ class NewBattle:
                             dmg = self.calc_damage(action[1])
                             if self.turn == "player":
                                 self.m_cur_health -= dmg
-                                self.dmg_txt = self.dmg_font.render(str(dmg), True, (255, 255, 255))
+                                self.dmg_txt = self.dmg_font.render(str(dmg), True, self.dmg_font_colour[self.element])
                                 self.healthbar_flag = True
                             else:
                                 self.player_dmg_flag = True
                                 self.p_health -= dmg
-                                self.dmg_txt = self.dmg_font.render(str(dmg), True, (200, 200, 200))
+                                self.dmg_txt = self.dmg_font.render(str(dmg), True, self.dmg_font_colour[self.element])
                         if action[0] != "end_sequence":
                             self.action_count += 1
                             self.sequence_timer.reset()
@@ -1800,6 +1808,7 @@ class NewBattle:
         return int(damage)
 
     def calc_damage(self, atk_type):
+        self.crit_chance = 0
         if self.turn == "player":
             strength = self.p_str
             defence = self.m_def    # Monster's defence
@@ -1825,13 +1834,13 @@ class NewBattle:
             if effect[0] == "defend":
                 defence = defence + (defence * 2.0)   # increase defence by 200%
         if atk_type == "attack":    # Regular attack
+            self.element = "none"
             dmg_range = strength + random.randrange(-3, 3)  # Will take a range of their current strength
             if dmg_range <= 0:
                 dmg_range = 1
             if luck >= 10:
                 luck = 10
             self.crit_chance = random.randrange(luck, 11)  # will always crit with 10 luck.
-
             if self.crit_chance == 10:
                 damage = (dmg_range * strength / (strength + defence)) * 4
             else:
@@ -1840,6 +1849,17 @@ class NewBattle:
                 for attribute in self.p_item_effects:
                     if attribute == 'AtkDmg 2x':
                         damage *= 2  # Doubles damage
+        elif atk_type == "fire slash":
+            self.element = "fire"
+            dmg_range = (strength * 0.5) + (magic * 0.5) + random.randrange(-3, 3)
+            if dmg_range <= 0:
+                dmg_range = 1
+            damage = damage = (dmg_range * strength / (strength + defence)) * 2
+        if self.turn == "player":
+            if self.element in self.m_weakness:
+                damage *= 2     # Damage doubles if enemy is weak against that element
+            elif self.element in self.m_strengths:
+                damage *= 0.5     # Damage halves if enemy is strong against that element
         return int(damage)
 
     def shake_screen(self):
@@ -1903,6 +1923,7 @@ class NewBattle:
         self.player_dmg_flag = False
         self.player_flag = True
         self.player_sprites.play()
+        self.element = "none"
         self.player_sprites_burst.play()
         self.turn_count = 0
         self.healthbar_flag = False
@@ -1956,11 +1977,15 @@ class NewBattle:
             if self.player_dmg_flag:
                 surf.blit(self.dmg_txt, (self.player_pos, 270))
                 if self.crit_chance == 10:
-                    surf.blit(self.crit_text, (self.player_pos, 240))
+                    surf.blit(self.crit_text, (self.player_pos, 260))
             if self.healthbar_flag:
                 surf.blit(self.dmg_txt, (self.monster_pos , self.monster_y - 40))
                 if self.crit_chance == 10:
-                    surf.blit(self.crit_text, (self.monster_pos, self.monster_y - 60))
+                    surf.blit(self.crit_text, (self.monster_pos, self.monster_y - 70))
+                if self.element in self.m_weakness:
+                    surf.blit(self.weak_text, (self.monster_pos, self.monster_y - 70))
+                elif self.element in self.m_strengths:
+                    surf.blit(self.strong_text, (self.monster_pos, self.monster_y - 70))
                 self.draw_healthbar(self.m_cur_health)
             self.update_status_effects()
             self.play_sequence(self.sequence_to_play, self.sequence_target)
@@ -1972,6 +1997,7 @@ class NewBattle:
             clock.tick(60)
             fps = "FPS:%d" % clock.get_fps()
             pygame.display.set_caption(fps)
+
 
 class TextBox:
     """The textbox class, used to draw textboxes and anything related to dialogue."""

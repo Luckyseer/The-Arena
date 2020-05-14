@@ -11,7 +11,7 @@
     "exp" : 5000,
     "move_list" : ["attack"],
     "bg" : "data/backgrounds/Ruins2.png",
-    "weakness" : [],
+    "weakness" : ["fire"],
     "strengths" : []
   },
   "snake": {
@@ -56,7 +56,7 @@
     "exp" : 5000,
     "move_list" : ["attack"],
     "bg" : "data/backgrounds/Ruins2.png",
-    "weakness" : ["ice"],
+    "weakness" : ["water"],
     "strengths" : []
   },
   "floor_boss1": {
