@@ -46,6 +46,7 @@ class Player:
         self.defe = defence
         self.mag = magic
         self.luck = luck
+        self.expreq = 0
         # Player's stats from equipment
         self.add_stre = item_data['weapons'][self.cur_weapon]['atk'] + item_data['armours'][self.cur_armour]['atk'] + \
                         item_data['accessories'][self.cur_accessory]['atk']
@@ -99,6 +100,21 @@ class Player:
         self.add_mag = item_data['weapons'][self.cur_weapon]['mag'] + item_data['armours'][self.cur_armour]['mag'] + \
                        item_data['accessories'][self.cur_accessory]['mag']
 
+    def set_player_stats(self, **kwargs):
+        """For debug purposes"""
+        for stat, value in kwargs.items():
+            if stat == "strength" or stat == "stre":
+                self.stre = value
+            elif stat == "defence" or stat == "defe":
+                self.defe = value
+            elif stat == "magic" or stat == "mag":
+                self.mag = value
+            elif stat == "luck" or stat == "luk":
+                self.luck = value
+            elif stat == "health":
+                self.hp = self.curhp = value
+            elif stat == "mana":
+                self.mp = self.curmp = value
 
 if  __name__ == '__main__':
     pygame.init()
@@ -1234,7 +1250,8 @@ class NewBattle:
                                 "fire": (209, 63, 10),
                                 "water": (22, 104, 219),
                                 "light": (221, 237, 38),
-                                "dark": (39, 14, 74)}   # Colour of font changes with element
+                                "dark": (39, 14, 74),
+                                "earth": (94, 58, 21)}   # Colour of font changes with element
         self.atk_txt = self.ui_font.render(self.ui_text[1], True, (200, 200, 200))
         self.skill_txt = self.ui_font.render(self.ui_text[2], True, (200, 200, 200))
         self.item_txt = self.ui_font.render(self.ui_text[3], True, (200, 200, 200))
@@ -1381,9 +1398,16 @@ class NewBattle:
                                 self.initial_window_pos = 0
                                 self.cursor_pos = 0
                         elif self.ui_state == 'skill':
-                                self.game_state = 'player_skill'
-                                self.global_timer.reset()
-                                self.draw_menu = False
+                            if self.p_level >= self.skill_data[self.p_class][self.skill_min + self.cursor_pos]['level_req']:
+                                if self.p_mana >= self.skill_data[self.p_class][self.skill_min + self.cursor_pos]['mp_cost']:
+                                    self.game_state = 'player_skill'
+                                    self.global_timer.reset()
+                                    self.p_mana -= self.skill_data[self.p_class][self.skill_min + self.cursor_pos]['mp_cost']
+                                    self.draw_menu = False
+                                else:
+                                    self.buzzer_sound.play()
+                            else:
+                                self.buzzer_sound.play()
                     if event.key == pygame.K_RCTRL:
                         if self.ui_state == 'skill':
                             self.ui_state = 'main'
@@ -1467,7 +1491,7 @@ class NewBattle:
                 self.sequence_flag = True
                 self.sequence_to_play = self.skill_data[self.p_class][self.skill_min + self.cursor_pos]['name'].lower()
                 if self.skill_data[self.p_class][self.skill_min + self.cursor_pos]['type'] != 'buff':
-                    self.sequence_target = (self.monster_pos, 300)
+                    self.sequence_target = (self.monster_pos, self.monster_y)
                 else:
                     self.sequence_target = (900, 270)
                 self.global_timer.reset()
@@ -1488,6 +1512,32 @@ class NewBattle:
             if enemy_action == 'attack':
                 self.game_state = 'enemy_attack'
                 self.global_timer.reset()
+            else:
+                self.sequence_to_play = enemy_action
+                self.game_state = 'enemy_skill'
+                self.global_timer.reset()
+        if self.game_state == 'enemy_skill':
+            if self.sequence_done:
+                self.sequence_done = False
+                self.global_timer.reset()
+                self.game_state = 'enemy_skill_done'
+            else:
+                self.sequence_flag = True
+                for skill in self.skill_data["monster"]:
+                    if skill["name"].lower() == self.sequence_to_play:
+                        if skill["type"] == "buff":
+                            self.sequence_target = (self.monster_pos, self.monster_y)
+                        else:
+                            self.sequence_target = (920, 270)
+                self.global_timer.reset()
+        if self.game_state == 'enemy_skill_done':
+            if self.global_timer.timing(1) >= 1.5:
+                self.turn = 'player'
+                self.game_state = ''
+                self.global_timer.reset()
+                self.turn_count += 1
+                self.draw_menu = True
+                self.ui_state = 'main'
         if self.game_state == 'enemy_attack':  # Enemy regular attack
             enemy_attacking = False
             if self.monster_pos < 250:
@@ -1634,13 +1684,24 @@ class NewBattle:
         elif self.turn == "player":   # At end of player's turn update enemy's effects
             for status in self.m_status:
                 if status[1] <= self.turn_count:
-                    self.p_status.remove(status)
+                    self.m_status.remove(status)
 
     def draw_healthbar(self, cur_health):  # Enemy health bar
         if cur_health > self.virtualMonsterHealth:
-            self.virtualMonsterHealth += 1
+            if self.virtualMonsterHealth % 100 == 0 and not self.virtualMonsterHealth + 100 > cur_health:
+                self.virtualMonsterHealth += 100
+            elif self.virtualMonsterHealth % 50 == 0 and not self.virtualMonsterHealth + 50 > cur_health:
+                self.virtualMonsterHealth += 50
+            elif self.virtualMonsterHealth % 5 == 0 and not self.virtualMonsterHealth + 5 > cur_health:
+                self.virtualMonsterHealth += 5
+            else:
+                self.virtualMonsterHealth += 1
         elif cur_health < self.virtualMonsterHealth:
-            if self.virtualMonsterHealth % 5 == 0 and not self.virtualMonsterHealth - 5 < cur_health:
+            if self.virtualMonsterHealth % 100 == 0 and not self.virtualMonsterHealth - 100 < cur_health:
+                self.virtualMonsterHealth -= 100
+            elif self.virtualMonsterHealth % 50 == 0 and not self.virtualMonsterHealth - 50 < cur_health:
+                self.virtualMonsterHealth -= 50
+            elif self.virtualMonsterHealth % 5 == 0 and not self.virtualMonsterHealth - 5 < cur_health:
                 self.virtualMonsterHealth -= 5
             else:
                 self.virtualMonsterHealth -= 1
@@ -1699,6 +1760,12 @@ class NewBattle:
                     surf.blit(title_text2, (520, 413))
                     mp_cost_txt = self.ui_font.render("Mp Cost: %d" % cur_mp_cost, True, (200, 60, 130))
                     surf.blit(mp_cost_txt, (340, 540))
+                    if self.skill_data[self.p_class][self.skill_min + self.cursor_pos]['level_req'] > self.p_level:
+                        surf.blit(self.ui_font.render("Not learned!", True, (204, 55, 87)), (570, 540))
+                    if self.skill_data[self.p_class][self.skill_min + self.cursor_pos]['mp_cost'] > self.p_mana and \
+                            self.skill_data[self.p_class][self.skill_min + self.cursor_pos][
+                                'level_req'] <= self.p_level:
+                        surf.blit(self.ui_font.render("Insufficient MP!", True, (49, 61, 224)), (340, 510))
             title_text = self.title_font.render(self.ui_text[self.current_title], True, (200, 30, 30))  # Title for the ui
             surf.blit(title_text, (959, 412))
 
@@ -1751,64 +1818,9 @@ class NewBattle:
         player_data.gold += self.m_gold
         player_data.exp += self.m_exp
 
-    def old_calc_damage(self, turn, atk_type='atk'):
-        # WIP CHANGE A LOT OF THINGS
-        element = 'Normal'
-        if turn == 'player':
-            if atk_type == 'fire':
-                element = 'fire'
-                damage = self.p_mag * (100 / (100 + self.m_def)) - random.randrange(0, 10)
-            elif atk_type == 'ice':
-                damage = self.p_mag * (100 / (100 + self.m_def)) - random.randrange(0, 10)
-            elif atk_type == 'water':
-                damage = (self.p_mag * 3) * (100 / (100 + self.m_def)) - random.randrange(0, 10)
-            elif atk_type == 'cure':  # Not really damage but eh
-                damage = ((self.p_max_health * 10) / 35) - random.randrange(0, 6)
-            elif atk_type == 'attack':
-                self.crit_chance = random.randrange(self.p_luck, 11)  # will always crit with 10 luck.
-                if self.p_luck >= 10:
-                    self.crit_chance = 10
-                print(self.crit_chance)
-                #  if self.p_status == 'burst':  # Warrior burst skill takes priority over a crit
-                #   damage = (self.pstr * (100 / (100 + self.mdef))) * 5 - random.randrange(0, 10)
-                if self.crit_chance == 10:
-                    damage = (self.p_str * (100 / (100 + self.m_def))) * 4 - random.randrange(0, 10)
-
-                else:
-                    damage = (self.p_str * (100 / (100 + self.m_def))) * 2 - random.randrange(0, 10)
-                    print(self.p_str)
-                for attribute in self.p_item_effects:
-                    if attribute == 'AtkDmg 2x':
-                        damage *= 2  # Doubles damage
-                if "burst" in self.p_status:
-                    damage *= 1.5
-                    self.p_status.remove("burst")
-                """elif atk_type == 'death':
-                            if self.mdeathresist:
-                                return 'Resist!'
-                            else:
-                                death_luck = random.randrange(1, 6)  # 1 in 5 chance of success
-                                print('Death_luck:', death_luck)
-                                if death_luck == 5:
-                                    damage = 99999
-                                else:
-                                    return 'Failed!' """
-        elif turn == 'enemy':
-            if atk_type == 'attack':
-                damage = self.m_str * (100 / (100 + self.p_def)) - random.randrange(0, 10)
-            if atk_type == 'thunder':  # temp make sure to change
-                damage = self.m_mag * (100 / (100 + self.p_def)) - random.randrange(0, 10)
-        if damage < 0:
-            damage = 0
-        elif damage > 99999:
-            damage = 99999
-        if element in self.m_weakness:  # If enemy is weak to the element
-            damage *= 2
-
-        return int(damage)
-
     def calc_damage(self, atk_type):
         self.crit_chance = 0
+        self.element = "none"
         if self.turn == "player":
             strength = self.p_str
             defence = self.m_def    # Monster's defence
@@ -1854,7 +1866,13 @@ class NewBattle:
             dmg_range = (strength * 0.5) + (magic * 0.5) + random.randrange(-3, 3)
             if dmg_range <= 0:
                 dmg_range = 1
-            damage = damage = (dmg_range * strength / (strength + defence)) * 2
+            damage = (dmg_range * strength / (strength + defence)) * 2
+        elif atk_type == "quake":
+            self.element = "earth"
+            dmg_range = magic + random.randrange(-3, 3)
+            if dmg_range <= 0:
+                dmg_range = 1
+            damage = (dmg_range * magic / (magic + defence)) * 2.5
         if self.turn == "player":
             if self.element in self.m_weakness:
                 damage *= 2     # Damage doubles if enemy is weak against that element
@@ -1955,6 +1973,9 @@ class NewBattle:
         elif set_music == 1:
             pygame.mixer_music.load("data/sounds&music/boss_music.mp3")
             pygame.mixer_music.play()
+        elif set_music == 2:
+            pygame.mixer_music.load("data/sounds&music/Dungeon2.ogg")
+            pygame.mixer_music.play()
         else:
             pygame.mixer_music.load("data/sounds&music/03_Endless_Battle.ogg")
             pygame.mixer_music.play()
@@ -1977,7 +1998,7 @@ class NewBattle:
             if self.player_dmg_flag:
                 surf.blit(self.dmg_txt, (self.player_pos, 270))
                 if self.crit_chance == 10:
-                    surf.blit(self.crit_text, (self.player_pos, 260))
+                    surf.blit(self.crit_text, (self.player_pos, 240))
             if self.healthbar_flag:
                 surf.blit(self.dmg_txt, (self.monster_pos , self.monster_y - 40))
                 if self.crit_chance == 10:
@@ -3352,6 +3373,7 @@ class GameClock:
                 self.bellflag = False
                 self.fadeoutflag = False
 
+
 if __name__ == "__main__":
     player = Player(item_data=item_data)
     eventManager = GameEvents()
@@ -3452,7 +3474,6 @@ if __name__ == "__main__":
     txtbox = TextBox()
     timer = Timer()
     fadeoutflag = False  # Flag for music to fade out
-
 
     while not done:
         # main
@@ -3895,7 +3916,9 @@ if __name__ == "__main__":
                 secretbattle.battle('secret_battle1', -10, False, bgm='data/sounds&music/Battle3.ogg')
             if shh == ['t', 'e', 's', 't'] and scene == 'menu':
                 shh = []
-                debugbattle.battle('debug_fight', -120, bgm='data/sounds&music/Dungeon2.ogg')
+                Zen = Player()
+                Zen.set_player_stats(stre=1000, mag=2000, health=10000, mana=1000, luck=9)
+                battler.battle("debug_fight", Zen, set_music=2)
             if shh == ['t', 'o', 'w', 'n'] and scene == 'menu':
                 shh = []
                 fadeout(surf)

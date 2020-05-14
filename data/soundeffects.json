@@ -11,7 +11,8 @@
     "slash" : "data/sounds&music/Slash1.ogg",
     "slash2" : "data/sounds&music/Slash2.ogg",
     "enemy_dead" : "data/sounds&music/Collapse1.ogg",
-    "defend": "data/sounds&music/Heal2.ogg"
+    "defend": "data/sounds&music/Heal2.ogg",
+    "quake": "data/sounds&music/Earth1.ogg"
   },
   "system" : {
     "cursor" : "data/sounds&music/Cursor1.ogg",

@@ -316,5 +316,47 @@
       "data/sprites/fireslash/tile013.png",
       0.1
     ]
+    ],
+  "quake": [
+    [
+      "data/sprites/quake/tile013.png",
+      0.1
+    ],
+    [
+      "data/sprites/quake/tile014.png",
+      0.1
+    ],
+    [
+      "data/sprites/quake/tile015.png",
+      0.1
+    ],
+    [
+      "data/sprites/quake/tile016.png",
+      0.1
+    ],
+    [
+      "data/sprites/quake/tile017.png",
+      0.1
+    ],
+    [
+      "data/sprites/quake/tile017.png",
+      0.1
+    ],
+    [
+      "data/sprites/quake/tile016.png",
+      0.1
+    ],
+    [
+      "data/sprites/quake/tile015.png",
+      0.1
+    ],
+    [
+      "data/sprites/quake/tile014.png",
+      0.1
+    ],
+    [
+      "data/sprites/quake/tile013.png",
+      0.1
     ]
+  ]
 }

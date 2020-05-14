@@ -34,17 +34,20 @@
  * Changed formatting to be more PEP-8 compliant(getting there).
 # - Alpha v3.0(WIP)
  + Added the town. (Not implemented)
- + Updated Battle system(incomplete)
+ + Updated Battle system!
  + Cleaned up a lot of old code.
  + Added descriptions to items in the shop.
  + Added an indicator when there are more items than shown in the shop.
  + Made the player and monster move while attacking just to make it look a bit more lively.
  + Added skills and the fuctionality to easily make more with 'sequences'!
- + Added new warrior skills
+ + Added new warrior skills.
  + Added new status effect "defend" which increases defence.
  + Added status icons to player HUD to indicate the effect.
  + Completely rewrote damage calculation function.
- + Adjusted heights of larger monsters
+ + Adjusted heights of larger monsters.
+ + Now enemies can use skills the same way players can. 
+ + You can test the new battle system by typing  in "test" while in the main menu.
+ 
 # Known issues:
  - Items not implemented.
 # TODO:

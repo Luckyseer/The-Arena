@@ -3,5 +3,6 @@
   "burst" : [["alert_box", "    Burst", 0], ["sound", "burst", 0], ["animation", "burst", 2], ["add_status", "burst", 0], ["end_sequence"]],
   "double slash" : [["alert_box", "Double Slash", 0], ["sound", "slash", 0], ["animation", "slash", 0], ["deal_damage", "attack", 2], ["sound", "slash", 0], ["animation", "slash", 0], ["deal_damage", "attack", 2], ["end_sequence"]],
   "defend": [["alert_box", "   Defend", 0], ["sound", "defend", 0], ["animation", "defend", 2], ["add_status", "defend", 0], ["end_sequence"]],
-  "fire slash": [["alert_box", "Fire Slash", 0], ["sound", "slash", 0], ["animation", "fire slash", 0.5], ["sound", "fire2", 0], ["deal_damage", "fire slash", 3], ["end_sequence"]]
+  "fire slash": [["alert_box", "Fire Slash", 0], ["sound", "slash", 0], ["animation", "fire slash", 0.5], ["sound", "fire2", 0], ["deal_damage", "fire slash", 3], ["end_sequence"]],
+  "quake": [["alert_box", "     Quake", 0], ["sound", "quake", 0], ["deal_damage", "quake", 0], ["animation", "quake", 2], ["end_sequence"]]
 }

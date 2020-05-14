@@ -5,40 +5,72 @@
       "type" : "buff",
       "desc" : "Greatly strengthen next attack.",
       "mp_cost" : 20,
-      "level_req" : 1,
-      "animation" : "special"
+      "level_req" : 1
     },
     {
       "name": "Double Slash",
       "type": "dmg",
       "desc": "Attacks the enemy twice.",
       "mp_cost": 30,
-      "level_req": 5,
-      "animation": "slash"
+      "level_req": 5
     },
     {
         "name" : "Defend",
         "type" : "buff",
         "desc" : "Greatly strengthen defence(2 turns).",
         "mp_cost" : 15,
-        "level_req" : 7,
-        "animation" : "special"
+        "level_req" : 7
       },
     {
         "name" : "Quake",
         "type" : "dmg",
         "desc" : "Attack the enemy with great force.",
         "mp_cost" : 60,
-        "level_req" : 10,
-        "animation" : "special"
+        "level_req" : 10
       },
     {
         "name" : "Fire Slash",
         "type" : "dmg",
-        "desc" : "Deal magical fire damage to the enemy.",
+        "desc" : "Deal fire damage to the enemy.",
         "mp_cost" : 25,
-        "level_req" : 13,
-        "animation" : "special"
+        "level_req" : 13
+      }
+  ],
+  "monster": [
+    {
+      "name" : "Burst",
+      "type" : "buff",
+      "desc" : "Greatly strengthen next attack.",
+      "mp_cost" : 20,
+      "level_req" : 1
+    },
+    {
+      "name": "Double Slash",
+      "type": "dmg",
+      "desc": "Attacks the enemy twice.",
+      "mp_cost": 30,
+      "level_req": 5
+    },
+    {
+        "name" : "Defend",
+        "type" : "buff",
+        "desc" : "Greatly strengthen defence(2 turns).",
+        "mp_cost" : 15,
+        "level_req" : 7
+      },
+    {
+        "name" : "Quake",
+        "type" : "dmg",
+        "desc" : "Attack the enemy with great force.",
+        "mp_cost" : 60,
+        "level_req" : 10
+      },
+    {
+        "name" : "Fire Slash",
+        "type" : "dmg",
+        "desc" : "Deal fire damage to the enemy.",
+        "mp_cost" : 25,
+        "level_req" : 13
       }
   ]
 }
