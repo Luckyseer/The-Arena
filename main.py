@@ -1424,6 +1424,14 @@ class NewBattle:
                                     self.buzzer_sound.play()
                             else:
                                 self.buzzer_sound.play()
+                        elif self.ui_state == 'item':
+                            if len(self.p_inventory) > 0:
+                                self.game_state = 'player_item'
+                                self.global_timer.reset()
+                                self.p_inventory[self.item_min + self.cursor_pos]["amount"] -= 1
+                                self.draw_menu = False
+                            else:
+                                self.buzzer_sound.play()
                     if event.key == pygame.K_RCTRL:
                         if self.ui_state == 'skill':
                             self.ui_state = 'main'
@@ -1514,9 +1522,19 @@ class NewBattle:
                 else:
                     self.sequence_target = (900, 270)
                 self.global_timer.reset()
-
-        if self.game_state == 'player_skill_done':
+        if self.game_state == 'player_item':
+            if self.sequence_done:
+                self.sequence_done = False
+                self.global_timer.reset()
+                self.game_state = 'player_item_done'
+            else:
+                self.sequence_flag = True
+                self.sequence_to_play = "use_item"
+                self.sequence_target = (900, 270)
+                self.global_timer.reset()
+        if self.game_state == 'player_skill_done' or self.game_state == 'player_item_done':
             if self.global_timer.timing(1) >= 1.5:
+                self.update_player_inventory()
                 self.turn = 'enemy'
                 self.game_state = 'enemy_turn'
                 self.global_timer.reset()
@@ -1612,6 +1630,14 @@ class NewBattle:
             self.m_cur_health = self.m_max_health
         if self.m_cur_health < 0:
             self.m_cur_health = 0
+        if self.p_health > self.p_max_health:
+            self.p_health = self.p_max_health
+        if self.p_health < 0:
+            self.p_health = 0
+        if self.p_mana > self.p_max_mana:
+            self.p_mana = self.p_max_mana
+        if self.p_mana < 0:
+            self.p_mana = 0
 
     def play_sequence(self, sequence, target=(920, 270)):
         """A sequence is a set of actions/things that should happen in a row ie. something like a skill
@@ -1632,6 +1658,8 @@ class NewBattle:
                         elif action[0] == "alert_box":
                             self.alert_box_flag = True
                             self.alert_text = action[1]
+                            if action[1] == "item_name":
+                                self.alert_text = self.p_inventory[self.item_min + self.cursor_pos]["name"]
                         elif action[0] == "animation":
                             self.play_animation(action[1], target)
                         elif action[0] == "sound":
@@ -1666,10 +1694,30 @@ class NewBattle:
                                 self.player_dmg_flag = True
                                 self.p_health -= dmg
                                 self.dmg_txt = self.dmg_font.render(str(dmg), True, self.dmg_font_colour[self.element])
-                        elif action[0] == "heal":
+                        elif action[0] == "heal_hp":
                             if self.turn == "player":
                                 if action[1] == "item":
-                                    pass
+                                    if self.turn == "player":
+                                        item = self.p_inventory[self.item_min + self.cursor_pos]["name"]
+                                        for items in self.consumable_data:
+                                            if items["name"] == item:
+                                                hp_heal = items["hp"]
+                                    if hp_heal != 0:
+                                        self.dmg_txt = self.dmg_font.render(str(hp_heal), True, (3, 102, 16))
+                                        self.p_health += hp_heal
+                                        self.player_dmg_flag = True
+                        elif action[0] == "heal_mp":
+                            if self.turn == "player":
+                                if action[1] == "item":
+                                    if self.turn == "player":
+                                        item = self.p_inventory[self.item_min + self.cursor_pos]["name"]
+                                        for items in self.consumable_data:
+                                            if items["name"] == item:
+                                                mp_heal = items["mp"]
+                                    if mp_heal != 0:
+                                        self.dmg_txt = self.dmg_font.render(str(mp_heal), True, (40, 43, 158))
+                                        self.p_mana += mp_heal
+                                        self.player_dmg_flag = True
                         if action[0] != "end_sequence":
                             self.action_count += 1
                             self.sequence_timer.reset()
@@ -1885,6 +1933,12 @@ class NewBattle:
         player_data.gold += self.m_gold
         player_data.exp += self.m_exp
         player_data.inventory = self.p_inventory
+
+    def update_player_inventory(self):
+        """For removing items from inventory after consumption"""
+        for items in self.p_inventory:
+            if items["amount"] <= 0:
+                self.p_inventory.remove(items)
 
     def calc_damage(self, atk_type):
         self.crit_chance = 0

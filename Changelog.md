@@ -52,6 +52,7 @@
  + You can now use consumables in battle
 # Known issues:
  - Minor frame drop on status screen
+ - Update current song after victory
 # TODO:
  - Finish the town.
  - ~~Items in battle.~~ Done
