@@ -32,7 +32,7 @@
  * Changed the stats for some of the monsters(Still not final).
  * The 'Fading in' effect should work properly now.
  * Changed formatting to be more PEP-8 compliant(getting there).
-# - Alpha v3.0(WIP)
+# - Alpha v3.0
  + Added the town. (Not implemented)
  + Updated Battle system!
  + Cleaned up a lot of old code.
@@ -47,10 +47,12 @@
  + Adjusted heights of larger monsters.
  + Now enemies can use skills the same way players can. 
  + You can test the new battle system by typing  in "test" while in the main menu.
- 
+# - Alpha v3.1 
+ + Added consumables to shops
+ + You can now use consumables in battle
 # Known issues:
- - Items not implemented.
+ - Minor frame drop on status screen
 # TODO:
  - Finish the town.
- - Items in battle.
+ - ~~Items in battle.~~ Done
  - Changing equipment in status screen.

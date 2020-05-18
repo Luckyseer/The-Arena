@@ -10,7 +10,7 @@ from pygame.locals import *
 
 icon = pygame.image.load("data/sprites/icon2.png")
 pygame.display.set_icon(icon)
-alphatext = "Alpha v3.0 - New Battle System"
+alphatext = "Alpha v3.1 - Items and Inventory system"
 try:
     with open('data/items.json', 'r') as items:
         item_data = json.load(items)
@@ -56,28 +56,17 @@ class Player:
                        item_data['accessories'][self.cur_accessory]['mag']
         self.add_luck = luck
         self.progress = 1  # progress in game
-        self.gold = 150
+        self.gold = 15000
         self.level = 15
         self.hours = 6  # in-game clock values
         self.minutes = 0  # ^
         self.exp = 0
-        self.inventory = {'Potion': 1,  # Heals 200 HP
-                          'Bread': 0,  # Heals 50 HP
-                          'Steak': 0,  # Heals 120 HP
-                          'Meat Stew': 0,  # Heals 250 HP
-                          'Roasted Beef': 0,  # Heals 500 HP
-                          'Elixir': 0,  # Fully heals HP and MP
-                          'Mana Potion': 0,  # Restores 100 MP
-                          'Water': 0,  # Restores 20MP
-                          'Orange Juice': 0,  # Restores 50MP
-                          'Orc Tears': 0,  # Restores 150MP
-                          'Dragon\'s Breath': 0,  # Restores 250MP
-                          }
+        self.inventory = []
         self.pclass = 'warrior'
         self.fkills = 0  # Kills in floor
         self.tkills = 0  # Total Kills
         self.scene = 'menu'
-        self.town_first_flag = True  # Flag to check if player visited town or not.
+        self.town_first_flag = False  # Flag to check if player visited town or not.
         self.paid_girl_flag = False  # Flag for whether the player paid the girl during the town scene
 
     def xp_till_levelup(self, currentlevel):  # Experience needed to level up
@@ -115,6 +104,9 @@ class Player:
                 self.hp = self.curhp = value
             elif stat == "mana":
                 self.mp = self.curmp = value
+            elif stat == "level":
+                self.level = value
+
 
 if  __name__ == '__main__':
     pygame.init()
@@ -1192,7 +1184,7 @@ class SideBattle:
 class NewBattle:
     """The new battle system. Returns True on victory"""
 
-    def __init__(self, monsterdata, itemdata, sounddata, animationdata, skilldata, sequences):
+    def __init__(self, monsterdata, itemdata, sounddata, animationdata, skilldata, sequence_data):
         #  Data
         self.monster_data = monsterdata
         self.consumable_data = itemdata['consumables']
@@ -1203,7 +1195,7 @@ class NewBattle:
         self.animation_data = animationdata
         self.skill_data = skilldata
         self.warrior_skills = skilldata['warrior']
-        self.sequences = sequences
+        self.sequences = sequence_data
         #  Player Details
         self.p_name = 'Zen'
         self.p_level = 5
@@ -1217,6 +1209,7 @@ class NewBattle:
         self.p_luck = 2
         self.p_class = 'warrior'
         self.p_status = []
+        self.p_inventory = []
         self.p_item_equipped = []
         self.p_item_effects = []    # Attributes from items
         #  Monster Details
@@ -1262,6 +1255,8 @@ class NewBattle:
         self.add_flag = False  # flag for the gold and exp adding up on the victory screen
         self.dmg_txt = '0'
         self.cursor = pygame.image.load("data/sprites/Cursor.png")
+        self.cursor_down = pygame.transform.rotate(self.cursor, -90)
+        self.cursor_up = pygame.transform.rotate(self.cursor, 90)
         self.vic_img = pygame.image.load("data/sprites/victory.png").convert_alpha()
         self.def_font = pygame.font.Font("data/fonts/Daisy_Roots.otf", 70)
         self.current_title = 0
@@ -1337,6 +1332,7 @@ class NewBattle:
         self.hp_bar_Full = pygame.image.load("data/sprites/hpbar2.png").convert_alpha()
         self.virtualMonsterHealth = self.m_cur_health
         self.skill_min = 0  # The minimum value for the top position of the skill selection window
+        self.item_min = 0
         self.skill_desc = ""  # Description of skill
 
     def focus_cam(self, target='player'):
@@ -1377,6 +1373,14 @@ class NewBattle:
                                 else:
                                     self.cursor_pos = 3
                                     self.skill_min = len(self.skill_data[self.p_class]) - 4
+                        elif self.ui_state == 'item':
+                            if self.cursor_pos < 0:
+                                if self.item_min != 0:
+                                    self.item_min -= 1
+                                    self.cursor_pos = 0
+                                else:
+                                    self.cursor_pos = 3
+                                    self.item_min = len(self.p_inventory) - 4
                     if event.key == pygame.K_DOWN:
                         self.cursor_pos += 1
                         if self.ui_state == 'skill':
@@ -1387,6 +1391,14 @@ class NewBattle:
                                 else:
                                     self.cursor_pos = 0
                                     self.skill_min = 0
+                        elif self.ui_state == 'item':
+                            if self.cursor_pos > self.cursor_max:
+                                if self.item_min + 4 < len(self.p_inventory):
+                                    self.item_min += 1
+                                    self.cursor_pos = 3
+                                else:
+                                    self.cursor_pos = 0
+                                    self.item_min = 0
                     if event.key == pygame.K_RETURN:
                         if self.ui_state == 'main':
                             if self.cursor_pos == 0:
@@ -1395,6 +1407,10 @@ class NewBattle:
                                 self.draw_menu = False
                             if self.cursor_pos == 1:
                                 self.ui_state = 'skill'
+                                self.initial_window_pos = 0
+                                self.cursor_pos = 0
+                            if self.cursor_pos == 2:
+                                self.ui_state = 'item'
                                 self.initial_window_pos = 0
                                 self.cursor_pos = 0
                         elif self.ui_state == 'skill':
@@ -1410,6 +1426,9 @@ class NewBattle:
                                 self.buzzer_sound.play()
                     if event.key == pygame.K_RCTRL:
                         if self.ui_state == 'skill':
+                            self.ui_state = 'main'
+                            self.cursor_pos = 0
+                        elif self.ui_state == 'item':
                             self.ui_state = 'main'
                             self.cursor_pos = 0
 
@@ -1647,6 +1666,10 @@ class NewBattle:
                                 self.player_dmg_flag = True
                                 self.p_health -= dmg
                                 self.dmg_txt = self.dmg_font.render(str(dmg), True, self.dmg_font_colour[self.element])
+                        elif action[0] == "heal":
+                            if self.turn == "player":
+                                if action[1] == "item":
+                                    pass
                         if action[0] != "end_sequence":
                             self.action_count += 1
                             self.sequence_timer.reset()
@@ -1729,8 +1752,8 @@ class NewBattle:
             hp_text = self.ui_font.render("HP: %d/%d" % (self.p_health, self.p_max_health), True, (230, 0, 50))
             mp_text = self.ui_font.render("MP: %d/%d" % (self.p_mana, self.p_max_mana), True, (20, 0, 230))
 
-            surf.blit(hp_text, (930, 90))  # Text for hp
-            surf.blit(mp_text, (930, 110))  # Text for mp
+            surf.blit(hp_text, (920, 90))  # Text for hp
+            surf.blit(mp_text, (920, 110))  # Text for mp
             for index, status in enumerate(self.p_status):
                 if status[0] in self.status_icons:
                     surf.blit(self.status_icons[status[0]], (900 + (40 * index), 140))
@@ -1739,7 +1762,7 @@ class NewBattle:
                 surf.blit(self.atk_txt, (945, 475))
                 surf.blit(self.skill_txt, (945, 500))
                 surf.blit(self.item_txt, (945, 525))
-            if self.ui_state == 'skill':    # Skill selection
+            elif self.ui_state == 'skill':    # Skill selection
                 self.current_title = 2
                 cur_mp_cost = self.skill_data[self.p_class][self.skill_min + self.cursor_pos]['mp_cost']
                 self.skill_desc = self.ui_font.render(self.skill_data[self.p_class][self.skill_min + self.cursor_pos]['desc'], True, (200, 200, 200))
@@ -1752,6 +1775,10 @@ class NewBattle:
                 surf.blit(skill_text2, (915, 500))
                 surf.blit(skill_text3, (915, 525))
                 surf.blit(skill_text4, (915, 550))
+                if self.skill_min != 0:
+                    surf.blit(self.cursor_up, (960, 430))
+                if self.skill_min + 4 < len(self.skill_data[self.p_class]):
+                    surf.blit(self.cursor_down, (960, 590))
                 if self.initial_window_pos < 300:
                     self.initial_window_pos += 30
                 if self.initial_window_pos == 300:
@@ -1766,6 +1793,45 @@ class NewBattle:
                             self.skill_data[self.p_class][self.skill_min + self.cursor_pos][
                                 'level_req'] <= self.p_level:
                         surf.blit(self.ui_font.render("Insufficient MP!", True, (49, 61, 224)), (340, 510))
+            elif self.ui_state == 'item':
+                self.current_title = 3
+                surf.blit(self.battle_ui2, (self.initial_window_pos, 400))
+                if len(self.p_inventory) < 4:
+                    self.cursor_max = len(self.p_inventory)
+                else:
+                    self.cursor_max = 3
+                if len(self.p_inventory) > 0:
+                    for item in self.consumable_data:
+                        if self.p_inventory[self.item_min + self.cursor_pos]["name"] == item["name"]:
+                            item_desc = self.ui_font.render(item['battle_desc'], True, (200, 200, 200))
+
+                    if self.item_min != 0:
+                        surf.blit(self.cursor_up, (960, 430))
+                    if len(self.p_inventory) >= 4:
+                        if self.item_min + 4 < len(self.p_inventory):
+                            surf.blit(self.cursor_down, (960, 590))
+                    amount_in_inventory = self.ui_font.render("In Inventory: {}".format(self.p_inventory[self.item_min + self.cursor_pos]["amount"]), True, (255, 0, 85))
+                    item1 = self.ui_font.render(self.p_inventory[self.item_min]["name"], True, (200, 200, 200))
+                    surf.blit(item1, (915, 475))
+                    if len(self.p_inventory) >= 2:
+                        item2 = self.ui_font.render(self.p_inventory[self.item_min + 1]["name"], True, (200, 200, 200))
+                        surf.blit(item2, (915, 500))
+                    if len(self.p_inventory) >= 3:
+                        item3 = self.ui_font.render(self.p_inventory[self.item_min + 2]["name"], True, (200, 200, 200))
+                        surf.blit(item3, (915, 525))
+                    if len(self.p_inventory) >= 4:
+                        item3 = self.ui_font.render(self.p_inventory[self.item_min + 3]["name"], True, (200, 200, 200))
+                        surf.blit(item3, (915, 550))
+                if self.initial_window_pos < 300:
+                    self.initial_window_pos += 30
+                if self.initial_window_pos == 300:
+                    if len(self.p_inventory) <= 0:
+                        item_desc = self.ui_font.render("No items in inventory.", True, (200, 200, 200))
+                        amount_in_inventory = self.ui_font.render("", True, (200, 200, 200))
+                    surf.blit(item_desc, (340, 480))
+                    surf.blit(amount_in_inventory, (340, 540))
+                    title_text2 = self.title_font.render(self.ui_text[6], True, (200, 30, 30))
+                    surf.blit(title_text2, (520, 413))
             title_text = self.title_font.render(self.ui_text[self.current_title], True, (200, 30, 30))  # Title for the ui
             surf.blit(title_text, (959, 412))
 
@@ -1805,6 +1871,7 @@ class NewBattle:
         self.p_str = player_data.stre + player_data.add_stre
         self.p_def = player_data.defe + player_data.add_defe
         self.p_name = player_data.name
+        self.p_inventory = player_data.inventory
         self.p_item_effects = []
         self.p_item_equipped = [self.weapon_data[player_data.cur_weapon],
                                 self.armour_data[player_data.cur_armour], self.acc_data[player_data.cur_accessory]]
@@ -1817,6 +1884,7 @@ class NewBattle:
         player_data.curmp = self.p_mana
         player_data.gold += self.m_gold
         player_data.exp += self.m_exp
+        player_data.inventory = self.p_inventory
 
     def calc_damage(self, atk_type):
         self.crit_chance = 0
@@ -2529,6 +2597,7 @@ class Shop(MainUi):
         self.armour_list = item_data['armours']
         self.acc_list = item_data['accessories']
         self.cursor_down = pygame.transform.rotate(self.cursor, -90)
+        self.cursor_up = pygame.transform.rotate(self.cursor, 90)
         self.consume_list = item_data['consumables']
         self.player_data = Player()
         self.shopbg = pygame.image.load("data/backgrounds/shopbg.png").convert_alpha()
@@ -2562,56 +2631,66 @@ class Shop(MainUi):
 
     def status_window(self, item, player_data):
         self.get_player_stats(player_data)
-        if not self.status_anim:
-            self.box_pos = 2000
-            self.status_anim = True
-        if self.status_anim:
-            if self.box_pos > 950:
-                self.box_pos -= 50
-
-        surf.blit(self.status_bg, (self.box_pos, 222))
-        if self.box_pos <= 950:
-            str_txt = self.uitext.render('STR: ' + str(self.pstr), False, self.txtcolor3)
-            def_txt = self.uitext.render('DEF: ' + str(self.pdef), False, self.txtcolor3)
-            mag_txt = self.uitext.render('MAG: ' + str(self.pmag), False, self.txtcolor3)
-            luk_txt = self.uitext.render('LUCK: ' + str(self.pluck), False, self.txtcolor3)
+        if self.current_list == self.consume_list:
             item_desc = self.uitext2.render(item['description'], False, self.txtcolor2)
-            if self.current_list == self.weapons_list:
-                player_item = player_data.cur_weapon
-
-            elif self.current_list == self.armour_list:
-                player_item = player_data.cur_armour
-            else:
-                player_item = player_data.cur_accessory
-
-            str_dif = self.pstr + item['atk'] - (self.pstr + self.current_list[player_item]['atk'])
-            def_dif = self.pdef + item['def'] - (self.pdef + self.current_list[player_item]['def'])
-            mag_dif = self.pmag + item['mag'] - (self.pmag + self.current_list[player_item]['mag'])
-            if str_dif >= 0:
-                str_diftxt = self.uitext.render('(+' + str(str_dif) + ')', False, self.green_rgb)
-                surf.blit(str_diftxt, (1120, 300))
-            else:
-                str_diftxt = self.uitext.render('(' + str(str_dif) + ')', False, self.red_rgb)
-                surf.blit(str_diftxt, (1120, 300))
-            if def_dif >= 0:
-                def_diftxt = self.uitext.render('(+' + str(def_dif) + ')', False, self.green_rgb)
-                surf.blit(def_diftxt, (1120, 370))
-            else:
-                def_diftxt = self.uitext.render('(' + str(def_dif) + ')', False, self.red_rgb)
-                surf.blit(def_diftxt, (1120, 370))
-            if mag_dif >= 0:
-                mag_diftxt = self.uitext.render('(+' + str(mag_dif) + ')', False, self.green_rgb)
-                surf.blit(mag_diftxt, (1120, 440))
-            else:
-                mag_diftxt = self.uitext.render('(' + str(mag_dif) + ')', False, self.red_rgb)
-                surf.blit(mag_diftxt, (1120, 440))
+            surf.blit(item_desc, (120, 660))
+            if self.min_pos != 0:
+                surf.blit(self.cursor_up, (212, 303))
             if self.min_pos + 5 != self.max_pos:
                 surf.blit(self.cursor_down, (212, 623))  # Downward facing arrow to show that more items are available
-            surf.blit(item_desc, (120, 660))
-            surf.blit(str_txt, (1000, 300))
-            surf.blit(def_txt, (1000, 370))
-            surf.blit(mag_txt, (1000, 440))
-            surf.blit(luk_txt, (1000, 510))
+        else:
+            if not self.status_anim:
+                self.box_pos = 2000
+                self.status_anim = True
+            if self.status_anim:
+                if self.box_pos > 950:
+                    self.box_pos -= 50
+
+            surf.blit(self.status_bg, (self.box_pos, 222))
+            if self.box_pos <= 950:
+                str_txt = self.uitext.render('STR: ' + str(self.pstr), False, self.txtcolor3)
+                def_txt = self.uitext.render('DEF: ' + str(self.pdef), False, self.txtcolor3)
+                mag_txt = self.uitext.render('MAG: ' + str(self.pmag), False, self.txtcolor3)
+                luk_txt = self.uitext.render('LUCK: ' + str(self.pluck), False, self.txtcolor3)
+                item_desc = self.uitext2.render(item['description'], False, self.txtcolor2)
+                if self.current_list == self.weapons_list:
+                    player_item = player_data.cur_weapon
+
+                elif self.current_list == self.armour_list:
+                    player_item = player_data.cur_armour
+                else:
+                    player_item = player_data.cur_accessory
+
+                str_dif = self.pstr + item['atk'] - (self.pstr + self.current_list[player_item]['atk'])
+                def_dif = self.pdef + item['def'] - (self.pdef + self.current_list[player_item]['def'])
+                mag_dif = self.pmag + item['mag'] - (self.pmag + self.current_list[player_item]['mag'])
+                if str_dif >= 0:
+                    str_diftxt = self.uitext.render('(+' + str(str_dif) + ')', False, self.green_rgb)
+                    surf.blit(str_diftxt, (1120, 300))
+                else:
+                    str_diftxt = self.uitext.render('(' + str(str_dif) + ')', False, self.red_rgb)
+                    surf.blit(str_diftxt, (1120, 300))
+                if def_dif >= 0:
+                    def_diftxt = self.uitext.render('(+' + str(def_dif) + ')', False, self.green_rgb)
+                    surf.blit(def_diftxt, (1120, 370))
+                else:
+                    def_diftxt = self.uitext.render('(' + str(def_dif) + ')', False, self.red_rgb)
+                    surf.blit(def_diftxt, (1120, 370))
+                if mag_dif >= 0:
+                    mag_diftxt = self.uitext.render('(+' + str(mag_dif) + ')', False, self.green_rgb)
+                    surf.blit(mag_diftxt, (1120, 440))
+                else:
+                    mag_diftxt = self.uitext.render('(' + str(mag_dif) + ')', False, self.red_rgb)
+                    surf.blit(mag_diftxt, (1120, 440))
+                if self.min_pos + 5 != self.max_pos:
+                    surf.blit(self.cursor_down, (212, 623))  # Downward facing arrow to show that more items are available
+                if self.min_pos != 0:
+                    surf.blit(self.cursor_up, (212, 303))
+                surf.blit(item_desc, (120, 660))
+                surf.blit(str_txt, (1000, 300))
+                surf.blit(def_txt, (1000, 370))
+                surf.blit(mag_txt, (1000, 440))
+                surf.blit(luk_txt, (1000, 510))
 
     def buy_item(self, item_id):
         if self.player_data.gold < self.current_list[item_id]['cost']:
@@ -2683,22 +2762,22 @@ class Shop(MainUi):
                 cost1 = self.uitext.render(wepcostlist[self.min_pos], False, self.txtcolor3)
                 stat1 = self.uitext.render(wepstatlist[self.min_pos], False, self.txtcolor3)
                 attr1 = self.uitext.render(wepattributelist[self.min_pos], False, self.txtcolor3)
-                if self.max_pos > 2:
+                if self.max_pos >= 2:
                     item2 = self.uitext.render(wepnamelist[self.min_pos + 1], False, self.txtcolor3)
                     cost2 = self.uitext.render(wepcostlist[self.min_pos + 1], False, self.txtcolor3)
                     stat2 = self.uitext.render(wepstatlist[self.min_pos + 1], False, self.txtcolor3)
                     attr2 = self.uitext.render(wepattributelist[self.min_pos + 1], False, self.txtcolor3)
-                if self.max_pos > 3:
+                if self.max_pos >= 3:
                     item3 = self.uitext.render(wepnamelist[self.min_pos + 2], False, self.txtcolor3)
                     cost3 = self.uitext.render(wepcostlist[self.min_pos + 2], False, self.txtcolor3)
                     stat3 = self.uitext.render(wepstatlist[self.min_pos + 2], False, self.txtcolor3)
                     attr3 = self.uitext.render(wepattributelist[self.min_pos + 2], False, self.txtcolor3)
-                if self.max_pos > 4:
+                if self.max_pos >= 4:
                     item4 = self.uitext.render(wepnamelist[self.min_pos + 3], False, self.txtcolor3)
                     cost4 = self.uitext.render(wepcostlist[self.min_pos + 3], False, self.txtcolor3)
                     stat4 = self.uitext.render(wepstatlist[self.min_pos + 3], False, self.txtcolor3)
                     attr4 = self.uitext.render(wepattributelist[self.min_pos + 3], False, self.txtcolor3)
-                if self.max_pos > 5:
+                if self.max_pos >= 5:
                     item5 = self.uitext.render(wepnamelist[self.min_pos + 4], False, self.txtcolor3)
                     cost5 = self.uitext.render(wepcostlist[self.min_pos + 4], False, self.txtcolor3)
                     stat5 = self.uitext.render(wepstatlist[self.min_pos + 4], False, self.txtcolor3)
@@ -2709,22 +2788,22 @@ class Shop(MainUi):
                 cost1 = self.uitext.render(armcostlist[self.min_pos], False, self.txtcolor3)
                 stat1 = self.uitext.render(armstatlist[self.min_pos], False, self.txtcolor3)
                 attr1 = self.uitext.render(armattributelist[self.min_pos], False, self.txtcolor3)
-                if self.max_pos > 2:
+                if self.max_pos >= 2:
                     item2 = self.uitext.render(armnamelist[self.min_pos + 1], False, self.txtcolor3)
                     cost2 = self.uitext.render(armcostlist[self.min_pos + 1], False, self.txtcolor3)
                     stat2 = self.uitext.render(armstatlist[self.min_pos + 1], False, self.txtcolor3)
                     attr2 = self.uitext.render(armattributelist[self.min_pos + 1], False, self.txtcolor3)
-                if self.max_pos > 3:
+                if self.max_pos >= 3:
                     item3 = self.uitext.render(armnamelist[self.min_pos + 2], False, self.txtcolor3)
                     cost3 = self.uitext.render(armcostlist[self.min_pos + 2], False, self.txtcolor3)
                     stat3 = self.uitext.render(armstatlist[self.min_pos + 2], False, self.txtcolor3)
                     attr3 = self.uitext.render(armattributelist[self.min_pos + 2], False, self.txtcolor3)
-                if self.max_pos > 4:
+                if self.max_pos >= 4:
                     item4 = self.uitext.render(armnamelist[self.min_pos + 3], False, self.txtcolor3)
                     cost4 = self.uitext.render(armcostlist[self.min_pos + 3], False, self.txtcolor3)
                     stat4 = self.uitext.render(armstatlist[self.min_pos + 3], False, self.txtcolor3)
                     attr4 = self.uitext.render(armattributelist[self.min_pos + 3], False, self.txtcolor3)
-                if self.max_pos > 5:
+                if self.max_pos >= 5:
                     item5 = self.uitext.render(armnamelist[self.min_pos + 4], False, self.txtcolor3)
                     cost5 = self.uitext.render(armcostlist[self.min_pos + 4], False, self.txtcolor3)
                     stat5 = self.uitext.render(armstatlist[self.min_pos + 4], False, self.txtcolor3)
@@ -2735,22 +2814,22 @@ class Shop(MainUi):
                 cost1 = self.uitext.render(acccostlist[self.min_pos], False, self.txtcolor3)
                 stat1 = self.uitext.render(accstatlist[self.min_pos], False, self.txtcolor3)
                 attr1 = self.uitext.render(accattributelist[self.min_pos], False, self.txtcolor3)
-                if self.max_pos > 2:
+                if self.max_pos >= 2:
                     item2 = self.uitext.render(accnamelist[self.min_pos + 1], False, self.txtcolor3)
                     cost2 = self.uitext.render(acccostlist[self.min_pos + 1], False, self.txtcolor3)
                     stat2 = self.uitext.render(accstatlist[self.min_pos + 1], False, self.txtcolor3)
                     attr2 = self.uitext.render(accattributelist[self.min_pos + 1], False, self.txtcolor3)
-                if self.max_pos > 3:
+                if self.max_pos >= 3:
                     item3 = self.uitext.render(accnamelist[self.min_pos + 2], False, self.txtcolor3)
                     cost3 = self.uitext.render(acccostlist[self.min_pos + 2], False, self.txtcolor3)
                     stat3 = self.uitext.render(accstatlist[self.min_pos + 2], False, self.txtcolor3)
                     attr3 = self.uitext.render(accattributelist[self.min_pos + 2], False, self.txtcolor3)
-                if self.max_pos > 4:
+                if self.max_pos >= 4:
                     item4 = self.uitext.render(accnamelist[self.min_pos + 3], False, self.txtcolor3)
                     cost4 = self.uitext.render(acccostlist[self.min_pos + 3], False, self.txtcolor3)
                     stat4 = self.uitext.render(accstatlist[self.min_pos + 3], False, self.txtcolor3)
                     attr4 = self.uitext.render(accattributelist[self.min_pos + 3], False, self.txtcolor3)
-                if self.max_pos > 5:
+                if self.max_pos >= 5:
                     item5 = self.uitext.render(accnamelist[self.min_pos + 4], False, self.txtcolor3)
                     cost5 = self.uitext.render(acccostlist[self.min_pos + 4], False, self.txtcolor3)
                     stat5 = self.uitext.render(accstatlist[self.min_pos + 4], False, self.txtcolor3)
@@ -2759,24 +2838,35 @@ class Shop(MainUi):
                 self.max_pos = len(self.consume_list)
                 item1 = self.uitext.render(connamelist[self.min_pos], False, self.txtcolor3)
                 cost1 = self.uitext.render(concostlist[self.min_pos], False, self.txtcolor3)
-                stat1 = self.uitext.render(constatlist[self.min_pos], False, self.txtcolor3)
+                if self.max_pos >= 2:
+                    item2 = self.uitext.render(connamelist[self.min_pos + 1], False, self.txtcolor3)
+                    cost2 = self.uitext.render(concostlist[self.min_pos + 1], False, self.txtcolor3)
+                if self.max_pos >= 3:
+                    item3 = self.uitext.render(connamelist[self.min_pos + 2], False, self.txtcolor3)
+                    cost3 = self.uitext.render(concostlist[self.min_pos + 2], False, self.txtcolor3)
+                if self.max_pos >= 4:
+                    item4 = self.uitext.render(connamelist[self.min_pos + 3], False, self.txtcolor3)
+                    cost4 = self.uitext.render(concostlist[self.min_pos + 3], False, self.txtcolor3)
+                if self.max_pos >= 5:
+                    item5 = self.uitext.render(connamelist[self.min_pos + 4], False, self.txtcolor3)
+                    cost5 = self.uitext.render(concostlist[self.min_pos + 4], False, self.txtcolor3)
 
             surf.blit(item1, (161, 339))
             surf.blit(cost1, (449, 339))
 
-            if self.max_pos > 2:
+            if self.max_pos >= 2:
                 surf.blit(item2, (161, 399))
                 surf.blit(cost2, (449, 399))
 
-            if self.max_pos > 3:
+            if self.max_pos >= 3:
                 surf.blit(item3, (161, 459))
                 surf.blit(cost3, (449, 459))
 
-            if self.max_pos > 4:
+            if self.max_pos >= 4:
                 surf.blit(item4, (161, 519))
                 surf.blit(cost4, (449, 519))
 
-            if self.max_pos > 5:
+            if self.max_pos >= 5:
                 surf.blit(item5, (161, 579))
                 surf.blit(cost5, (449, 579))
 
@@ -2807,13 +2897,13 @@ class Shop(MainUi):
             if not self.shop_selection_flag:  # while using cursor 2
                 if self.shop_cursor_pos2 == 0:
                     surf.blit(self.cursor, (120, 339))
-                if self.shop_cursor_pos2 == 1:
+                elif self.shop_cursor_pos2 == 1:
                     surf.blit(self.cursor, (120, 399))
-                if self.shop_cursor_pos2 == 2:
+                elif self.shop_cursor_pos2 == 2:
                     surf.blit(self.cursor, (120, 459))
-                if self.shop_cursor_pos2 == 3:
+                elif self.shop_cursor_pos2 == 3:
                     surf.blit(self.cursor, (120, 519))
-                if self.shop_cursor_pos2 == 4:
+                elif self.shop_cursor_pos2 == 4:
                     surf.blit(self.cursor, (120, 579))
                 if self.shop_cursor_pos2 > 4:
                     if self.min_pos + 5 < self.max_pos:
@@ -2832,8 +2922,7 @@ class Shop(MainUi):
                             self.min_pos = self.max_pos - 5
                     else:
                         self.shop_cursor_pos2 = self.max_pos - 1
-                if self.current_list != self.consume_list:
-                    self.status_window(self.current_list[self.shop_cursor_pos2 + self.min_pos], player_data)
+                self.status_window(self.current_list[self.shop_cursor_pos2 + self.min_pos], player_data)
 
 
 class GameEvents(MainUi):
@@ -2858,6 +2947,7 @@ class GameEvents(MainUi):
         self.game_clock = GameClock()
         self.option_selector = SelectOptions()
         self.town_talk1 = False  # Flag for drawing options menu for the 'Talk' Screen
+
     def town_first_visit(self, player_data):
         event_done = False
         pygame.mixer.music.load('data/sounds&music/Bustling_Streets.mp3')
@@ -2876,7 +2966,7 @@ class GameEvents(MainUi):
         dialogue_choice = 0
         dialogue_choice2 = 0
         choice_select = False
-        player_data.town_first_flag = False
+        player_data.town_first_flag = True
         while not event_done:
             curwidth, curheight = screen.get_size()
             for event in pygame.event.get():
@@ -3236,7 +3326,7 @@ class GameEvents(MainUi):
 
     def town(self, player_data):
         '''The town and all the locations present in it.'''
-        if player_data.town_first_flag:
+        if not player_data.town_first_flag:
             self.town_first_visit(player_data)
         event_done = False
         global surf
@@ -3765,6 +3855,7 @@ if __name__ == "__main__":
                         arena_shop.min_pos -= 1"""
                 if (event.key == pygame.K_RETURN and shop) and not arena_shop.shop_selection_flag:
                     if arena_shop.buy_item(arena_shop.min_pos + arena_shop.shop_cursor_pos2):
+                        print(player.gold)
                         player.gold -= arena_shop.current_list[arena_shop.min_pos + arena_shop.shop_cursor_pos2]['cost']
                         if arena_shop.current_list == arena_shop.weapons_list:
                             player.cur_weapon = arena_shop.min_pos + arena_shop.shop_cursor_pos2
@@ -3772,7 +3863,21 @@ if __name__ == "__main__":
                             player.cur_armour = arena_shop.min_pos + arena_shop.shop_cursor_pos2
                         elif arena_shop.current_list == arena_shop.acc_list:
                             player.cur_accessory = arena_shop.min_pos + arena_shop.shop_cursor_pos2
+                        elif arena_shop.current_list == arena_shop.consume_list:
+                            for consumable in arena_shop.consume_list:
+                                if consumable["id"] == arena_shop.min_pos + arena_shop.shop_cursor_pos2:
+                                    if len(player.inventory) > 0:
+                                        item_in_inventory = False
+                                        for item in player.inventory:
+                                            if item["name"] == consumable["name"]:
+                                                item["amount"] += 1
+                                                item_in_inventory = True
+                                        if not item_in_inventory:
+                                            player.inventory.append({"name": consumable["name"], "amount": 1})
+                                    else:
+                                        player.inventory.append({"name": consumable["name"], "amount": 1})
                         player.update_stats()
+                        print(player.inventory)
 
                 if (
                         event.key == pygame.K_RETURN and ui.cursorpos == 4) and scene == 'arena' and controlui:  # Inn option
