@@ -358,5 +358,71 @@
       "data/sprites/quake/tile013.png",
       0.1
     ]
+  ],
+  "cure": [
+    [
+      "data/sprites/Cure1.png",
+      0.1
+    ],
+    [
+      "data/sprites/Cure2.png",
+      0.1
+    ],
+    [
+      "data/sprites/Cure3.png",
+      0.1
+    ],
+    [
+      "data/sprites/Cure4.png",
+      0.1
+    ],
+    [
+      "data/sprites/Cure5.png",
+      0.1
+    ],
+    [
+      "data/sprites/Cure6.png",
+      0.1
+    ],
+    [
+      "data/sprites/Cure7.png",
+      0.1
+    ],
+    [
+      "data/sprites/Cure8.png",
+      0.1
+    ],
+    [
+      "data/sprites/Cure9.png",
+      0.1
+    ],
+    [
+      "data/sprites/Cure10.png",
+      0.1
+    ],
+    [
+      "data/sprites/Cure11.png",
+      0.1
+    ],
+    [
+      "data/sprites/Cure12.png",
+      0.1
+    ],
+    [
+      "data/sprites/Cure13.png",
+      0.1
+    ],
+    [
+      "data/sprites/Cure14.png",
+      0.1
+    ],
+    [
+      "data/sprites/Cure15.png",
+      0.1
+    ],
+    [
+      "data/sprites/Cure16.png",
+      0.1
+    ]
   ]
 }

@@ -197,9 +197,9 @@
     {
       "id" : 6,
       "name" : "Rabbit's foot",
-      "atk" : 500,
-      "def" : 500,
-      "mag" : 500,
+      "atk" : 5,
+      "def" : 5,
+      "mag" : 5,
       "cost" : 1000,
       "attributes" : "Luck 2x",
       "description" : "Said to be a symbol of luck."
@@ -207,12 +207,64 @@
   ],
   "consumables" : [
     {
-      "id" : 0,
-      "name" : "Not ready yet.",
-      "hp" : 50,
-      "mp" : 60,
-      "cost" : 50,
-      "description" : ""
+      "id": 0,
+      "name": "Bandages",
+      "hp": 50,
+      "mp": 0,
+      "cost": 25,
+      "effect": "",
+      "description": "Tis' but a scratch! (Heals 50 HP)",
+      "battle_desc": "Heals 50 HP."
+    },
+    {
+      "id" : 1,
+      "name" : "Potion",
+      "hp" : 200,
+      "mp" : 0,
+      "cost" : 100,
+      "effect": "",
+      "description" : "Tastes a bit salty. (Heals 200 HP)",
+      "battle_desc": "Heals 200 HP."
+    },
+    {
+      "id" : 2,
+      "name" : "Roast Beef",
+      "hp" : 100,
+      "mp" : 100,
+      "cost" : 125,
+      "effect": "",
+      "description" : "Beefy! (Heals 100 HP & MP)",
+      "battle_desc": "Heals 100 HP & MP."
+    },
+    {
+      "id" : 3,
+      "name" : "Mana Potion",
+      "hp" : 0,
+      "mp" : 200,
+      "cost" : 100,
+      "effect": "",
+      "description" : "Tastes a bit sour. (Heals 200 MP)",
+      "battle_desc" : "Heals 200 MP."
+    },
+    {
+      "id" : 4,
+      "name" : "Dragon Tear",
+      "hp" : 500,
+      "mp" : 250,
+      "cost" : 400,
+      "effect": "",
+      "description" : "Said to be the secret to eternal youth. (Heals 500 HP & 250 MP)",
+      "battle_desc": "Heals 500 HP & 250 MP."
+    },
+    {
+      "id" : 5,
+      "name" : "Elixir",
+      "hp" : 9999,
+      "mp" : 9999,
+      "cost" : 1500,
+      "effect": "",
+      "description" : "Said to cure even the most deadliest of injuries. (Fully restore HP & MP)",
+      "battle_desc": "Fully restores HP & MP."
     }
   ]
 }

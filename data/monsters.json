@@ -39,7 +39,7 @@
     "luck": 1,
     "gold" : 120,
     "exp" : 5000,
-    "move_list" : ["attack", "thunder"],
+    "move_list" : ["attack", "quake"],
     "bg" : "data/backgrounds/Ruins2.png",
     "weakness" : ["light"],
     "strengths" : ["dark"]
