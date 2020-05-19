@@ -148,41 +148,41 @@
       "id" : 1,
       "name" : "Berserker's Necklace",
       "atk" : 0,
-      "def" : -10,
-      "mag" : 0,
-      "cost" : 1000,
+      "def" : -20,
+      "mag" : -20,
+      "cost" : 600,
       "attributes" : "AtkDmg 2x",
-      "description" : "Doubles the users regular attack damage."
+      "description" : "Offence is the best offence. (Doubles the users regular attack damage)"
     },
     {
       "id" : 2,
-      "name" : "Debug Amulet3",
-      "atk" : 800,
-      "def" : 900,
-      "mag" : 1000,
-      "cost" : 1000,
+      "name" : "Ember earrings",
+      "atk" : 0,
+      "def" : 0,
+      "mag" : 10,
+      "cost" : 500,
       "attributes" : "FireDmg Up",
-      "description" : ""
+      "description" : "Makes you feel warm! (Raises fire damage by 50%)"
     },
     {
       "id" : 3,
-      "name" : "Debug Amulet4",
-      "atk" : 800,
-      "def" : 900,
-      "mag" : 1000,
-      "cost" : 1000,
-      "attributes" : "IceDmg Up",
-      "description" : ""
+      "name" : "Teardrop amulet",
+      "atk" : 0,
+      "def" : 0,
+      "mag" : 10,
+      "cost" : 500,
+      "attributes" : "WaterDmg Up",
+      "description" : "Makes you a bit emotional. (Raises water damage by 50%)"
     },
     {
       "id" : 4,
-      "name" : "Debug Amulet5",
-      "atk" : 800,
-      "def" : 900,
-      "mag" : 1000,
+      "name" : "Book of death",
+      "atk" : 0,
+      "def" : 20,
+      "mag" : 10,
       "cost" : 1000,
       "attributes" : "Death Resist",
-      "description" : ""
+      "description" : "Touching this book will let you see a god of death. (Resist instant death effect)"
     },
     {
       "id" : 5,
@@ -200,9 +200,9 @@
       "atk" : 5,
       "def" : 5,
       "mag" : 5,
-      "cost" : 1000,
+      "cost" : 900,
       "attributes" : "Luck 2x",
-      "description" : "Said to be a symbol of luck."
+      "description" : "Said to be a symbol of luck. (Increases luck during battle)"
     }
   ],
   "consumables" : [

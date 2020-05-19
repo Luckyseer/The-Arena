@@ -22,18 +22,18 @@
         "level_req" : 7
       },
     {
+        "name" : "Fire Slash",
+        "type" : "dmg",
+        "desc" : "Deal fire damage to the enemy.",
+        "mp_cost" : 25,
+        "level_req" : 9
+      },
+    {
         "name" : "Quake",
         "type" : "dmg",
         "desc" : "Attack the enemy with great force.",
         "mp_cost" : 60,
         "level_req" : 10
-      },
-    {
-        "name" : "Fire Slash",
-        "type" : "dmg",
-        "desc" : "Deal fire damage to the enemy.",
-        "mp_cost" : 25,
-        "level_req" : 13
       }
   ],
   "monster": [

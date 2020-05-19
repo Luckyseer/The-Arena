@@ -50,6 +50,7 @@
 # - Alpha v3.1 
  + Added consumables to shops
  + You can now use consumables in battle
+ + Added new accessories and item effects
 # Known issues:
  - Minor frame drop on status screen
  - Update current song after victory

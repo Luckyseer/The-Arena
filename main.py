@@ -1529,6 +1529,7 @@ class NewBattle:
                 self.game_state = 'player_item_done'
             else:
                 self.sequence_flag = True
+                self.crit_chance = 0
                 self.sequence_to_play = "use_item"
                 self.sequence_target = (900, 270)
                 self.global_timer.reset()
@@ -2000,6 +2001,16 @@ class NewBattle:
                 damage *= 2     # Damage doubles if enemy is weak against that element
             elif self.element in self.m_strengths:
                 damage *= 0.5     # Damage halves if enemy is strong against that element
+            for effect in self.p_item_effects:
+                if effect == "AtkDmg 2x" and atk_type == "attack":
+                    damage *= 2
+                elif effect == "FireDmg Up":
+                    if self.element == "fire":
+                        damage += damage * 0.5
+                elif effect == "WaterDmg Up":
+                    if self.element == "water":
+                        damage += damage * 0.5
+
         return int(damage)
 
     def shake_screen(self):
@@ -2147,6 +2158,7 @@ class TextBox:
 
     def __init__(self, txtcolor=(21, 57, 114), convo_flag=False):
         self.bg = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()  # Ui background
+        self.bg_loaded = pygame.transform.scale(self.bg, (1280, 300)).convert_alpha()
         self.txtcolor = txtcolor  # Default font colour
         self.txtcolor2 = (23, 18, 96)
         self.uitext = pygame.font.Font("data/fonts/runescape_uf.ttf", 33)  # Default font
@@ -2198,7 +2210,10 @@ class TextBox:
 
     def draw_textbox(self, pic=None, name='', line1='', line2='', line3='', line4='', line5='',
                      line6='Press RCTRL to continue...'):
-        surf.blit(pygame.transform.scale(self.bg, (curwidth, self.txtbox_height)), (0, 430))
+        if self.txtbox_height < 300:
+            surf.blit(pygame.transform.scale(self.bg, (curwidth, self.txtbox_height)), (0, 430))
+        else:
+            surf.blit(self.bg_loaded, (0, 430))
         if not self.popup_done:
             self.popup()
         if self.popup_done:
