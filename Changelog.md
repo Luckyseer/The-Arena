@@ -51,8 +51,9 @@
  + Added consumables to shops
  + You can now use consumables in battle
  + Added new accessories and item effects
+ + You can only buy one of each weapon, armour or accessory now.
+ + Added the amount of the consumable in player's inventory in the shop
 # Known issues:
- - Minor frame drop on status screen
  - Update current song after victory
 # TODO:
  - Finish the town.

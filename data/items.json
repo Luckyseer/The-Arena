@@ -182,7 +182,7 @@
       "mag" : 10,
       "cost" : 1000,
       "attributes" : "Death Resist",
-      "description" : "Touching this book will let you see a god of death. (Resist instant death effect)"
+      "description" : "Might induce heart failure! (Resist instant death effect)"
     },
     {
       "id" : 5,
