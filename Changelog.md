@@ -48,14 +48,16 @@
  + Now enemies can use skills the same way players can. 
  + You can test the new battle system by typing  in "test" while in the main menu.
 # - Alpha v3.1 
- + Added consumables to shops
- + You can now use consumables in battle
- + Added new accessories and item effects
+ + Added consumables to shops.
+ + You can now use consumables in battle.
+ + Added new accessories and item effects.
  + You can only buy one of each weapon, armour or accessory now.
- + Added the amount of the consumable in player's inventory in the shop
+ + Added the amount of the consumable in player's inventory in the shop.
+ + You can now change your equipment on the status screen.
+ + You no longer automatically equip the item after purchase.
 # Known issues:
  - Update current song after victory
 # TODO:
  - Finish the town.
  - ~~Items in battle.~~ Done
- - Changing equipment in status screen.
+ - ~~Changing equipment in status screen.~~ Done
