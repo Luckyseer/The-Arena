@@ -5,8 +5,10 @@ import random
 from math import floor
 import pygame
 from data import pyganim
+from data import gameui
 import json
 from pygame.locals import *
+
 
 icon = pygame.image.load("data/sprites/icon2.png")
 pygame.display.set_icon(icon)
@@ -1185,6 +1187,7 @@ class SideBattle:
 
 
 class NewBattle:
+
     """The new battle system. Returns True on victory"""
 
     def __init__(self, monsterdata, itemdata, sounddata, animationdata, skilldata, sequence_data):
@@ -2076,12 +2079,16 @@ class NewBattle:
         self.sequence_done = False
         self.player_dmg_flag = False
         self.player_flag = True
-        self.player_sprites.play()
         self.element = "none"
         self.player_sprites_burst.play()
         self.turn_count = 0
         self.healthbar_flag = False
         self.victory_flag = False
+        if player_data.pclass == "warrior":
+            self.player_sprites = pyganim.PygAnimation([("data/sprites/idle1.png", 0.2), ("data/sprites/idle2.png", 0.2), ("data/sprites/idle3.png", 0.2)])
+        elif player_data.pclass == "mage":
+            self.player_sprites = pyganim.PygAnimation([("data/sprites/midle1.png", 0.3), ("data/sprites/midle2.png", 0.3), ("data/sprites/midle3.png", 0.3)])
+        self.player_sprites.play()
 
     def check_victory(self):
         """Checks if player won the battle or not"""
@@ -2413,17 +2420,32 @@ class MainUi:
         nametxt = self.uitext.render('Name: ' + player.name, False, self.txtcolor)
         surf.blit(nametxt, (169, 207))
         strtxt = self.uitext.render('STR: %d' % player.stre, False, self.txtcolor)
-        strtxt2 = self.uitext.render('(+%d)' % player.add_stre, False, (0, 200, 0))
+        if player.add_stre > 0:
+            strtxt2 = self.uitext.render('(+%d)' % player.add_stre, False, (0, 200, 0))
+        elif player.add_stre == 0:
+            strtxt2 = self.uitext.render('(%d)' % player.add_stre, False, (95, 100, 100))
+        else:
+            strtxt2 = self.uitext.render('(+%d)' % player.add_stre, False, (200, 0, 0))
         surf.blit(strtxt, (169, 247))
         surf.blit(strtxt2, (299, 247))
         deftxt = self.uitext.render('DEF: %d' % player.defe, False, self.txtcolor)
-        deftxt2 = self.uitext.render('(+%d)' % player.add_defe, False, (0, 200, 0))
+        if player.add_defe > 0:
+            deftxt2 = self.uitext.render('(+%d)' % player.add_defe, False, (0, 200, 0))
+        elif player.add_defe == 0:
+            deftxt2 = self.uitext.render('(+%d)' % player.add_defe, False, (95, 100, 100))
+        else:
+            deftxt2 = self.uitext.render('(%d)' % player.add_defe, False, (200, 0, 0))
         surf.blit(deftxt, (169, 287))
         surf.blit(deftxt2, (299, 287))
         lucktxt = self.uitext.render('LUCK: %d' % player.luck, False, self.txtcolor)
         surf.blit(lucktxt, (169, 327))
         magtxt = self.uitext.render('MAG: %d' % player.mag, False, self.txtcolor)
-        magtxt2 = self.uitext.render('(+%d)' % player.add_mag, False, (0, 200, 0))
+        if player.add_mag > 0:
+            magtxt2 = self.uitext.render('(+%d)' % player.add_mag, False, (0, 200, 0))
+        elif player.add_mag == 0:
+            magtxt2 = self.uitext.render('(+%d)' % player.add_mag, False, (95, 100, 100))
+        else:
+            magtxt2 = self.uitext.render('(%d)' % player.add_mag, False, (200, 0, 0))
         surf.blit(magtxt, (169, 367))
         surf.blit(magtxt2, (299, 367))
         lvltxt = self.uitext.render('Level: %d' % player.level, False, self.txtcolor2)
@@ -2526,6 +2548,7 @@ class MainUi:
                 surf.blit(self.cursor, (940, 280))
             elif self.equip_cursor2_pos == 4:
                 surf.blit(self.cursor, (940, 335))
+
     def status_menu(self, player=Player()):
         surf.blit(self.status_menu_bg, (955, 405))
         surf.blit(self.equip_txt, (990, 465))

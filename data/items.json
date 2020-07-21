@@ -96,7 +96,7 @@
       "id" : 2,
       "name" : "Iron Chainmail",
       "atk" : 5,
-      "def" : 15,
+      "def" : 20,
       "mag" : 0,
       "cost" : 300,
       "attributes" : "null",
