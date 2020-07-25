@@ -2919,9 +2919,8 @@ class Shop(MainUi):
             shop_title = self.title_text.render(shop_name, True, self.txtcolor2)
 
         if self.shopkeep:
-            self.txtbox.draw_textbox("data/sprites/shopkeep.png", 'Shopkeeper',
-                                     'Welcome to the Arena shop! How can I help you?',
-                                     line6='              Press RCTRL to continue...')
+            self.txtbox.draw_textbox([["data/sprites/shopkeep.png", 'Shopkeeper',
+                                     'Welcome to the Arena shop! How can I help you?']], surf, (0, 400))
         if not self.shopkeep:
             surf.blit(self.shopbg, (53, 30))
             surf.blit(shop_title, (360, 57))
@@ -4285,11 +4284,12 @@ if __name__ == "__main__":
                 if (event.key == pygame.K_RETURN and ui.cursorpos == 3) and scene == 'arena' and controlui:  # Shop option
                     drawui = False
                     controlui = False
-                    arena_shop.txtbox.popup_reset()
+                    arena_shop.txtbox.reset()
                     shop = True
                 if (event.key == pygame.K_RCTRL and shop) and arena_shop.shopkeep:
-                    arena_shop.shopkeep = False
-                    event.key = 0  # to stop pygame from being dumb
+                    if arena_shop.txtbox.progress_dialogue([[]]):
+                        arena_shop.shopkeep = False
+                        event.key = 0  # to stop pygame from being dumb
                 if (event.key == pygame.K_RCTRL and shop) and not arena_shop.shopkeep:
                     if arena_shop.shop_selection_flag:
                         drawui = True
@@ -4451,7 +4451,8 @@ if __name__ == "__main__":
                     controlui = True
                     battle_choice = False
                 if (event.key == pygame.K_RCTRL and battle_choice) and ui.battalk:
-                    ui.battalk = False
+                    if ui.txtbox.progress_dialogue([[]]):
+                        ui.battalk = False
                 if event.key == pygame.K_RCTRL and post_battle:
                     ui.pb_dialogue = False
                     post_battle = False

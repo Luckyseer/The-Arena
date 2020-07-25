@@ -145,7 +145,8 @@ class TextBox:
         self.popup_flag = False
         self.popup_done = False
         self.dialogue_progress = 0
-
+        self.ui_text.reset_buffer()
+        
     def popup(self):  # popup animation for the text box
         if not self.popup_flag:
             self.txtbox_height = 0
