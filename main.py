@@ -5,14 +5,15 @@ import random
 from math import floor
 import pygame
 from data import pyganim
-from data import gameui
+from gameui import TextBox
+from gameui import  UiText
 import json
 from pygame.locals import *
 
 
 icon = pygame.image.load("data/sprites/icon2.png")
 pygame.display.set_icon(icon)
-alphatext = "Alpha v3.1 - Items and Equipment system"
+alphatext = "Alpha v4.0 - Story and the Town"
 try:
     with open('data/items.json', 'r') as items:
         item_data = json.load(items)
@@ -27,6 +28,8 @@ try:
         skills = json.load(skills)
     with open('data/sequences.json', 'r') as sequences:
         sequences = json.load(sequences)
+    with open('data/dialogue.json', 'r') as dialogue:
+        dialogues = json.load(dialogue)
 except EOFError or IOError:
     print('Could not load item/monster/sound data, Make sure they are in the folder with the game')
     raise FileNotFoundError
@@ -113,16 +116,19 @@ class Player:
                 self.level = value
 
 
-if  __name__ == '__main__':
+if __name__ == '__main__':
     pygame.init()
-
-    isfullscreen = True
     screen_width = 1280
     screen_height = 720
+    is_fullscreen = False
+    if not is_fullscreen:
+        screen = pygame.display.set_mode([screen_width, screen_height])
+    else:
+        screen = pygame.display.set_mode([screen_width, screen_height], pygame.FULLSCREEN)
+
     # #Note to self: remove debug lines after done# #
 
     clock = pygame.time.Clock()
-    screen = pygame.display.set_mode([screen_width, screen_height])
     pygame.display.set_caption('The Arena')
     done = False
 
@@ -883,13 +889,7 @@ class SideBattle:
                 if event.type == pygame.constants.USEREVENT:
                     pygame.mixer.music.load(self.bgm)
                     pygame.mixer.music.play()
-                if event.type == VIDEORESIZE:
-                    screen = pygame.display.set_mode(event.dict['size'], HWSURFACE | DOUBLEBUF | RESIZABLE)
-                    surf.blit(pygame.transform.scale(surf, (curwidth, curheight)), (0, 0))
-                    self.monpos = (curwidth - 1080, 270)
-                    if curwidth - 1080 <= 0:
-                        self.monpos = (0, 270)
-                    pygame.display.flip()
+
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     posfinder()  # debug
 
@@ -2163,93 +2163,6 @@ class NewBattle:
             pygame.display.set_caption(fps)
 
 
-class TextBox:
-    """The textbox class, used to draw textboxes and anything related to dialogue."""
-
-    def __init__(self, txtcolor=(21, 57, 114), convo_flag=False):
-        self.bg = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()  # Ui background
-        self.bg_loaded = pygame.transform.scale(self.bg, (1280, 300)).convert_alpha()
-        self.txtcolor = txtcolor  # Default font colour
-        self.txtcolor2 = (23, 18, 96)
-        self.uitext = pygame.font.Font("data/fonts/runescape_uf.ttf", 33)  # Default font
-        self.uitext2 = pygame.font.Font("data/fonts/runescape_uf.ttf", 25)  # Choice selection font
-        self.cursor = pygame.image.load("data/sprites/Cursor.png").convert_alpha()
-        self.ch_cursorpos = 0  # Position of cursor for choice selection
-        self.dialogue_progress = 0  # Current 'Progress' of the dialogue
-        self.txtbox_height = 300
-        self.popup_flag = False  # Flag for popup animation
-        self.popup_done = False  # Check if the popup animation is done or not
-        self.convo_flag = convo_flag  # if it is a conversation(aka story part) the popup animation won't repeat
-
-    def select_choice(self, choice1, choice2, choice3=None):  # Select a choice between 2 or 3 options
-        if choice3 is not None:
-            surf.blit(pygame.transform.scale(self.bg, (300, 150)),
-                      (916, 276))  # Adjusting size of textbox based on whether there are 3 or 2 choices.
-        else:
-            surf.blit(pygame.transform.scale(self.bg, (300, 125)), (916, 276))
-        ch1 = self.uitext2.render(choice1, False, self.txtcolor)
-        ch2 = self.uitext2.render(choice2, False, self.txtcolor)
-        surf.blit(ch1, (960, 309))
-        surf.blit(ch2, (960, 339))
-        if self.ch_cursorpos == 0:  # Choice 1
-            surf.blit(self.cursor, (930, 309))
-        if self.ch_cursorpos == 1:  # Choice 2
-            surf.blit(self.cursor, (930, 339))
-        if choice3 is not None:
-            ch3 = self.uitext2.render(choice3, False, self.txtcolor)
-            surf.blit(ch3, (960, 369))
-            if self.ch_cursorpos == 2:
-                surf.blit(self.cursor, (930, 369))
-        if self.ch_cursorpos > 1:
-            self.ch_cursorpos = 0
-        elif self.ch_cursorpos < 0:
-            self.ch_cursorpos = 1
-
-    def popup_reset(self):
-        self.popup_flag = False
-        self.popup_done = False
-
-    def popup(self):  # popup animation for the text box
-        if not self.popup_flag:
-            self.txtbox_height = 0
-        self.popup_flag = True
-        if self.popup_flag and self.txtbox_height < 300:
-            self.txtbox_height += 50
-        if self.txtbox_height >= 300:
-            self.popup_done = True
-
-    def draw_textbox(self, pic=None, name='', line1='', line2='', line3='', line4='', line5='',
-                     line6='Press RCTRL to continue...'):
-        if self.txtbox_height < 300:
-            surf.blit(pygame.transform.scale(self.bg, (curwidth, self.txtbox_height)), (0, 430))
-        else:
-            surf.blit(self.bg_loaded, (0, 430))
-        if not self.popup_done:
-            self.popup()
-        if self.popup_done:
-            if pic is not None:
-                speaker = pygame.image.load(pic).convert_alpha()
-                surf.blit(speaker, (110, 490))
-                nameplate = self.uitext.render(name, True, (255, 21, 45))
-                surf.blit(nameplate, (131, 655))  # Where the name of the speaker goes
-                picoff = 0
-            elif pic is None:
-                picoff = 100  # When there is no pic the text starts from the leftmost box(AKA narrator mode)
-            # Different rows of text for the txtbox(could be made more elegant,pygame text rendering is pretty annoying)
-            row1 = self.uitext.render(line1, False, self.txtcolor)
-            surf.blit(row1, (270 - picoff, 490))
-            row2 = self.uitext.render(line2, False, self.txtcolor)
-            surf.blit(row2, (270 - picoff, 520))
-            row3 = self.uitext.render(line3, False, self.txtcolor)
-            surf.blit(row3, (270 - picoff, 550))
-            row4 = self.uitext.render(line4, False, self.txtcolor)
-            surf.blit(row4, (270 - picoff, 580))
-            row5 = self.uitext.render(line5, False, self.txtcolor)
-            surf.blit(row5, (270 - picoff, 610))
-            row6 = self.uitext.render(line6, False, self.txtcolor2)
-            surf.blit(row6, (270 - picoff, 640))
-
-
 drawui = True  # Flag to signify whether to draw the ui or not,
 
 
@@ -2389,29 +2302,21 @@ class MainUi:
         if not self.talked:
             if self.Talk == 0 and player.progress == 1:
 
-                self.txtbox.draw_textbox("data/sprites/oldman.png", 'Old Man',
-                                         'I heard the monsters on the first floor are quite weak.',
-                                         'You mustn\'t underestimate them However!',
-                                         'Consider Equipping yourself with new equipment from the Shop.',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/oldman.png", 'Old Man',
+                                         'I heard the monsters on the first floor are quite weak. You mustn\'t underestimate them However!\nConsider Equipping yourself with new equipment from the Shop.',
+                                         ]], surf, (0, 400))
             elif self.Talk == 1 and player.progress == 1:
 
-                self.txtbox.draw_textbox("data/sprites/boy.png", 'Boy',
-                                         'Wow mister, you\'re going to fight in the Arena? So cool!',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/boy.png", 'Boy', 'Wow mister, you\'re going to fight in the Arena? So cool!']], surf, (0, 400))
 
             elif self.Talk == 2 and player.progress == 1:
 
-                self.txtbox.draw_textbox("data/sprites/youngman.png", 'Young Man',
-                                         'In the 50 years that the Arena has been open, there has been only one winner.',
-                                         ' It was the legendary Hero known as Zen.',
-                                         'That was 2 years ago though, nobody has seen him since.',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/youngman.png", 'Young Man',
+                                         'In the 50 years that the Arena has been open, there has been only one winner. It was the legendary Hero known as Zen. That was 2 years ago though, nobody has seen him since.']], surf, (0, 400))
             elif self.Talk == 3 and player.progress == 1:
 
-                self.txtbox.draw_textbox("data/sprites/mysteryman.png", 'Stranger',
-                                         'You...', 'Nevermind. Good luck in the Arena, I\'ll be keeping an eye on you.',
-                                         line6='              Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/mysteryman.png", 'Stranger',
+                                         'You...\nNevermind. Good luck in the Arena, I\'ll be keeping an eye on you.']], surf, (0, 400))
             if self.Talk > 3:
                 self.Talk = -1
 
@@ -2654,13 +2559,13 @@ class MainUi:
         if self.battalk:
             montokill = 5 - monkill
             if monkill < 5:
-                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                         'You have %d monter(s) left to kill. You\'re almost there!' % montokill,
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                         'You have %d monter(s) left to kill. You\'re almost there!' % montokill]]
+                                         , surf, (0, 400))
             if monkill >= 5:
-                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                         'You can challenge the floor boss! Are you prepared for it?',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                         'You can challenge the floor boss! Are you prepared for it?']]
+                                         , surf, (0, 400))
 
         if not self.battalk:
             if monkill >= 5:
@@ -2687,24 +2592,22 @@ class MainUi:
             self.pbtalk = random.randrange(0, 4)
         if self.pbtalk == 0 and progress == 1:
             self.pb_dialogue = True
-            ui.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                   'That was a good battle! If you\'re injured make sure to rest up at the inn.',
-                                   line6='Press RCTRL to continue...')
+            ui.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                   'That was a good battle! If you\'re injured make sure to rest up at the inn.'
+                                   ]], surf, (0, 400))
         elif self.pbtalk == 1 and progress == 1:
             self.pb_dialogue = True
-            ui.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                   'Good job! Make sure to use the gold from your battle to buy equipment from',
-                                   'our Shop.', line6='Press RCTRL to continue...')
+            ui.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                   'Good job! Make sure to use the gold from your battle to buy equipment from our Shop!']], surf, (0, 400))
         elif self.pbtalk == 2 and progress == 1:
             self.pb_dialogue = True
-            ui.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                   'Nice work! You\'re pretty skilled, are you sure you haven\'t done this before?',
-                                   line6='Press RCTRL to continue...')
+            ui.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                   'Nice work! You\'re pretty skilled, are you sure you haven\'t done this before?'
+                                   ]], surf, (0, 400))
         elif self.pbtalk == 3 and progress == 1:
             self.pb_dialogue = True
-            ui.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                   'Good work out there! I overheard some strange people talking about you.',
-                                   'Something about.. A debt?', line6='Press RCTRL to continue...')
+            ui.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                   'Good work out there! I overheard some strange people talking about you. Something about.. A debt?']], surf, (0, 400))
 
     def draw_inn(self, gold):
         surf.blit(pygame.transform.scale(self.bg, (int(curwidth / 1.5), 300)), (0, 430))  # Description box
@@ -3269,11 +3172,15 @@ class GameEvents(MainUi):
         self.applauseSound = pygame.mixer.Sound('data/sounds&music/Applause1.ogg')
         self.bossRoar = pygame.mixer.Sound('data/sounds&music/Monster2.ogg')
         self.arena_bg = pygame.image.load("data/backgrounds/arenaDay.png").convert_alpha()
+        self.arena_bg = pygame.transform.scale(self.arena_bg, (1280, 720))
         self.boss_face1 = pygame.image.load("data/sprites/Boss1.png")
         self.town_location = 0  # 0-Centre 1-Bar/Inn 2-Slums
         self.game_clock = GameClock()
         self.option_selector = SelectOptions()
         self.town_talk1 = False  # Flag for drawing options menu for the 'Talk' Screen
+        self.text_box = TextBox()
+        self.ui_text = UiText()
+        self.ui_text.main_font_colour = (255, 255, 255)
 
     def town_first_visit(self, player_data):
         event_done = False
@@ -3640,16 +3547,240 @@ class GameEvents(MainUi):
             pygame.display.set_caption(fps)
             pygame.display.update()
 
-    def intro_scene(self):
+    def intro_scene(self, intro_dialogue):
         event_done = False
-        pygame.mixer.music.load('data/sounds&music/Dungeon3.ogg')
+        pygame.mixer.music.load('data/sounds&music/Church.mp3')
+        door_sound = pygame.mixer.Sound('data/sounds&music/Door1.ogg')
+        gate_sound = pygame.mixer.Sound('data/sounds&music/Door4.ogg')
         global surf
         global screen
+        text_surf = pygame.Surface((1280, 720))
+        text_surf.set_alpha(0)
+        text_surf.set_colorkey((0, 0, 0))
         pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
         self.timekeep.reset()
         self.dialoguecontrol = False
+        draw_tb = False
+        intro_level = 0
+        pygame.mixer_music.play()
+        text_x = 100
+        text_y = 100
+        text = ''
+        dialogue = 'intro1'
         while not event_done:
-            pass
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    event_done = True
+                    global done
+                    done = True
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RCTRL:
+                        if self.dialoguecontrol:
+                            if self.text_box.progress_dialogue(intro_dialogue[dialogue]):
+                                intro_level += 1
+                                self.timekeep.reset()
+                    if event.key == pygame.K_s:
+                        if intro_level < 20:
+                            intro_level = 20
+            if intro_level < 24:
+                surf.fill((0, 0, 0, 255))
+            text_surf.fill((0, 0, 0, 0))
+            if intro_level == 0:
+                if self.timekeep.timing(1) > 3:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 1:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = "I'm.. still alive?"
+                if self.timekeep.timing(1) > 3:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 2:
+                text_x += 0.1
+                self.ui_text.fade_out(text_surf)
+                if self.timekeep.timing(1) > 3:
+                    text_x = 100
+                    text_y = 200
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 3:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = "Or is this what death feels like?"
+                if self.timekeep.timing(1) > 3:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 4:
+                text_x += 0.1
+                self.ui_text.fade_out(text_surf)
+                if self.timekeep.timing(1) > 4:
+                    intro_level += 1
+                    text_x = 100
+                    text_y = 300
+                    self.timekeep.reset()
+            elif intro_level == 5:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = "Why did things have to turn out this way?"
+                if self.timekeep.timing(1) > 4:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 6:
+                text_x += 0.1
+                self.ui_text.fade_out(text_surf)
+                if self.timekeep.timing(1) > 2:
+                    intro_level += 1
+                    text_x = 100
+                    text_y = 400
+                    self.timekeep.reset()
+            elif intro_level == 7:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = "I never wanted any of this.."
+                if self.timekeep.timing(1) > 4:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 8:
+                text_x += 0.1
+                self.ui_text.fade_out(text_surf)
+                if self.timekeep.timing(1) > 2:
+                    intro_level += 1
+                    text_x = 100
+                    text_y = 500
+                    self.timekeep.reset()
+            elif intro_level == 9:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = "This.. This is all my fault.."
+                if self.timekeep.timing(1) > 4:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 10:
+                text_x += 0.1
+                self.ui_text.fade_out(text_surf)
+                if self.timekeep.timing(1) > 2:
+                    intro_level += 1
+                    text_x = 100
+                    text_y = 100
+                    self.timekeep.reset()
+            elif intro_level == 11:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = "Because of me.. The world will.."
+                if self.timekeep.timing(1) > 4:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 12:
+                text_x += 0.1
+                self.ui_text.fade_out(text_surf)
+                if self.timekeep.timing(1) > 2:
+                    intro_level += 1
+                    text_x = 100
+                    text_y = 200
+                    self.timekeep.reset()
+            elif intro_level == 13:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = "No.. Not yet.. I can't give up now."
+                if self.timekeep.timing(1) > 4:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 14:
+                text_x += 0.1
+                self.ui_text.fade_out(text_surf)
+                if self.timekeep.timing(1) > 2:
+                    intro_level += 1
+                    text_x = 100
+                    text_y = 300
+                    self.timekeep.reset()
+            elif intro_level == 15:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = "There should still be time.. I've gotten this far.."
+                if self.timekeep.timing(1) > 4:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 16:
+                text_x += 0.1
+                self.ui_text.fade_out(text_surf)
+                if self.timekeep.timing(1) > 2:
+                    intro_level += 1
+                    text_x = 100
+                    text_y = 400
+                    self.timekeep.reset()
+            elif intro_level == 17:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = "If I don't stand now.. It will truly be the end.."
+                if self.timekeep.timing(1) > 4:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 18:
+                text_x += 0.1
+                self.ui_text.fade_out(text_surf)
+                if self.timekeep.timing(1) > 2:
+                    intro_level += 1
+                    text_x = 100
+                    text_y = 500
+                    self.timekeep.reset()
+            elif intro_level == 19:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = "Mark my words... I will return.. "
+                if self.timekeep.timing(1) > 2:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 20:
+                text_x += 0.1
+                self.ui_text.fade_out(text_surf)
+                if self.timekeep.timing(1) > 2:
+                    intro_level += 1
+                    text_x = 100
+                    text_y = 100
+                    self.timekeep.reset()
+            elif intro_level == 21:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = ""
+                self.ui_text.draw_scrolling_text((text_x, text_y), "My name is...", False, text_surf, 1)
+                if self.timekeep.timing(1) > 5:
+                    intro_level += 1
+                    pygame.mixer_music.fadeout(3000)
+                    self.timekeep.reset()
+            elif intro_level == 22:
+                if self.timekeep.timing(1) > 6:
+                    fadein(255)
+                    door_sound.play()
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 23:
+                if self.timekeep.timing(1) > 2:
+                    draw_tb = True
+                    self.dialoguecontrol = True
+            elif intro_level == 24:
+                gate_sound.play()
+                fadein(255, 0.01)
+                intro_level += 1
+                dialogue = "intro2"
+                draw_tb = False
+                self.text_box.reset()
+                pygame.mixer_music.load("data/sounds&music/Infinite_Arena.mp3")
+                pygame.mixer_music.play()
+                self.timekeep.reset()
+            elif intro_level == 25:
+                surf.blit(self.arena_bg, (0, 0))
+                if self.timekeep.timing(1) > 2:
+                    draw_tb = True
+            elif intro_level == 26:
+                event_done = True
+            self.ui_text.draw_text((text_x, text_y), text, False, text_surf)
+            surf.blit(text_surf, (0, 0))
+            if draw_tb:
+                self.text_box.draw_textbox(intro_dialogue[dialogue], surf, (0, 400))
+            screen.blit(surf, (0, 0))
+            clock.tick(60)
+            pygame.display.flip()
 
     def town(self, player_data):
         '''The town and all the locations present in it.'''
@@ -4039,9 +4170,6 @@ if __name__ == "__main__":
                         print("Could not create save file.")
                         pass
                     timer.reset()
-                    fadein(255, 0.001)
-                    door.play()
-                    surf.fill((0, 0, 0))
                 if event.key == pygame.K_RETURN and scene == 'new_game2' and cursorpos == 1:
                     player.pclass = 'warrior'
                     rfile = open('savegame.dat', 'wb+')
@@ -4054,9 +4182,6 @@ if __name__ == "__main__":
                         print("Could not create save file.")
                         pass
                     timer.reset()
-                    fadein(255, 0.001)
-                    door.play()
-                    surf.fill((0, 0, 0))
                 if event.key == pygame.K_RCTRL and (
                         scene == 'new_game3' or scene == 'new_game4') or scene == 'credits':
                     newgtxtbox += 1
@@ -4086,11 +4211,12 @@ if __name__ == "__main__":
                     event.key = 1  # So that it doesn't automatically pick the first option(input is annoying on pygame)
 
                 if (event.key == pygame.K_RCTRL and options) or (event.key == pygame.K_RCTRL and talking):
-                    drawui = True
-                    controlui = True
-                    ui.talked = False
-                    options = False
-                    talking = False
+                    if ui.txtbox.progress_dialogue([[]]):
+                        drawui = True
+                        controlui = True
+                        ui.talked = False
+                        options = False
+                        talking = False
 
                 if event.key == pygame.K_LEFT and options:  # Option screen control
                     floor1_talk.colpos -= 1
@@ -4105,7 +4231,7 @@ if __name__ == "__main__":
                     floor1_talk.rowpos += 1
                     ui.cursorsound.play()
                 if event.key == pygame.K_RETURN and options:
-                    ui.txtbox.popup_reset()
+                    ui.txtbox.reset()
                     if floor1_talk.rowpos == 0 and floor1_talk.colpos == 0:  # Option 1
                         talkval = 0
                         options = False
@@ -4137,7 +4263,7 @@ if __name__ == "__main__":
                     drawui = False
                     controlui = False
                     battle_choice = True
-                    ui.txtbox.popup_reset()
+                    ui.txtbox.reset()
                     ui.battalk = True
                     ui.batcursorpos = 4
 
@@ -4336,12 +4462,7 @@ if __name__ == "__main__":
                 pygame.mixer.music.load(Currentmusic)
                 pygame.mixer.music.play()
                 pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
-            elif event.type == VIDEORESIZE:
-                curwidth, curheight = screen.get_size()
-                screen = pygame.display.set_mode(event.dict['size'], HWSURFACE | DOUBLEBUF | RESIZABLE)
-                surf.blit(pygame.transform.scale(menubg1, (curwidth, curheight)), (0, 0))
-                surf.blit(pygame.transform.scale(surf, (curwidth, curheight)), (0, 0))
-                pygame.display.flip()
+
         name = "".join(namelist)
         if scene == 'menu':  # Main menu of the game(What you see on start-up)
             surf.blit(pygame.transform.scale(menubg1, (curwidth, curheight)), (0, 0))
@@ -4371,6 +4492,9 @@ if __name__ == "__main__":
             if shh == ['t', 'o', 't'] and scene == 'menu':
                 player.town_first_flag = False
                 eventManager.town(player)
+                shh = []
+            if shh == ['t', 's', 't'] and scene == 'menu':
+                eventManager.intro_scene(dialogues)
                 shh = []
             if cursorpos == 0:
                 surf.blit(cursor, (434, 400))
@@ -4425,103 +4549,9 @@ if __name__ == "__main__":
             if cursorpos > 1:
                 cursorpos = 0
         if scene == 'new_game3':
-
-            if timer.timing() == 2:
-                timepassed = True
-
-            if timepassed:
-                surf.fill((0, 0, 0))
-                if newgtxtbox == 1:
-                    txtbox.draw_textbox("data/sprites/host_face.png", '???', 'Oh? who do we have here?')
-                if newgtxtbox == 2:
-                    txtbox.draw_textbox("data/sprites/host_face.png", '???', 'A new challenger? You seem quite young!')
-                if newgtxtbox == 3:
-                    txtbox.draw_textbox("data/sprites/host_face.png", '???',
-                                        'Me? I\'m the one they call the host of the arena.')
-                if newgtxtbox == 4:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'But you can call me Chance!')
-                if newgtxtbox == 5:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                        'Well, if you want to register I\'m not stopping you.')
-                if newgtxtbox == 6:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                        'So far only one warrior has emerged victorius from the arena, 2 years ago.')
-                if newgtxtbox == 7:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'Countless others have tried and failed.',
-                                        'Many have lost their lives beyond these gates.')
-                if newgtxtbox == 8:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                        'This is your last chance, there is no shame in turning back.')
-                if newgtxtbox == 9:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', '...')
-                if newgtxtbox == 10:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'You are an interesting fellow.')
-                if newgtxtbox == 11:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'Very well, you may step forward..')
-                if newgtxtbox == 12:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', '..And enter the Arena!')
-                if newgtxtbox > 12:
-                    gate.play()
-                    fadein(255, 0.005)
-                    timepassed = False
-                    timer.reset()
-                    scene = 'new_game4'
-                    newgtxtbox = 1
-        if scene == 'new_game4':
-            if timer.timing() == 1 and (not timepassed):
-                pygame.mixer.music.load('data/sounds&music/Infinite_Arena.mp3')
-                pygame.mixer.music.play()
-                timepassed = True
-            surf.blit(pygame.transform.scale(arena_bg1, (curwidth, curheight)), (0, 0))
-            if timepassed:
-                if newgtxtbox == 1:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'Welcome to the Arena my friend!')
-                if newgtxtbox == 2:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'Let me explain to you how this works.')
-                if newgtxtbox == 3:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                        'The Arena has 3 floors. Each floor has 5 regular enemies and 1 \'Floor Boss\'.')
-                if newgtxtbox == 4:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                        'After your preparations, you can come to me if you are ready to fight.')
-                if newgtxtbox == 5:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                        'I will let you fight a regular enemy in the floor you are on.')
-                if newgtxtbox == 6:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                        'After you defeat 5 regular enemies you can challenge the Floor boss.')
-                if newgtxtbox == 7:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                        'If you don\'t feel like you\'re ready you can fight more regular enemies before',
-                                        'challenging the boss.')
-                if newgtxtbox == 8:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                        'After you defeat the floor boss, you can proceed to the next floor.')
-                if newgtxtbox == 9:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                        'Also, Enemies drop gold when they\'re defeated.',
-                                        'You can use the gold to buy items and equipment from',
-                                        'our shop after every battle!')
-                if newgtxtbox == 10:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                        'If you\'re able to defeat the final Floor boss you will be crowned',
-                                        'the \'Arena Champion!\'')
-                if newgtxtbox == 11:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'One more thing..')
-                if newgtxtbox == 12:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                        'Before a battle you may talk with people around the Arena.')
-                if newgtxtbox == 13:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                        'Who knows, maybe you may learn a useful tip or two from them!')
-                if newgtxtbox == 14:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'Well, I\'m sure you\'re raring to go.',
-                                        'Let me know when you\'re ready for your first battle!')
-                if newgtxtbox == 15:
-                    txtbox.draw_textbox("data/sprites/host_face.png", 'Chance', 'Good luck friend, lord knows you need it!')
-                    clockTime.reset()
-                if newgtxtbox > 15:
-                    scene = 'arena'
+            fadeout(surf, 0.01)
+            eventManager.intro_scene(dialogues)
+            scene = 'arena'
         if scene == 'arena':
             clockTime.pass_time(player) # passage of ingame time
             if clockTime.time_state == 'Morning':

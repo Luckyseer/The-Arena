@@ -55,6 +55,9 @@
  + Added the amount of the consumable in player's inventory in the shop.
  + You can now change your equipment on the status screen.
  + You no longer automatically equip the item after purchase.
+# - Alpha v4.0
+ + Updated the textbox system. (Some of the old dialogue is broken as a result haven't gotten round to fixing it.)
+ + Changed the intro, added some more plot.
 # Known issues:
  - Update current song after victory
 # TODO:

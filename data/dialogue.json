@@ -1,0 +1,37 @@
+{
+  "intro1": [
+    ["", "", "You make your way into a fancy looking office. The room is well furnished and in the back of the room is a big metal gate. In there you see a man looking over some documents. "],
+    ["data/sprites/host_face.png", "???", "Oh? Can I help you?"],
+    ["", "", "The man gets up to greet you."],
+    ["", "", "You exchange pleasantries and state your reason for coming here."],
+    ["data/sprites/host_face.png", "???", "Ah, I see. So you want to challenge the Arena?"],
+    ["data/sprites/host_face.png", "???", "You seem quite young. Have you any experience in combat?"],
+    ["data/sprites/host_face.png", "???", "That reminds me. I still haven't introduce myself have I?"],
+    ["data/sprites/host_face.png", "Chance", "I am the one they call the director of the Arena. But you can call me Chance."],
+    ["data/sprites/host_face.png", "Chance", "Well if you want to register I'm not going to stop you."],
+    ["data/sprites/host_face.png", "Chance", "But a fair warning, the Arena is extremely dangerous.\nMany Adventurers, some more experienced than you have lost their lives here."],
+    ["data/sprites/host_face.png", "Chance", "Once you join, you are contractually obligated to participate in the fights. You will be rewarded for each fight you win of course, but once you're in a battle there's no turning back."],
+    ["data/sprites/host_face.png", "Chance", "While many have challenged the Arena and lived, only one warrior has managed to get to the final floor and emerge victorious. That was 2 years ago."],
+    ["data/sprites/host_face.png", "Chance", "I will not think less of you if you decide to turn back this instant and go back where you came from."],
+    ["data/sprites/host_face.png", "Chance", "So decide. Will you really fight in the arena?"],
+    ["", "", "Chance holds out a paper and hands you a quill and some ink."],
+    ["", "", "You sign the contract with no hesitation."],
+    ["data/sprites/host_face.png", "Chance", "..."],
+    ["data/sprites/host_face.png", "Chance", "You are truly an interesting person."],
+    ["data/sprites/host_face.png", "Chance", "Very well, You may step forward..."],
+    ["data/sprites/host_face.png", "Chance", "...And enter the Arena!"]
+  ],
+  "intro2": [
+    ["data/sprites/host_face.png", "Chance", "Welcome to the Arena!"],
+    ["data/sprites/host_face.png", "Chance", "Before you get started, you need to know a few things."],
+    ["data/sprites/host_face.png", "Chance", "The Arena has 5 floors, In each floor you fight monsters and after you've defeated 5 monsters you can challenge the floor boss."],
+    ["data/sprites/host_face.png", "Chance", "After you've defeated the floor boss, you can progress onto the next floor. If you think you're not ready to face the floor boss yet, you can continue fighting the monsters on the floor that you're on until you're strong enough."],
+    ["data/sprites/host_face.png", "Chance", "As you progress through the floors, the monsters get stronger and stronger. In order to keep up, you will have to buy new equipment through the Arena shop."],
+    ["data/sprites/host_face.png", "Chance", "You can buy the equipment using the gold rewards obtained after beating a monster."],
+    ["data/sprites/host_face.png", "Chance", "If you get hurt after a battle, you can sleep at the Inn for a small fee or you can buy healing items from the shop."],
+    ["data/sprites/host_face.png", "Chance", "Also, you can find some interesting people around the Arena, so make sure to talk to them. They may have some useful info for you!"],
+    ["data/sprites/host_face.png", "Chance", "Well that's about it.. I have high hopes for you."],
+    ["data/sprites/host_face.png", "Chance", "Good luck friend... Lord knows you need it!"]
+  ]
+
+}

@@ -1,10 +1,11 @@
-"""Just a small script to test the functions for the UI. Some things may be broken."""
+"""Just a small script to test the UI. Some things may be broken. Use the arrow keys to test things"""
 import pygame
 from gameui import *
+import json
 
 pygame.init()
 
-screen = pygame.display.set_mode((400, 400), pygame.NOFRAME)
+screen = pygame.display.set_mode((1280, 400))
 clock = pygame.time.Clock()
 done = False
 text = UiText()
@@ -12,9 +13,14 @@ text.main_font_colour = (0, 0, 0)
 text.main_font_colour2 = (0, 0, 0)
 fade = False
 fade_out = False
-bg = pygame.Surface((400, 400))
+bg = pygame.Surface((1280, 400))
+bg.set_colorkey((255, 255, 255))
 bg.set_alpha(255)
 tb = TextBox()
+draw_tb = False
+with open("dialogue.json", "r") as f:
+    data = json.load(f)
+    dialogue = data["intro1"]
 while not done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -29,6 +35,13 @@ while not done:
                 if not fade_out:
                     fade = True
                     print('nope')
+            if event.key == pygame.K_LEFT:
+                draw_tb = True
+            if event.key == pygame.K_RIGHT:
+                draw_tb = False
+                tb.popup_reset()
+            if event.key == pygame.K_RCTRL:
+                tb.progress_dialogue(dialogue)
 
     if fade_out:
         text.fade_out(bg)
@@ -38,9 +51,12 @@ while not done:
         text.fade_in(bg)
         if bg.get_alpha() >= 255:
             fade = False
+
     screen.fill((255, 255, 255))
     bg.fill((255, 255, 255, 255))
     text.draw_scrolling_text((0, 0), "This is a test line I want to see if this text works properly as intended\nLike this\nOr this.", False, bg, 3)
+    if draw_tb:
+        tb.draw_textbox(dialogue, screen)
     screen.blit(bg, (0, 0))
     clock.tick(60)
     fps = clock.get_fps()
