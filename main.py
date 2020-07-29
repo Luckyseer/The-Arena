@@ -1259,6 +1259,7 @@ class NewBattle:
         self.player_x = 920  # Rough x coordinate of player on screen (For animations)
         self.player_y = 270
         self.add_flag = False  # flag for the gold and exp adding up on the victory screen
+        self.check_level = False
         self.dmg_txt = '0'
         self.cursor = pygame.image.load("data/sprites/Cursor.png")
         self.cursor_down = pygame.transform.rotate(self.cursor, -90)
@@ -1270,6 +1271,7 @@ class NewBattle:
         self.sound_effect = ''
         self.cursor_sound = pygame.mixer.Sound(sounddata['system']['cursor'])
         self.buzzer_sound = pygame.mixer.Sound(sounddata['system']['buzzer'])
+        self.level_up_sound = pygame.mixer.Sound('data/sounds&music/levelup.wav')
         #  State control
         self.battling = True
         self.turn = 'player'
@@ -1284,6 +1286,8 @@ class NewBattle:
         self.sequence_done = False
         self.healthbar_flag = False
         self.player_dmg_flag = False    # Flag to display damage dealt to player
+        self.checked = False
+        self.level_up = False
         self.wait_time = 0
         self.sequence_to_play = ""
         self.sequence_timer = Timer()
@@ -1299,6 +1303,7 @@ class NewBattle:
         self.camera_x = 0
         self.camera_y = 0
         self.element = "none"
+        self.cur_level = 0
         self.victory_flag = False
         #  Temp stuff remove later
         self.crit_text = self.dmg_font.render("Critical!", True, (225, 0, 100))
@@ -1452,7 +1457,8 @@ class NewBattle:
                             if self.f_exp != self.m_exp or self.f_gold != self.m_gold:
                                 self.f_exp = self.m_exp
                                 self.f_gold = self.m_gold
-                            elif self.f_exp == self.m_exp:
+                                self.check_level = True
+                            elif self.f_exp == self.m_exp and not self.check_level:
                                 self.battling = False
                                 self.update_player_details(player_data)
                                 self.victory_flag = True
@@ -2022,11 +2028,13 @@ class NewBattle:
     def shake_screen(self):
         self.camera_x, self.camera_y = random.randrange(-5, 5), random.randrange(-5, 5)
 
-    def victory(self):
+    def victory(self, player=Player()):
         if not self.add_flag:
             self.f_gold = 0
             self.f_exp = 0
             self.add_flag = True
+            self.checked = False
+            self.level_up = False
             pygame.mixer.music.pause()
             pygame.mixer.music.load('data/sounds&music/Victory_and_Respite.mp3')  # victory music
             pygame.mixer.music.play()
@@ -2052,6 +2060,34 @@ class NewBattle:
                 self.f_exp += 2
             else:
                 self.f_exp += 1
+        if self.f_exp == self.m_exp and self.f_gold == self.m_gold and not self.checked:
+            self.check_level = True
+            self.checked = True
+        if self.check_level:
+            player.exp += self.m_exp
+            player.gold += self.m_gold
+            self.cur_level = player.level
+            while player.check_levelup():
+                player.level += 1
+                player.hp += 25
+                player.mp += 10
+                player.stat_points += 3
+                self.level_up = True
+            self.check_level = False
+            if self.level_up:
+                self.level_up_sound.play()
+        if self.level_up:
+            lvl_txt = self.ui_font.render('Gained {} level(s)!'.format(player.level - self.cur_level), True, (255, 255, 0))
+            hp_txt = self.ui_font.render('+{} HP'.format((player.level - self.cur_level) * 25),
+                                            True, (255, 255, 0))
+            mp_txt = self.ui_font.render('+{} MP'.format((player.level - self.cur_level) * 10),
+                                            True, (255, 255, 0))
+            stat_txt = self.ui_font.render('+{} Stat points'.format((player.level - self.cur_level) * 3),
+                                            True, (255, 255, 0))
+            surf.blit(lvl_txt, (curwidth / 3 + 100, curheight / 5 + 150))
+            surf.blit(hp_txt, (curwidth / 3 + 100, curheight / 5 + 175))
+            surf.blit(mp_txt, (curwidth / 3 + 100, curheight / 5 + 200))
+            surf.blit(stat_txt, (curwidth / 3 + 100, curheight / 5 + 225))
 
     def defeat(self):
         if not self.add_flag:
@@ -2367,9 +2403,9 @@ class MainUi:
         surf.blit(magtxt2, (299, 327))
         lvltxt = self.uitext.render('Level: %d' % player.level, False, self.txtcolor2)
         surf.blit(lvltxt, (607, 396))
-        xptxt = self.uitext2.render('Exp till next level: %d' % player.xp_till_levelup(player.level), False,
-                                    self.txtcolor2)
-        surf.blit(xptxt, (607, 426))
+        xp_txt = self.uitext2.render('Exp till next level: {}'.format(player.xp_till_levelup(player.level) - player.exp)
+                                     , False, self.txtcolor2)
+        surf.blit(xp_txt, (607, 426))
         surf.blit(self.face, (679, 207))
         classtxt = self.uitext.render(player.pclass.capitalize(), False, self.txtcolor)
         surf.blit(classtxt, (697, 366))

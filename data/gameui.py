@@ -113,7 +113,6 @@ class UiText:
                 surface.set_alpha(surface.get_alpha() - 5)
                 self.text_timer.reset()
 
-
     def reset_buffer(self):
         self.scrolling_flag = True
         self.current_char = 0
@@ -123,7 +122,7 @@ class UiText:
 class TextBox:
     """The textbox class, used to draw textboxes and anything related to dialogue."""
 
-    def __init__(self, txtcolor=(21, 57, 114), convo_flag=False):
+    def __init__(self):
         self.bg = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()  # Ui background
         self.bg_loaded = pygame.transform.scale(self.bg, (1280, 300)).convert_alpha()
         self.confirm_bg = pygame.transform.scale(self.bg, (300, 300)).convert_alpha()
@@ -139,7 +138,6 @@ class TextBox:
         self.txtbox_height = 300
         self.popup_flag = False  # Flag for popup animation
         self.popup_done = False  # Check if the popup animation is done or not
-        self.convo_flag = convo_flag  # if it is a conversation(aka story part) the popup animation won't repeat
         self.ui_text = UiText()
         self.ui_text_small = UiText(25)
         self.ui_text_confirm = UiText(27)
