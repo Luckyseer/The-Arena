@@ -58,7 +58,7 @@ class UiText:
         y_outline = y + 1
         for line in words:
             for word in line:
-                rendered_word = self.main_font.render(word, True, self.main_font_colour)
+                rendered_word = self.main_font.render(word, True, self.main_font_colour).convert_alpha()
                 word_width, word_height = rendered_word.get_size()
                 if outline:
                     rendered_word_outline = self.main_font_outline.render(word, True, self.main_font_colour2)
@@ -126,6 +126,9 @@ class TextBox:
     def __init__(self, txtcolor=(21, 57, 114), convo_flag=False):
         self.bg = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()  # Ui background
         self.bg_loaded = pygame.transform.scale(self.bg, (1280, 300)).convert_alpha()
+        self.confirm_bg = pygame.transform.scale(self.bg, (300, 300)).convert_alpha()
+        self.confirm_surf = pygame.Surface((300, 300))
+        self.confirm_surf.set_colorkey((0, 0, 0))
         self.txtbox_surf = pygame.Surface((1260, 300))
         self.txtbox_surf.set_alpha(255)
         self.txtbox_surf.set_colorkey((0, 0, 0))
@@ -139,11 +142,16 @@ class TextBox:
         self.convo_flag = convo_flag  # if it is a conversation(aka story part) the popup animation won't repeat
         self.ui_text = UiText()
         self.ui_text_small = UiText(25)
+        self.ui_text_confirm = UiText(27)
         self.ui_text_small.main_font_colour = (255, 21, 45)
+        self.load_face = False
+        self.speaker = pygame.image.load('data/sprites/boy.png').convert_alpha()
+        self.confirm_flag = False
 
     def reset(self):
         self.popup_flag = False
         self.popup_done = False
+        self.load_face = False
         self.dialogue_progress = 0
         self.ui_text.reset_buffer()
         
@@ -163,6 +171,7 @@ class TextBox:
             if self.dialogue_progress < len(dialogue) - 1:
                 self.dialogue_progress += 1
                 self.ui_text.reset_buffer()
+                self.load_face = False
                 return False
             else:
                 return True
@@ -176,8 +185,10 @@ class TextBox:
         if self.popup_done:
             self.txtbox_surf.blit(self.bg_loaded, (0, 0))
             if dialogue[self.dialogue_progress][0] != "":   # Textbox dialogue head
-                speaker = pygame.image.load(dialogue[self.dialogue_progress][0]).convert_alpha()
-                self.txtbox_surf.blit(speaker, (110, 70))
+                if not self.load_face:
+                    self.speaker = pygame.image.load(dialogue[self.dialogue_progress][0]).convert_alpha()
+                    self.load_face = True
+                self.txtbox_surf.blit(self.speaker, (110, 70))
                 self.ui_text_small.draw_text((150, 220), dialogue[self.dialogue_progress][1], False, self.txtbox_surf)    # Name of speaker
                 pic_off = 0  # Offset for image when the text is drawn
             else:
@@ -187,3 +198,12 @@ class TextBox:
             self.ui_text_small.draw_text((300, 220), "Press RCTRL to continue...", False, self.txtbox_surf)
 
         surface.blit(self.txtbox_surf, pos)
+
+    def confirm_box(self, message='', surface=pygame.Surface((0, 0)), confirm_text='ENTER: Confirm', deny_text='RCTRL: Cancel'):
+        self.confirm_surf.fill((0, 0, 0))
+        self.confirm_surf.blit(self.confirm_bg, (0, 0))
+        self.ui_text_confirm.draw_text((50, 50), message, False, self.confirm_surf)
+        self.ui_text_confirm.draw_text((50, 160), confirm_text, False, self.confirm_surf)
+        self.ui_text_confirm.draw_text((50, 190), deny_text, False, self.confirm_surf)
+        surface.blit(self.confirm_surf, (surface.get_width()/2 - 150, surface.get_height()/2 - 150))
+

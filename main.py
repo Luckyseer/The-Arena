@@ -5,8 +5,7 @@ import random
 from math import floor
 import pygame
 from data import pyganim
-from gameui import TextBox
-from gameui import  UiText
+from data import gameui
 import json
 from pygame.locals import *
 
@@ -51,6 +50,7 @@ class Player:
         self.defe = defence
         self.mag = magic
         self.luck = luck
+        self.stat_points = 0
         self.expreq = 0
         # Player's stats from equipment
         self.add_stre = item_data['weapons'][self.cur_weapon]['atk'] + item_data['armours'][self.cur_armour]['atk'] + \
@@ -61,8 +61,8 @@ class Player:
                        item_data['accessories'][self.cur_accessory]['mag']
         self.add_luck = luck
         self.progress = 1  # progress in game
-        self.gold = 1500
-        self.level = 15
+        self.gold = 1500000
+        self.level = 1
         self.hours = 6  # in-game clock values
         self.minutes = 0  # ^
         self.exp = 0
@@ -2181,11 +2181,18 @@ class MainUi:
         self.max_pos = 0
         self.window_x = 1600
         self.equip_flag1 = False
+        self.confirm = False
         self.equip_flag2 = False
+        self.stat_flag = False
         self.cur_id = 0  # The current id of the equipment being hovered in the change equip window
         self.status_cur_pos = 0
         self.equip_cursor1_pos = 0
         self.equip_cursor2_pos = 0
+        self.stat_cursor_pos = 0
+        self.orig_stat_points = 0
+        self.orig_str = 0
+        self.orig_def = 0
+        self.orig_mag = 0
         self.txtcolor = (21, 57, 114)
         self.txtcolor2 = (117, 17, 67)
         self.txtcolor3 = (23, 18, 96)
@@ -2194,9 +2201,12 @@ class MainUi:
         self.cursor = pygame.image.load("data/sprites/Cursor.png").convert_alpha()
         self.cursor_down = pygame.transform.rotate(self.cursor, -90)
         self.cursor_up = pygame.transform.rotate(self.cursor, 90)
+        self.cursor_left = pygame.transform.rotate(self.cursor, 180)
         self.cursorsound = pygame.mixer.Sound('data/sounds&music/Cursor1.ogg')
         self.cursorpos = 0
         self.equip_txt = self.uitext.render('Equipment', False, self.txtcolor)
+        self.buzzer_sound = pygame.mixer.Sound('data/sounds&music/Buzzer1.ogg')
+        self.stats_txt = self.uitext.render('Stats', False, self.txtcolor)
         self.talktxt = self.uitext.render('Talk', False, self.txtcolor)
         self.talkdesc = self.uitext.render('Talk with people around the Arena.', False, self.txtcolor)
         self.talkdesc2 = self.uitext.render('Talk with people around the Inn.', False, self.txtcolor)
@@ -2218,7 +2228,7 @@ class MainUi:
         self.backdesc = self.uitext.render('Return to the Arena', False, self.txtcolor)
         self.sleeptxt = self.uitext.render('Rest', False, self.txtcolor)
         self.sleepdesc = self.uitext.render('Spend the night at the Inn. (20 Gold)', False, self.txtcolor)
-        self.txtbox = TextBox()
+        self.txtbox = gameui.TextBox()
         self.statustxt = self.uitext.render('- STATUS -', True, self.txtcolor)
         self.face = pygame.image.load("data/sprites/f1.png").convert_alpha()
         self.wepicon = pygame.image.load("data/sprites/wepicon.png").convert_alpha()
@@ -2331,6 +2341,8 @@ class MainUi:
             strtxt2 = self.uitext.render('(%d)' % player.add_stre, False, (95, 100, 100))
         else:
             strtxt2 = self.uitext.render('(+%d)' % player.add_stre, False, (200, 0, 0))
+        stat_points = self.uitext.render('Stat points: %d' % player.stat_points, False, (46, 69, 184))
+        surf.blit(stat_points, (430, 247))
         surf.blit(strtxt, (169, 247))
         surf.blit(strtxt2, (299, 247))
         deftxt = self.uitext.render('DEF: %d' % player.defe, False, self.txtcolor)
@@ -2343,7 +2355,7 @@ class MainUi:
         surf.blit(deftxt, (169, 287))
         surf.blit(deftxt2, (299, 287))
         lucktxt = self.uitext.render('LUCK: %d' % player.luck, False, self.txtcolor)
-        surf.blit(lucktxt, (169, 327))
+        surf.blit(lucktxt, (169, 367))
         magtxt = self.uitext.render('MAG: %d' % player.mag, False, self.txtcolor)
         if player.add_mag > 0:
             magtxt2 = self.uitext.render('(+%d)' % player.add_mag, False, (0, 200, 0))
@@ -2351,8 +2363,8 @@ class MainUi:
             magtxt2 = self.uitext.render('(+%d)' % player.add_mag, False, (95, 100, 100))
         else:
             magtxt2 = self.uitext.render('(%d)' % player.add_mag, False, (200, 0, 0))
-        surf.blit(magtxt, (169, 367))
-        surf.blit(magtxt2, (299, 367))
+        surf.blit(magtxt, (169, 327))
+        surf.blit(magtxt2, (299, 327))
         lvltxt = self.uitext.render('Level: %d' % player.level, False, self.txtcolor2)
         surf.blit(lvltxt, (607, 396))
         xptxt = self.uitext2.render('Exp till next level: %d' % player.xp_till_levelup(player.level), False,
@@ -2382,7 +2394,7 @@ class MainUi:
         surf.blit(self.equip_menu_bg, (self.window_x, 45))
         if self.window_x > 955:
             self.window_x -= 55
-        if self.equip_cursor2_pos > 4:
+        if self.equip_cursor2_pos > self.max_pos - 1 or self.equip_cursor2_pos > 4:
             if self.min_pos + 5 < self.max_pos:
                 self.min_pos += 1
                 self.equip_cursor2_pos = 4
@@ -2394,8 +2406,12 @@ class MainUi:
                 self.min_pos -= 1
                 self.equip_cursor2_pos = 0
             else:
-                self.equip_cursor2_pos = 4
-                self.min_pos = self.max_pos - 5
+                if self.max_pos - 1 < 4:
+                    self.min_pos = 0
+                    self.equip_cursor2_pos = self.max_pos - 1
+                else:
+                    self.min_pos = self.max_pos - 5
+                    self.equip_cursor2_pos = 4
         if self.equip_cursor1_pos == 0:
             self.max_pos = len(player.wep_owned)
             if len(player.wep_owned) > 0:
@@ -2454,14 +2470,35 @@ class MainUi:
             elif self.equip_cursor2_pos == 4:
                 surf.blit(self.cursor, (940, 335))
 
+    def stat_point_alloc(self, player=Player()):
+        if self.stat_cursor_pos == 0:
+            surf.blit(self.cursor, (255, 250))
+            surf.blit(self.cursor_left, (135, 247))
+        elif self.stat_cursor_pos == 1:
+            surf.blit(self.cursor, (255, 290))
+            surf.blit(self.cursor_left, (135, 287))
+        elif self.stat_cursor_pos == 2:
+            surf.blit(self.cursor, (265, 330))
+            surf.blit(self.cursor_left, (135, 327))
+        if self.stat_cursor_pos > 2:
+            self.stat_cursor_pos = 0
+        elif self.stat_cursor_pos < 0:
+            self.stat_cursor_pos = 2
+        if self.confirm:
+            self.txtbox.confirm_box('Confirm Changes?', surf)
+
+
     def status_menu(self, player=Player()):
         surf.blit(self.status_menu_bg, (955, 405))
         surf.blit(self.equip_txt, (990, 465))
-        surf.blit(self.back_txt, (990, 505))
+        surf.blit(self.stats_txt, (990, 505))
+        surf.blit(self.back_txt, (990, 545))
         if self.status_cur_pos == 0:
             surf.blit(self.cursor, (950, 465))
         elif self.status_cur_pos == 1:
             surf.blit(self.cursor, (950, 505))
+        elif self.status_cur_pos == 2:
+            surf.blit(self.cursor, (950, 545))
         if self.equip_flag1:
             if self.equip_cursor1_pos == 0:
                 surf.blit(self.cursor, (140, 410))
@@ -2471,16 +2508,18 @@ class MainUi:
                 surf.blit(self.cursor, (140, 490))
         if self.equip_flag2:
             pass
-        if self.status_cur_pos > 1:
+        if self.status_cur_pos > 2:
             self.status_cur_pos = 0
         if self.status_cur_pos < 0:
-            self.status_cur_pos = 1
+            self.status_cur_pos = 2
         if self.equip_cursor1_pos > 2:
             self.equip_cursor1_pos = 0
         if self.equip_cursor1_pos < 0:
             self.equip_cursor1_pos = 2
         if self.equip_flag1:
             self.change_equipment(player)
+        if self.stat_flag:
+            self.stat_point_alloc(player)
 
     def handle_status_inputs(self, player=Player()):
             if event.type == pygame.QUIT:
@@ -2488,20 +2527,50 @@ class MainUi:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_DOWN:
                     self.cursorsound.play()
-                    if not self.equip_flag1 and not self.equip_flag2:
-                        self.status_cur_pos -= 1
+                    if not self.equip_flag1 and not self.equip_flag2 and not self.stat_flag:
+                        self.status_cur_pos += 1
                     elif self.equip_flag1 and not self.equip_flag2:
                         self.equip_cursor1_pos += 1
                     elif self.equip_flag2 and self.equip_flag1:
                         self.equip_cursor2_pos += 1
+                    elif self.stat_flag:
+                        self.stat_cursor_pos += 1
                 elif event.key == pygame.K_UP:
                     self.cursorsound.play()
-                    if not self.equip_flag1 and not self.equip_flag2:
-                        self.status_cur_pos += 1
+                    if not self.equip_flag1 and not self.equip_flag2 and not self.stat_flag:
+                        self.status_cur_pos -= 1
                     elif self.equip_flag1 and not self.equip_flag2:
                         self.equip_cursor1_pos -= 1
                     elif self.equip_flag2 and self.equip_flag1:
                         self.equip_cursor2_pos -= 1
+                    elif self.stat_flag:
+                        self.stat_cursor_pos -= 1
+                elif event.key == pygame.K_RIGHT:
+                    if self.stat_flag:
+                        if player.stat_points > 0:
+                            if self.stat_cursor_pos == 0:
+                                player.stre += 1
+                                player.stat_points -= 1
+                            elif self.stat_cursor_pos == 1:
+                                player.defe += 1
+                                player.stat_points -= 1
+                            elif self.stat_cursor_pos == 2:
+                                player.mag += 1
+                                player.stat_points -= 1
+                elif event.key == pygame.K_LEFT:
+                    if self.stat_flag:
+                        if self.stat_cursor_pos == 0:
+                            if self.orig_str < player.stre:
+                                player.stre -= 1
+                                player.stat_points += 1
+                        elif self.stat_cursor_pos == 1:
+                            if self.orig_def < player.defe:
+                                player.defe -= 1
+                                player.stat_points += 1
+                        elif self.stat_cursor_pos == 2:
+                            if self.orig_mag < player.mag:
+                                player.mag -= 1
+                                player.stat_points += 1
                 elif event.key == pygame.K_RETURN:
                     if self.status_cur_pos == 0:
                         if not self.equip_flag1 and not self.equip_flag2:
@@ -2530,6 +2599,19 @@ class MainUi:
                                         player.cur_accessory = self.cur_id
                             player.update_stats()
                             self.equip_sound.play()
+                    elif self.status_cur_pos == 1:
+                        if not self.stat_flag:
+                            if player.stat_points > 0:
+                                self.stat_flag = True
+                                self.orig_stat_points = player.stat_points
+                                self.orig_str = player.stre
+                                self.orig_def = player.defe
+                                self.orig_mag = player.mag
+                            else:
+                                self.buzzer_sound.play()
+                        if self.confirm:
+                            self.confirm = False
+                            self.stat_flag = False
 
                 elif event.key == pygame.K_RCTRL:
                     if self.equip_flag1 and not self.equip_flag2:
@@ -2538,6 +2620,16 @@ class MainUi:
                         self.equip_flag2 = False
                         self.min_pos = 0
                         self.equip_cursor2_pos = 0
+                    elif self.confirm:
+                        self.confirm = False
+                        self.stat_flag = False
+                        player.stre = self.orig_str
+                        player.defe = self.orig_def
+                        player.mag = self.orig_mag
+                        player.stat_points = self.orig_stat_points
+                    elif self.stat_flag:
+                        if self.orig_stat_points > player.stat_points:
+                            self.confirm = True
 
     def system(self):
         surf.blit(pygame.transform.scale(self.bg, (int(curwidth / 2.7), int(curheight / 3))), (470, 200))
@@ -3177,8 +3269,8 @@ class GameEvents(MainUi):
         self.game_clock = GameClock()
         self.option_selector = SelectOptions()
         self.town_talk1 = False  # Flag for drawing options menu for the 'Talk' Screen
-        self.text_box = TextBox()
-        self.ui_text = UiText()
+        self.text_box = gameui.TextBox()
+        self.ui_text = gameui.UiText()
         self.ui_text.main_font_colour = (255, 255, 255)
 
     def town_first_visit(self, player_data):
@@ -3779,6 +3871,7 @@ class GameEvents(MainUi):
                 self.text_box.draw_textbox(intro_dialogue[dialogue], surf, (0, 400))
             screen.blit(surf, (0, 0))
             clock.tick(60)
+            pygame.display.set_caption("FPS:{}".format(int(clock.get_fps())))
             pygame.display.flip()
 
     def town(self, player_data):
@@ -3937,7 +4030,7 @@ if __name__ == "__main__":
     #####
 
     randbattle = 0
-    timepassed = False  # Flag to check if the time passed or not
+    timepassed = False  # Flag to check if the time passed or6 not
     newgtxtbox = 0
     pygame.mixer.music.load('data/sounds&music/Theme2.ogg')
     pygame.mixer.music.play()
@@ -4018,7 +4111,7 @@ if __name__ == "__main__":
     shh = []
     battler = NewBattle(monster_data, item_data, sound_effects, animations, skills, sequences)  # New battle tester
     bellflag = False  # Flag for bell sound to play during time change
-    txtbox = TextBox()
+    txtbox = gameui.TextBox()
     timer = Timer()
     fadeoutflag = False  # Flag for music to fade out
 
@@ -4070,6 +4163,7 @@ if __name__ == "__main__":
 
                 if (event.key == pygame.K_RETURN and cursorpos == 1 and scene == 'menu') and not nosavefile:  # load
                     try:
+                        player = Player(item_data=item_data)
                         rfile = open('savegame.dat', 'rb+')
                         pygame.mixer.music.stop()
                         loadsound.play()
@@ -4158,6 +4252,8 @@ if __name__ == "__main__":
                 if event.key == pygame.K_RIGHT and scene == 'new_game2':
                     cursorpos += 1
                 if event.key == pygame.K_RETURN and scene == 'new_game2' and cursorpos == 0:
+                    player = Player(item_data=item_data)
+                    player.name = name.capitalize()
                     player.pclass = 'mage'
                     rfile = open('savegame.dat', 'wb+')
                     scene = 'new_game3'
@@ -4170,6 +4266,8 @@ if __name__ == "__main__":
                         pass
                     timer.reset()
                 if event.key == pygame.K_RETURN and scene == 'new_game2' and cursorpos == 1:
+                    player = Player(item_data=item_data)
+                    player.name = name.capitalize()
                     player.pclass = 'warrior'
                     rfile = open('savegame.dat', 'wb+')
                     scene = 'new_game3'
@@ -4272,15 +4370,15 @@ if __name__ == "__main__":
                     status = True
                     event.key = ""
                 if status:
+                    if event.key == pygame.K_RCTRL and (not ui.equip_flag1 and not ui.equip_flag2 and not ui.stat_flag):
+                        drawui = True
+                        controlui = True
+                        status = False
+                    elif event.key == pygame.K_RETURN and ui.status_cur_pos == 2:
+                        drawui = True
+                        controlui = True
+                        status = False
                     ui.handle_status_inputs(player)
-                    if event.key == pygame.K_RCTRL and (not ui.equip_flag1 and not ui.equip_flag2):
-                        drawui = True
-                        controlui = True
-                        status = False
-                    elif event.key == pygame.K_RETURN and ui.status_cur_pos == 1:
-                        drawui = True
-                        controlui = True
-                        status = False
                 if (event.key == pygame.K_RETURN and ui.cursorpos == 3) and scene == 'arena' and controlui:  # Shop option
                     drawui = False
                     controlui = False
@@ -4404,9 +4502,7 @@ if __name__ == "__main__":
                             player.level += 1
                             player.hp += 25
                             player.mp += 10
-                            player.str += 2
-                            player.mag += 2
-                            player.defe += 2
+                            player.stat_points += 3
 
                         player.fkills += 1
                         player.tkills += 1
@@ -4432,9 +4528,7 @@ if __name__ == "__main__":
                                 player.level += 1
                                 player.hp += 25
                                 player.mp += 10
-                                player.str += 2
-                                player.mag += 2
-                                player.defe += 2
+                                player.stat_points += 3
                         else:
                             scene = 'menu'
                             pygame.mixer_music.load('data/sounds&music/Theme2.ogg')
@@ -4551,6 +4645,7 @@ if __name__ == "__main__":
                 cursorpos = 0
         if scene == 'new_game3':
             fadeout(surf, 0.01)
+            eventManager = GameEvents()
             eventManager.intro_scene(dialogues)
             scene = 'arena'
         if scene == 'arena':
