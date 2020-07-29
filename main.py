@@ -2523,7 +2523,6 @@ class MainUi:
         if self.confirm:
             self.txtbox.confirm_box('Confirm Changes?', surf)
 
-
     def status_menu(self, player=Player()):
         surf.blit(self.status_menu_bg, (955, 405))
         surf.blit(self.equip_txt, (990, 465))
@@ -4534,12 +4533,6 @@ if __name__ == "__main__":
                     battler.battle(rand_mon, player_data=player)
                     fight = battler.check_victory()
                     if fight:
-                        while player.check_levelup():
-                            player.level += 1
-                            player.hp += 25
-                            player.mp += 10
-                            player.stat_points += 3
-
                         player.fkills += 1
                         player.tkills += 1
                         battle_choice = False
@@ -4560,11 +4553,6 @@ if __name__ == "__main__":
                         battler.battle('floor_boss1', player, set_music=1)
                         if battler.check_victory():
                             player.progress += 1
-                            while player.check_levelup():
-                                player.level += 1
-                                player.hp += 25
-                                player.mp += 10
-                                player.stat_points += 3
                         else:
                             scene = 'menu'
                             pygame.mixer_music.load('data/sounds&music/Theme2.ogg')
