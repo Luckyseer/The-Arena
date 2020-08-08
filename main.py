@@ -78,12 +78,12 @@ class Player:
         self.paid_girl_flag = False  # Flag for whether the player paid the girl during the town scene
 
     def xp_till_levelup(self, currentlevel):  # Experience needed to level up
-
         self.expreq = floor((currentlevel ** 4) / 5)
         return self.expreq
 
     def check_levelup(self):  # Check if player has leveled up
         self.xp_till_levelup(self.level)
+        print(f'Exp:{self.exp}, to_lvl:{self.xp_till_levelup(self.level)}')
         if self.exp >= self.expreq:
             return True
         else:
@@ -1460,7 +1460,6 @@ class NewBattle:
                                 self.check_level = True
                             elif self.f_exp == self.m_exp and not self.check_level:
                                 self.battling = False
-                                self.update_player_details(player_data)
                                 self.victory_flag = True
 
                         else:
@@ -1495,7 +1494,7 @@ class NewBattle:
         self.anim_pos = pos
         self.loaded_anim.play()
 
-    def check_state(self):
+    def check_state(self, player):
         """Keeps track of the game state and updates it accordingly"""
         if self.game_state == 'player_attack':  # Player regular attack
             player_attacking = False
@@ -1619,7 +1618,7 @@ class NewBattle:
             self.game_state = 'victory'
             self.global_timer.reset()
         if self.game_state == 'victory' and self.global_timer.timing(1) >= 1:  # Victory state
-            self.victory()
+            self.victory(player)
         if self.game_state == 'defeat_done':
             surf.blit(self.death_sprite, (self.player_x + 20, self.player_y + 20))
             if self.global_timer.timing(1) >= 1:
@@ -1941,11 +1940,20 @@ class NewBattle:
                 self.p_item_effects.append(items['attributes'])
 
     def update_player_details(self, player_data=Player()):  # Updates the player object with the cur hp and mana
+        """I don't remember the original reason that I didn't just directly update the player object.
+        Well, this works  for now lol."""
         player_data.curhp = self.p_health
         player_data.curmp = self.p_mana
         player_data.gold += self.m_gold
         player_data.exp += self.m_exp
         player_data.inventory = self.p_inventory
+        while player.check_levelup():
+            print(player.level)
+            player.level += 1
+            player.hp += 25
+            player.mp += 10
+            player.stat_points += 3
+            self.level_up = True
 
     def update_player_inventory(self):
         """For removing items from inventory after consumption"""
@@ -2028,7 +2036,7 @@ class NewBattle:
     def shake_screen(self):
         self.camera_x, self.camera_y = random.randrange(-5, 5), random.randrange(-5, 5)
 
-    def victory(self, player=Player()):
+    def victory(self, player):
         if not self.add_flag:
             self.f_gold = 0
             self.f_exp = 0
@@ -2064,15 +2072,8 @@ class NewBattle:
             self.check_level = True
             self.checked = True
         if self.check_level:
-            player.exp += self.m_exp
-            player.gold += self.m_gold
             self.cur_level = player.level
-            while player.check_levelup():
-                player.level += 1
-                player.hp += 25
-                player.mp += 10
-                player.stat_points += 3
-                self.level_up = True
+            self.update_player_details(player)
             self.check_level = False
             if self.level_up:
                 self.level_up_sound.play()
@@ -2189,7 +2190,7 @@ class NewBattle:
                 self.draw_healthbar(self.m_cur_health)
             self.update_status_effects()
             self.play_sequence(self.sequence_to_play, self.sequence_target)
-            self.check_state()  # To check the current game state
+            self.check_state(player_data)  # To check the current game state
             self.check_inputs(player_data)
             surf.blit(alpha, (0, 0))
             screen.blit(surf, (self.camera_x, self.camera_y))
@@ -2366,7 +2367,7 @@ class MainUi:
             if self.Talk > 3:
                 self.Talk = -1
 
-    def status(self, player=Player(), item_data=item_data):
+    def status(self, player, item_data=item_data):
         surf.blit(self.status_bg, (53, 30))
         nametxt = self.uitext.render('Name: ' + player.name, False, self.txtcolor)
         surf.blit(nametxt, (169, 207))
@@ -3336,21 +3337,18 @@ class GameEvents(MainUi):
                     done = True
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RCTRL and self.dialoguecontrol:
-                        self.townDialogue += 1
-                    if event.key == pygame.K_UP and choice_select:
-                        self.txtbox.ch_cursorpos -= 1
-                        self.cursorsound.play()
-                    if event.key == pygame.K_DOWN and choice_select:
-                        self.txtbox.ch_cursorpos += 1
-                        self.cursorsound.play()
+                        if self.txtbox.progress_dialogue():
+                            self.townDialogue += 1
+                    if choice_select:
+                        self.txtbox.select_choice_inputs(event)
                     if event.key == pygame.K_RETURN and choice_select:
-                        if self.txtbox.ch_cursorpos == 0:   # Pay the girl
+                        if self.txtbox.choice_cursor_pos == 0:   # Pay the girl
                             dialogue_choice = 0
                             dialogue_choice2 = 0
                             choice_select = False
                             self.townDialogue += 1
                             self.dialoguecontrol = True
-                        if self.txtbox.ch_cursorpos == 1:
+                        if self.txtbox.choice_cursor_pos == 1:   # Refuse the girl
                             dialogue_choice = 1
                             dialogue_choice2 = 1
                             choice_select = False
@@ -3370,34 +3368,23 @@ class GameEvents(MainUi):
                 self.dialoguecontrol = True
 
             if self.townDialogue == 1:
-                self.txtbox.draw_textbox(None, '',
-                                         'The town that the Arena is situated in gets very lively this time of the year as',
-                                         'this is when most of the challengers arrive.',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([['', '',
+                                         '''The town that the Arena is situated in gets very lively this time of the year as this is when most of the challengers arrive.''']], surf)
             elif self.townDialogue == 2:
-                self.txtbox.draw_textbox(None, '',
-                                         "You\'ve been here before but never really got the chance to look around,",
-                                         'so the sights of this place are still very unfamiliar to you.',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([['', '',
+                                         """You\'ve been here before but never really got the chance to look around, so the sights of this place are still very unfamiliar to you."""]], surf
+                                         )
             elif self.townDialogue == 3:
-                self.txtbox.draw_textbox(None, '',
-                                         'Even if you had been familiar with this place in the past, It would still have been',
-                                         'difficult finding your way through this place as the town has changed dramatically',
-                                         'over the course of a few years.',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([['', '',
+                                         'Even if you had been familiar with this place in the past, It would still have been difficult finding your way through this place as the town has changed dramatically over the course of a few years.']], surf)
             elif self.townDialogue == 4:
-                self.txtbox.draw_textbox(None, '',
-                                         'This is mostly due to the overwhelming popularity of the arena which has brought',
-                                         'visitors from all over the country to this one location.',
-                                         'This has let the town flourish and expand at a very quick pace, with new buildings and',
-                                         'stores being built seemingly everyday.',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([['', '',
+                                         '''This is mostly due to the overwhelming popularity of the arena which has brought visitors from all over the country to this one location. This has let the town flourish and expand at a very quick pace, with new buildings and stores being built seemingly everyday.''']], surf
+                                        )
             elif self.townDialogue == 5:
-                self.txtbox.draw_textbox(None, '',
-                                         'The presence and influence of the arena played a major role in the growth of the town,',
-                                         'so much so that the people of the town decided to change it\'s old name',
-                                         'and give it a new more fitting name, \"Arena Town\".',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([['', '',
+                                         '''The presence and influence of the arena played a major role in the growth of the town, so much so that the people of the town decided to change it\'s old name and give it a new more fitting name, \"Arena Town\".''']], surf
+                                         )
             elif self.townDialogue == 6:
                 runningsound.play()
                 self.timekeep.reset()
@@ -3405,13 +3392,13 @@ class GameEvents(MainUi):
                 self.dialoguecontrol = False
             elif self.townDialogue == 7 and timedflag1:
                 self.dialoguecontrol = True
-                self.txtbox.draw_textbox(None, '',
-                                         'You see a young girl running towards your direction.',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([['', '',
+                                         'You see a young girl running towards your direction.']], surf
+                                         )
             elif self.townDialogue == 8:
-                self.txtbox.draw_textbox("data/sprites/girl.png", '???',
-                                         'Oh no, I\'m so late, Grandpa\'s gonna get so mad!',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/girl.png", '???',
+                                         'Oh no, I\'m so late, Grandpa\'s gonna get so mad!']], surf
+                                         )
                 timedflag1 = False
 
             elif self.townDialogue == 9:
@@ -3420,54 +3407,55 @@ class GameEvents(MainUi):
                 self.dialoguecontrol = False
                 self.timekeep.reset()
             elif self.townDialogue == 10 and timedflag1:
-                self.txtbox.draw_textbox("data/sprites/girl.png", '???',
-                                         'Ouch!',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/girl.png", '???',
+                                         'Ouch!']], surf
+                                         )
                 self.dialoguecontrol = True
             elif self.townDialogue == 11:
-                self.txtbox.draw_textbox(None, '',
-                                         'The girl crashes into you at full speed and topples over onto the gravel road.',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([['', '',
+                                         'The girl crashes into you at full speed and topples over onto the gravel road.']], surf
+                                         )
             elif self.townDialogue == 12:
-                self.txtbox.draw_textbox("data/sprites/girl.png", '???',
-                                         'Hey, watch where you\'re going!',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/girl.png", '???',
+                                         'Hey, watch where you\'re going!']], surf
+                                         )
 
             elif self.townDialogue == 13:
-                self.txtbox.draw_textbox(None, '',
-                                         'The girl gets up and brushes off her skirt.',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([['', '',
+                                         'The girl gets up and brushes off her skirt.']], surf
+                                         )
             elif self.townDialogue == 14:
-                self.txtbox.draw_textbox("data/sprites/girl.png", '???',
-                                         'There\'s a tear in my new dress! What are you going to do about this?',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/girl.png", '???',
+                                         'There\'s a tear in my new dress! What are you going to do about this?']], surf
+                                         )
                 choice_select = True
+                self.txtbox.choice_flag = True
             elif self.townDialogue == 15:
-                self.txtbox.draw_textbox(None, '',
-                                         'What do you do?',
-                                         line6='Press ENTER to continue...')
-                self.txtbox.select_choice('Offer to pay her money', 'Ignore her and walk away')
+                self.txtbox.draw_textbox([['', '',
+                                         'What do you do?']], surf
+                                         )
+                self.txtbox.select_choice(['Offer to pay her money', 'Ignore her and walk away'], surf)
                 self.dialoguecontrol = False
             elif dialogue_choice == 0 and self.townDialogue >= 16:  # Pay money dialogue tree
                 if self.townDialogue == 16:
-                    self.txtbox.draw_textbox("data/sprites/girl.png", '???',
-                                             'Oh you\'re willing to pay? I\'m going to need atleast 150 gold for the dress.',
-                                             line6='Press RCTRL to continue...')
+                    self.txtbox.draw_textbox([["data/sprites/girl.png", '???',
+                                             'Oh you\'re willing to pay? I\'m going to need atleast 150 gold for the dress.']], surf
+                                             )
                     choice_select = True
                 elif self.townDialogue == 17:
-                    self.txtbox.draw_textbox(None, '',
-                                             'Pay 150 gold?',
-                                             line6='Press ENTER to continue...')
-                    self.txtbox.select_choice('Pay her', 'Don\'t Pay')
+                    self.txtbox.draw_textbox([['', '',
+                                             'Pay 150 gold?']], surf
+                                             )
+                    self.txtbox.select_choice(['Pay her', 'Don\'t Pay'], surf)
                     self.dialoguecontrol = False
                 elif self.townDialogue >= 18 and dialogue_choice2 == 0:  # Pay her
                     if player_data.gold < 150 and not paid_girl:  # if player doesn't have enough gold
                         if self.townDialogue == 18:
-                            self.txtbox.draw_textbox("data/sprites/girl.png", '???',
-                                                     'Hey you don\'t even have enough gold to pay me!')
+                            self.txtbox.draw_textbox([["data/sprites/girl.png", '???',
+                                                     'Hey you don\'t even have enough gold to pay me!']]), surf
                         if self.townDialogue == 19:
-                            self.txtbox.draw_textbox("data/sprites/girl.png", '???',
-                                                     'Don\'t waste my time if you don\'t have any money!')
+                            self.txtbox.draw_textbox([["data/sprites/girl.png", '???',
+                                                     'Don\'t waste my time if you don\'t have any money!']]), surf
                         if self.townDialogue == 20:
                             self.townDialogue = 21
                             dialogue_choice2 = 1
@@ -3477,47 +3465,42 @@ class GameEvents(MainUi):
                             player_data.paid_girl_flag = True
                         paid_girl = True
                         if self.townDialogue == 18:
-                            self.txtbox.draw_textbox("data/sprites/girl.png", '???',
-                                                     'Well, I guess this will have to do.')
+                            self.txtbox.draw_textbox([["data/sprites/girl.png", '???',
+                                                     'Well, I guess this will have to do.']], surf)
                         if self.townDialogue == 19:
-                            self.txtbox.draw_textbox("data/sprites/girl.png", '???',
-                                                     'You better be careful next time! Be grateful that I let you off easily!')
+                            self.txtbox.draw_textbox([["data/sprites/girl.png", '???',
+                                                     'You better be careful next time! Be grateful that I let you off easily!']], surf)
                         elif self.townDialogue == 20:
-                            self.txtbox.draw_textbox(None, '',
-                                                     'The girl walks away after glaring at you in the eye.',
-                                                     'You could have sworn you saw a smile for a second.')
+                            self.txtbox.draw_textbox([['', '',
+                                                     '''The girl walks away after glaring at you in the eye. You could have sworn you saw a smile for a second.''']], surf)
                         elif self.townDialogue == 21:
-                            self.txtbox.draw_textbox(None, '',
-                                                     'The girl disappears into the crowd.')
+                            self.txtbox.draw_textbox([['', '',
+                                                     'The girl disappears into the crowd.']], surf)
 
                 elif self.townDialogue >= 18 and dialogue_choice2 == 1:  # Don't pay her
                     if self.townDialogue == 18:
-                        self.txtbox.draw_textbox("data/sprites/girl.png", '???',
-                                                 '...You\'re not going to pay?',
-                                                 line6='Press RCTRL to continue...')
+                        self.txtbox.draw_textbox([["data/sprites/girl.png", '???',
+                                                 '...You\'re not going to pay?']], surf)
                     if self.townDialogue == 19:
-                        self.txtbox.draw_textbox("data/sprites/girl.png", '???',
-                                                 'Tch.. he didn\'t fall for it')
+                        self.txtbox.draw_textbox([["data/sprites/girl.png", '???',
+                                                 'Tch.. he didn\'t fall for it']], surf)
                     elif self.townDialogue == 20:
-                        self.txtbox.draw_textbox("data/sprites/girl.png", '???',
-                                                 'Well don\'t waste my time then, get out of my way!')
+                        self.txtbox.draw_textbox([["data/sprites/girl.png", '???',
+                                                 'Well don\'t waste my time then, get out of my way!']], surf)
                     elif self.townDialogue == 21:
-                        self.txtbox.draw_textbox(None, '',
-                                                 'The girl storms off and disappears into the crowd.')
+                        self.txtbox.draw_textbox([['', '',
+                                                 'The girl storms off and disappears into the crowd.']], surf)
             elif dialogue_choice == 1 and self.townDialogue >= 16:  # ignore girl tree
                 if self.townDialogue == 16:
-                    self.txtbox.draw_textbox("data/sprites/girl.png", '???',
-                                             '....',
-                                             line6='Press RCTRL to continue...')
+                    self.txtbox.draw_textbox([["data/sprites/girl.png", '???',
+                                             '....']], surf
+                                             )
                 elif self.townDialogue == 17:
-                    self.txtbox.draw_textbox("data/sprites/girl.png", '???',
-                                             'Don\'t just ignore me!',
-                                             line6='Press RCTRL to continue...')
+                    self.txtbox.draw_textbox([["data/sprites/girl.png", '???',
+                                             'Don\'t just ignore me!']], surf)
                 elif self.townDialogue == 18:
-                    self.txtbox.draw_textbox(None, '',
-                                             'You continue ignoring the girl while she makes a commotion in the middle of',
-                                             'the street and proceed to the Town.',
-                                             line6='Press RCTRL to continue...')
+                    self.txtbox.draw_textbox([['', '',
+                                             '''You continue ignoring the girl while she makes a commotion in the middle of the street and proceed to the Town.''']], surf)
                 elif self.townDialogue == 19:
                     self.townDialogue = 22
             if self.townDialogue >= 22:
@@ -3562,20 +3545,21 @@ class GameEvents(MainUi):
                     done = True
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RCTRL and self.dialoguecontrol:
-                        self.arenaDialogue += 1
+                        if self.txtbox.progress_dialogue():
+                            self.arenaDialogue += 1
                     if event.key == pygame.K_UP and choice_select:
-                        self.txtbox.ch_cursorpos -= 1
+                        self.txtbox.select_choice_inputs(event)
                         self.cursorsound.play()
                     if event.key == pygame.K_DOWN and choice_select:
-                        self.txtbox.ch_cursorpos += 1
+                        self.txtbox.select_choice_inputs(event)
                         self.cursorsound.play()
                     if event.key == pygame.K_RETURN and choice_select:
-                        if self.txtbox.ch_cursorpos == 0:
+                        if self.txtbox.choice_cursor_pos == 0:
                             dialogue_choice = 0
                             choice_select = False
                             self.arenaDialogue += 1
                             self.dialoguecontrol = True
-                        if self.txtbox.ch_cursorpos == 1:
+                        if self.txtbox.choice_cursor_pos == 1:
                             dialogue_choice = 1
                             choice_select = False
                             self.arenaDialogue += 1
@@ -3599,42 +3583,37 @@ class GameEvents(MainUi):
                     post_applause = True
 
             if self.arenaDialogue == 1:
-                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                         'Ladies and gentlemen!',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                         'Ladies and gentlemen!']], surf
+                                         )
 
             elif self.arenaDialogue == 2:
-                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                         'It seems like it\'s been ages since we\'ve had a challenger strong enough to',
-                                         'finally get to this point!',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                         'It seems like it\'s been ages since we\'ve had a challenger strong enough to finally get to this point!']], surf
+                                         )
             elif self.arenaDialogue == 3:
-                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                         'But we finally have him here, someone who is both brave and foolish enough',
-                                         'to step up and fight his way through some of the most powerful monsters, to',
-                                         'be able to stand before you at this very moment and face against what many',
-                                         'would consider suicide! ',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                         'But we finally have him here, someone who is both brave and foolish enough to step up and fight his way through some of the most powerful monsters, to be able to stand before you at this very moment and face against what many would consider suicide! ']], surf
+                                         )
             elif self.arenaDialogue == 4:
-                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                         'Please put your hands together for.. ' + name + '!',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                         'Please put your hands together for.. ' + name + '!']], surf
+                                         )
                 applause_flag2 = True
             elif self.arenaDialogue == 5:
-                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                         'And his opponent.. A beast that has destroyed the dreams of many young',
-                                         'adventurers, said to be the \'Gatekeeper\' of the Arena.',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                         'And his opponent.. A beast that has destroyed the dreams of many young adventurers, said to be the \'Gatekeeper\' of the Arena.']], surf
+                                         )
             elif self.arenaDialogue == 6:
-                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                         'Please put your hands together for.. Tho\'k!',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                         'Introducing.. Tho\'k!']], surf
+                                        )
                 boss_roar = True
 
             elif self.arenaDialogue == 7:
-                self.txtbox.draw_textbox("data/sprites/Boss1.png", 'Tho\'k',
-                                         'RAAAAAAAAAAAAAAAAAARRGGHHHHHH!!!!!',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/Boss1.png", 'Tho\'k',
+                                         'RAAAAAAAAAAAAAAAAAARRGGHHHHHH!!!!!']], surf
+                                         )
                 if boss_roar:
                     self.bossRoar.play()
                     self.timekeep.reset()
@@ -3644,26 +3623,27 @@ class GameEvents(MainUi):
                     self.dialoguecontrol = True
 
             elif self.arenaDialogue == 8:
-                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                         'Now, the time has come. ' + name + ', I assume you are ready?',
-                                         line6='Press ENTER to select a choice...')
-                self.txtbox.select_choice('Yes, I am ready.',
-                                          'I don\'t think I am.')
+                self.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                         'Now, the time has come. ' + name + ', I assume you are ready?']], surf
+                                         )
+                self.txtbox.select_choice(['Yes, I am ready.',
+                                          'I don\'t think I am.'], surf)
                 self.dialoguecontrol = False
                 choice_select = True
+                self.txtbox.choice_flag = True
             elif self.arenaDialogue == 9:
                 if dialogue_choice == 0:
-                    self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                             'Good! That\'s what I expected from you!',
-                                             line6='Press RCTRL to continue...')
-                if dialogue_choice == 1:
-                    self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                             'Well unfortunately it\'s too late to turn back now!',
-                                             line6='Press RCTRL to continue...')
+                    self.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                             'Good! That\'s what I expected from you!']], surf
+                                             )
+                elif dialogue_choice == 1:
+                    self.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                             'Well unfortunately it\'s too late to turn back now!']], surf
+                                             )
             elif self.arenaDialogue == 10:
-                self.txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                         'It is time! Fight!',
-                                         line6='Press RCTRL to continue...')
+                self.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                         'It is time! Fight!']], surf
+                                         )
             elif self.arenaDialogue == 11:
                 event_done = True
             screen.blit(surf, (0, 0))
@@ -4596,7 +4576,7 @@ if __name__ == "__main__":
             if shh == ['t', 'e', 's', 't'] and scene == 'menu':
                 shh = []
                 Zen = Player()
-                Zen.set_player_stats(stre=1000, mag=2000, health=10000, mana=1000, luck=9)
+                Zen.set_player_stats(stre=1000, mag=2000, health=10000, mana=1000, luck=9, level=90)
                 battler.battle("debug_fight", Zen, set_music=2)
             if shh == ['t', 'o', 'w', 'n'] and scene == 'menu':
                 shh = []
@@ -4649,7 +4629,7 @@ if __name__ == "__main__":
                 surf.blit(cursor, (260, 375))
                 surf.blit(MageDesc, (260, 45))
                 surf.blit(statstxt, (260, 95))
-                player.str = 10
+                player.stre = 10
                 player.mag = 25
                 player.defe = 15
 
@@ -4660,7 +4640,7 @@ if __name__ == "__main__":
                 surf.blit(cursor, (738, 375))
                 surf.blit(WarDesc, (260, 45))
                 surf.blit(statstxt, (260, 95))
-                player.str = 20
+                player.stre = 20
                 player.mag = 10
                 player.defe = 20
             if cursorpos < 0:

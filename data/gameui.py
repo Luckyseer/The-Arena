@@ -4,6 +4,14 @@
 import pygame
 
 
+class TooManyChoicesError(Exception):
+    """Exception raised when choice selection has too many choices."""
+    def __init__(self, choices):
+        self.choices = choices
+        self.message = "Expected 3 or less choices, Instead got {}".format(len(choices))
+        super().__init__(self.message)
+
+
 class Timer:
     """The Timer class, used to time things in-game."""
 
@@ -30,7 +38,7 @@ class Timer:
 
 
 class UiText:
-    """The class for text used by UI with some convenient functions"""
+    """The class for text used by UI with some convenient functions. The outline does not work properly currently"""
     def __init__(self, font_size=33):
         self.main_font = pygame.font.Font("data/fonts/runescape_uf.ttf", font_size)
         self.main_font_outline = pygame.font.Font("data/fonts/runescape_uf.ttf", font_size + 1)
@@ -43,7 +51,7 @@ class UiText:
         self.current_char = 0
 
     def get_next_character(self, text=''):
-        if len(text)  > self.current_char:
+        if len(text) > self.current_char:
             self.text_buffer += text[self.current_char]
             self.current_char += 1
 
@@ -126,6 +134,8 @@ class TextBox:
         self.bg = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()  # Ui background
         self.bg_loaded = pygame.transform.scale(self.bg, (1280, 300)).convert_alpha()
         self.confirm_bg = pygame.transform.scale(self.bg, (300, 300)).convert_alpha()
+        self.choice_bg1 = pygame.transform.scale(self.bg, (400, 300)).convert_alpha()
+        self.choice_bg2 = pygame.transform.scale(self.bg, (400, 200)).convert_alpha()
         self.confirm_surf = pygame.Surface((300, 300))
         self.confirm_surf.set_colorkey((0, 0, 0))
         self.txtbox_surf = pygame.Surface((1260, 300))
@@ -133,7 +143,6 @@ class TextBox:
         self.txtbox_surf.set_colorkey((0, 0, 0))
         self.txtcolor2 = (23, 18, 96)
         self.cursor = pygame.image.load("data/sprites/Cursor.png").convert_alpha()
-        self.ch_cursorpos = 0  # Position of cursor for choice selection
         self.dialogue_progress = 0  # Current 'Progress' of the dialogue
         self.txtbox_height = 300
         self.popup_flag = False  # Flag for popup animation
@@ -145,6 +154,10 @@ class TextBox:
         self.load_face = False
         self.speaker = pygame.image.load('data/sprites/boy.png').convert_alpha()
         self.confirm_flag = False
+        self.choice_cursor_pos = 0
+        self.choice_flag = False
+        self.choice_surf = pygame.Surface((400, 300))
+        self.choice_surf.set_colorkey((255, 255, 255))
 
     def reset(self):
         self.popup_flag = False
@@ -152,7 +165,9 @@ class TextBox:
         self.load_face = False
         self.dialogue_progress = 0
         self.ui_text.reset_buffer()
-        
+        self.choice_flag = False
+        self.confirm_flag = False
+
     def popup(self):  # popup animation for the text box
         if not self.popup_flag:
             self.txtbox_height = 0
@@ -162,7 +177,7 @@ class TextBox:
         if self.txtbox_height >= 300:
             self.popup_done = True
 
-    def progress_dialogue(self, dialogue):
+    def progress_dialogue(self, dialogue=[[]]):
         if self.ui_text.scrolling_flag:
             self.ui_text.scrolling_flag = False
         else:
@@ -172,9 +187,11 @@ class TextBox:
                 self.load_face = False
                 return False
             else:
+                self.load_face = False
+                self.ui_text.reset_buffer()
                 return True
 
-    def draw_textbox(self, dialogue, surface=pygame.Surface((0, 0)), pos=(0, 0)):
+    def draw_textbox(self, dialogue, surface=pygame.Surface((0, 0)), pos=(0, 400)):
         if self.txtbox_height < 300:
             self.txtbox_surf.fill((0, 0, 0, 255))
             self.txtbox_surf.blit(pygame.transform.scale(self.bg, (1280, self.txtbox_height)), (0, 0))
@@ -194,7 +211,6 @@ class TextBox:
 
             self.ui_text.draw_scrolling_text((250 - pic_off, 60), dialogue[self.dialogue_progress][2], False, self.txtbox_surf, 3)
             self.ui_text_small.draw_text((300, 220), "Press RCTRL to continue...", False, self.txtbox_surf)
-
         surface.blit(self.txtbox_surf, pos)
 
     def confirm_box(self, message='', surface=pygame.Surface((0, 0)), confirm_text='ENTER: Confirm', deny_text='RCTRL: Cancel'):
@@ -204,4 +220,35 @@ class TextBox:
         self.ui_text_confirm.draw_text((50, 160), confirm_text, False, self.confirm_surf)
         self.ui_text_confirm.draw_text((50, 190), deny_text, False, self.confirm_surf)
         surface.blit(self.confirm_surf, (surface.get_width()/2 - 150, surface.get_height()/2 - 150))
+
+    def select_choice(self, choices=[], surface=pygame.Surface((0, 0)), pos=(750, 200)):
+        if len(choices) > 3:
+            raise TooManyChoicesError(choices)
+        if self.choice_flag:
+            choice_string = '\n'    # We combine the choices into one string so that it will properly scroll over
+            self.choice_surf.fill((255, 255, 255))
+            if len(choices) >= 3:
+                self.choice_surf.blit(self.choice_bg1, (0, 0))
+            else:
+                self.choice_surf.blit(self.choice_bg2, (0, 0))
+            self.ui_text_small.draw_text((50, 60), choice_string.join(choices), False, self.choice_surf)
+            if self.choice_cursor_pos == 0:
+                self.choice_surf.blit(self.cursor, (20, 60))
+            elif self.choice_cursor_pos == 1:
+                self.choice_surf.blit(self.cursor, (20, 90 + len(choices[0]) / 2))
+            elif self.choice_cursor_pos == 2:
+                self.choice_surf.blit(self.cursor, (20, 120 + len(choices[1]) / 2 + len(choices[0]) / 2))
+            if self.choice_cursor_pos > len(choices) - 1:
+                self.choice_cursor_pos = 0
+            elif self.choice_cursor_pos < 0:
+                self.choice_cursor_pos = len(choices) - 1
+            surface.blit(self.choice_surf, pos)
+
+    def select_choice_inputs(self, event):
+        if event.key == pygame.K_DOWN:
+            self.choice_cursor_pos += 1
+        elif event.key == pygame.K_UP:
+            self.choice_cursor_pos -= 1
+
+
 
