@@ -60,6 +60,8 @@
  + Changed the intro, added some more plot.
  + You no longer gain stats when leveling up. Instead you get stat points that you can spend on your stats as you like. You can spend the points via the status menu.
  + You get a message when you level up after a battle.
+ + Fixed an issue when starting a new game after death
+ + Fixed issues with the old textbox events, should be working perfectly now.
 # Known issues:
  - Update current song after victory
 # TODO:
