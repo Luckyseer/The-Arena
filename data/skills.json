@@ -61,7 +61,7 @@
     {
       "name" : "Terrify",
       "type" : "debuff",
-      "desc" : "Reduce enemy DEF, ATK and MAG(2 turns).",
+      "desc" : "Reduce all enemy stats(2 turns).",
       "mp_cost" : 30,
       "level_req" : 8
     },
@@ -108,6 +108,41 @@
         "desc" : "Deal fire damage to the enemy.",
         "mp_cost" : 25,
         "level_req" : 13
-      }
+      },
+    {
+      "name" : "Fire",
+      "type" : "dmg",
+      "desc" : "Inflict magical fire damage.",
+      "mp_cost" : 20,
+      "level_req" : 1
+    },
+    {
+      "name": "Ice",
+      "type": "dmg",
+      "desc": "Inflict magical water damage.",
+      "mp_cost": 30,
+      "level_req": 4
+    },
+    {
+      "name" : "Thunder",
+      "type" : "dmg",
+      "desc" : "Inflict magical light damage.",
+      "mp_cost" : 40,
+      "level_req" : 6
+    },
+    {
+      "name" : "Terrify",
+      "type" : "debuff",
+      "desc" : "Reduce all enemy stats(2 turns).",
+      "mp_cost" : 30,
+      "level_req" : 8
+    },
+    {
+      "name" : "Tsunami",
+      "type" : "dmg",
+      "desc" : "Call forth a mighty wave.",
+      "mp_cost" : 70,
+      "level_req" : 10
+    }
   ]
 }

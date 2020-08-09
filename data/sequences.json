@@ -5,6 +5,10 @@
   "defend": [["alert_box", "   Defend", 0], ["sound", "defend", 0], ["animation", "defend", 2], ["add_status", "defend", 0], ["end_sequence"]],
   "fire slash": [["alert_box", "Fire Slash", 0], ["sound", "slash", 0], ["animation", "fire slash", 0.5], ["sound", "fire2", 0], ["deal_damage", "fire slash", 3], ["end_sequence"]],
   "quake": [["alert_box", "     Quake", 0], ["sound", "quake", 0], ["deal_damage", "quake", 0], ["animation", "quake", 2], ["end_sequence"]],
-  "use_item": [["alert_box", "item_name", 0], ["sound", "cure", 0], ["animation", "cure", 0], ["heal_hp", "item", 1], ["heal_mp", "item", 1], ["end_sequence"]]
-
+  "use_item": [["alert_box", "item_name", 0], ["sound", "cure", 0], ["animation", "cure", 0], ["heal_hp", "item", 1], ["heal_mp", "item", 1], ["end_sequence"]],
+  "fire": [["alert_box", "     Fire", 0], ["sound", "cast", 0], ["animation", "cast", 2], ["sound", "fire", 0], ["animation", "fire", 0], ["deal_damage", "fire", 2], ["end_sequence"]],
+  "ice": [["alert_box", "     Ice", 0], ["sound", "cast", 0], ["animation", "cast", 2], ["sound", "ice", 0], ["animation", "ice", 0], ["deal_damage", "ice", 2], ["end_sequence"]],
+  "thunder": [["alert_box", "  Thunder", 0], ["sound", "cast", 0], ["animation", "cast", 2], ["sound", "thunder", 0], ["animation", "thunder", 0], ["deal_damage", "thunder", 2], ["end_sequence"]],
+  "terrify": [["alert_box", "  Terrify", 0], ["sound", "cast", 0], ["animation", "cast", 2], ["sound", "death", 0], ["animation", "death", 0], ["add_status_target", "atk_down", 0], ["add_status_target", "def_down", 0], ["add_status_target", "mag_down", 2], ["end_sequence"]],
+  "tsunami": [["alert_box", "  Tsunami", 0], ["sound", "cast", 0], ["animation", "cast", 2], ["sound", "tsunami", 0], ["animation", "tsunami", 0], ["deal_damage", "tsunami", 2], ["end_sequence"]]
 }

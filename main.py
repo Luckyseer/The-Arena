@@ -70,7 +70,7 @@ class Player:
         self.wep_owned = []  # Used to store ids of currently owned weapons
         self.arm_owned = []
         self.acc_owned = []
-        self.pclass = 'warrior'
+        self.pclass = 'mage'
         self.fkills = 0  # Kills in floor
         self.tkills = 0  # Total Kills
         self.scene = 'menu'
@@ -1335,7 +1335,10 @@ class NewBattle:
         self.battle_ui3 = pygame.transform.scale(pygame.image.load("data/backgrounds/UiElement.png").convert_alpha(),
                                                  (250, 250))  # player info ui
         self.status_icons = {"burst": pygame.image.load("data/sprites/attack+.png"),
-                             "defend": pygame.image.load("data/sprites/defence+.png")
+                             "defend": pygame.image.load("data/sprites/defence+.png"),
+                             "atk_down": pygame.image.load("data/sprites/atk_down.png"),
+                             "def_down": pygame.image.load("data/sprites/def_down.png"),
+                             "mag_down": pygame.image.load("data/sprites/mag_down.png")
                              }
         self.title_bar = pygame.image.load("data/backgrounds/titlebar.png").convert_alpha()
         self.background = ""
@@ -1362,7 +1365,7 @@ class NewBattle:
         self.focus = False
         self.shake = False
 
-    def check_inputs(self, player_data=Player()):
+    def check_inputs(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.battling = False
@@ -1673,10 +1676,16 @@ class NewBattle:
                             if action[1] == "item_name":
                                 self.alert_text = self.p_inventory[self.item_min + self.cursor_pos]["name"]
                         elif action[0] == "animation":
-                            self.play_animation(action[1], target)
+                            if action[1] != "cast":
+                                self.play_animation(action[1], target)
+                            else:
+                                if self.turn == "player":
+                                    self.play_animation(action[1], (880, 230))  # Mage cast animation
+                                else:
+                                    self.play_animation(action[1], (self.monster_pos - 50, self.monster_y))
                         elif action[0] == "sound":
                             self.play_sound(action[1])
-                        elif action[0] == "add_status":
+                        elif action[0] == "add_status": # Buff
                             status_in = False
                             duration = 0
                             if self.turn == "player":
@@ -1696,6 +1705,28 @@ class NewBattle:
                                     self.p_status.append([action[1], duration])
                                 elif self.turn == "enemy":
                                     self.m_status.append([action[1], duration])
+                        elif action[0] == "add_status_target":  # Debuff
+                            status_in = False
+                            duration = 0
+                            if self.turn == "player":
+                                for status in self.m_status:
+                                    if action[1] in status:
+                                        status_in = True  # statuses don't stack or refresh
+                            elif self.turn == "enemy":
+                                for status in self.p_status:
+                                    if action[1] in status:
+                                        status_in = True  # statuses don't stack or refresh
+                            if not status_in:
+                                if action[1] == "atk_down":
+                                    duration = self.turn_count + 2  # the amount of time the effect lasts
+                                elif action[1] == "def_down":
+                                    duration = self.turn_count + 2
+                                elif action[1] == "mag_down":
+                                    duration = self.turn_count + 2
+                                if self.turn == "player":
+                                    self.m_status.append([action[1], duration])
+                                elif self.turn == "enemy":
+                                    self.p_status.append([action[1], duration])
                         elif action[0] == "deal_damage":
                             dmg = self.calc_damage(action[1])
                             if self.turn == "player":
@@ -1741,6 +1772,10 @@ class NewBattle:
                 print("Invalid Sequence!")
 
     def draw_cursor(self):
+        if self.cursor_pos > self.cursor_max:
+            self.cursor_pos = 0
+        if self.cursor_pos < 0:
+            self.cursor_pos = self.cursor_max
         if self.ui_state == 'main':
             self.cursor_max = 2
         if self.ui_state == 'skill':
@@ -1753,10 +1788,6 @@ class NewBattle:
             surf.blit(self.cursor, (890, 525))
         if self.cursor_pos == 3:
             surf.blit(self.cursor, (890, 550))
-        if self.cursor_pos > self.cursor_max:
-            self.cursor_pos = 0
-        if self.cursor_pos < 0:
-            self.cursor_pos = self.cursor_max
 
     def update_status_effects(self):
         """Updating and removing status effects according to duration"""
@@ -1985,9 +2016,15 @@ class NewBattle:
                     self.p_status.remove(effect)
                 else:
                     self.m_status.remove(effect)
+            elif effect[0] == "atk_down":
+                strength = strength * 0.5   # Reduce strength by 50%
+            elif effect[0] == "mag_down":
+                magic = magic * 0.5     # Reduce magic by 50%
         for effect in e_status:
             if effect[0] == "defend":
                 defence = defence + (defence * 2.0)   # increase defence by 200%
+            elif effect[0] == "def_down":
+                defence = defence * 0.5  # decreases defence by Half
         if atk_type == "attack":    # Regular attack
             self.element = "none"
             dmg_range = strength + random.randrange(-3, 3)  # Will take a range of their current strength
@@ -2016,6 +2053,30 @@ class NewBattle:
             if dmg_range <= 0:
                 dmg_range = 1
             damage = (dmg_range * magic / (magic + defence)) * 2.5
+        elif atk_type == "fire":
+            self.element = "fire"
+            dmg_range = magic + random.randrange(-3, 3)
+            if dmg_range <= 0:
+                dmg_range = 1
+            damage = (dmg_range * magic / (magic + defence)) * 2
+        elif atk_type == "ice":
+            self.element = "water"
+            dmg_range = magic + random.randrange(-3, 3)
+            if dmg_range <= 0:
+                dmg_range = 1
+            damage = (dmg_range * magic / (magic + defence)) * 2.5
+        elif atk_type == "thunder":
+            self.element = "light"
+            dmg_range = magic + random.randrange(-3, 3)
+            if dmg_range <= 0:
+                dmg_range = 1
+            damage = (dmg_range * magic / (magic + defence)) * 2.7
+        elif atk_type == "tsunami":
+            self.element = "water"
+            dmg_range = magic + random.randrange(-3, 3)
+            if dmg_range <= 0:
+                dmg_range = 1
+            damage = (dmg_range * magic / (magic + defence)) * 3.5
         if self.turn == "player":
             if self.element in self.m_weakness:
                 damage *= 2     # Damage doubles if enemy is weak against that element
@@ -2191,7 +2252,7 @@ class NewBattle:
             self.update_status_effects()
             self.play_sequence(self.sequence_to_play, self.sequence_target)
             self.check_state(player_data)  # To check the current game state
-            self.check_inputs(player_data)
+            self.check_inputs()
             surf.blit(alpha, (0, 0))
             screen.blit(surf, (self.camera_x, self.camera_y))
             pygame.display.update()
@@ -2814,28 +2875,59 @@ class SelectOptions(MainUi):
         backTxt = self.uitext.render('Back', False, self.txtcolor)
         surf.blit(Option1, (80, 490))  # Row 1
         if self.alert1:  # If the option is new/updated show alert.
-            self.alertAnim.blit(surf, (200, 490))
+            self.alertAnim.blit(surf, (80 + Option1.get_width(), 490))
         if no >= 2:
             surf.blit(Option2, (280, 490))
             if self.alert2:
-                self.alertAnim.blit(surf, (400, 490))
+                self.alertAnim.blit(surf, (280 + Option2.get_width(), 490))
             if no >= 3:
                 surf.blit(Option3, (480, 490))
                 if self.alert3:
-                    self.alertAnim.blit(surf, (600, 490))
+                    self.alertAnim.blit(surf, (480 + Option3.get_width(), 490))
                 if no >= 4:
                     surf.blit(Option4, (80, 590))  # Row 2
                     if self.alert4:
-                        self.alertAnim.blit(surf, (200, 590))
+                        self.alertAnim.blit(surf, (80 + Option4.get_width(), 590))
                     if no >= 5:
                         surf.blit(Option5, (280, 590))
                         if self.alert5:
-                            self.alertAnim.blit(surf, (400, 590))
+                            self.alertAnim.blit(surf, (280 + Option5.get_width(), 590))
                         if no >= 6:
                             surf.blit(Option6, (480, 590))
                             if self.alert6:
-                                self.alertAnim.blit(surf, (600, 590))
+                                self.alertAnim.blit(surf, (480 + Option6.get_width(), 590))
         surf.blit(backTxt, (680, 590))  # Exit
+        if self.colpos > no or self.colpos > 3:
+            self.colpos = 0
+        if self.rowpos > 1 or no <= 3:
+            self.rowpos = 0
+        if self.colpos < 0:
+            if no >= 3:
+                self.colpos = 2
+            else:
+                self.colpos = 3
+            if self.rowpos == 1:
+                self.colpos = 3
+        if self.rowpos < 0:
+            if no > 3:
+                if no == 4:
+                    self.colpos = 0
+                self.rowpos = 1
+            else:
+                self.rowpos = 0
+        if self.rowpos == 0:  # Goes to exit when trying to go right on the end of row 1
+            if self.colpos > 2:
+                self.rowpos = 1
+                self.colpos = 3
+        if self.rowpos == 1:
+            if no == 4:
+                if self.colpos > 0 and self.colpos <= 2:
+                    self.rowpos = 1
+                    self.colpos = 0
+                6
+            elif no == 5:
+                if self.colpos > 1:
+                    self.colpos = 3
 
         if self.rowpos == 0 and self.colpos == 0:  # Option 1
             surf.blit(self.cursor, (50, 490))
@@ -2851,18 +2943,6 @@ class SelectOptions(MainUi):
             surf.blit(self.cursor, (450, 590))
         if self.rowpos == 1 and self.colpos == 3:  # Back
             surf.blit(self.cursor, (650, 590))
-        if self.colpos > 3:
-            self.colpos = 0
-        if self.rowpos > 1:
-            self.rowpos = 0
-        if self.colpos < 0:
-            self.colpos = 2
-        if self.rowpos < 0:
-            self.rowpos = 1
-        if self.rowpos == 0:  # Goes to exit when trying to go right on the end of row 1
-            if self.colpos > 2:
-                self.rowpos = 1
-                self.colpos = 3
 
     def alert_off(self, alert):  # Switch off the specified alert(from 1 - 6)
         if alert == 1:
@@ -3568,7 +3648,7 @@ class GameEvents(MainUi):
                     pygame.mixer.music.play()
                     pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
 
-            surf.blit(pygame.transform.scale(self.arena_bg, (curwidth, curheight)), (0, 0))
+            surf.blit(self.arena_bg, (0, 0))
             if self.timekeep.timing() == 2:
                 if not applause_flag1:
                     self.applauseSound.play()
@@ -3652,6 +3732,26 @@ class GameEvents(MainUi):
             fps = "FPS:%d" % clock.get_fps()
             pygame.display.set_caption(fps)
             pygame.display.update()
+
+    def first_floor_victory(self):
+        '''Cutscene after beating the first_floor boss'''
+        event_done = False
+        pygame.mixer.music.load('data/sounds&music/Infinite_Arena.mp3')
+        global surf
+        global screen
+        pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
+        self.timekeep.reset()
+        self.dialoguecontrol = False
+        pygame.mixer_music.play()
+        while not event_done:
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    pass
+            surf.blit(self.arena_bg, (0, 0))
+            clock.tick(60)
+            screen.blit(0, 0)
+            pygame.display.set_caption("FPS:{}".format(int(clock.get_fps())))
+            pygame.display.flip()
 
     def intro_scene(self, intro_dialogue):
         event_done = False
@@ -3890,7 +3990,7 @@ class GameEvents(MainUi):
             pygame.display.flip()
 
     def town(self, player_data):
-        '''The town and all the locations present in it.'''
+        ''' The town and all the locations present in it. '''
         if not player_data.town_first_flag:
             self.town_first_visit(player_data)
         event_done = False
@@ -4586,7 +4686,8 @@ if __name__ == "__main__":
                 pygame.mixer_music.load(Currentmusic)
                 pygame.mixer_music.play()
             if shh == ['t', 'e', 't'] and scene == 'menu':
-                battler.battle('rat')
+                player.set_player_stats(level=20, health=1000, mana=1000)
+                battler.battle('rat', player)
                 shh = []
             if shh == ['t', 'o', 't'] and scene == 'menu':
                 player.town_first_flag = False

@@ -62,6 +62,8 @@
  + You get a message when you level up after a battle.
  + Fixed an issue when starting a new game after death
  + Fixed issues with the old textbox events, should be working perfectly now.
+ + Added mage skills
+ + Added debuffs
 # Known issues:
  - Update current song after victory
 # TODO:

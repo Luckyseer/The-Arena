@@ -1,4 +1,9 @@
 {
+  "cast": [["data/sprites/Cast1.png", 0.15],
+    ["data/sprites/Cast2.png", 0.15],
+    ["data/sprites/Cast3.png", 0.15],
+    ["data/sprites/Cast4.png", 0.15],
+    ["data/sprites/Cast5.png", 0.15]],
   "burst": [
     [
       "data/sprites/Special1.png",
@@ -125,6 +130,8 @@
       0.1
     ]
   ],
+  "ice": [["data/sprites/Ice1.png", 0.1],
+    ["data/sprites/Ice2.png", 0.1], ["data/sprites/Ice3.png", 0.1], ["data/sprites/Ice4.png", 0.1], ["data/sprites/Ice5.png", 0.1], ["data/sprites/Ice6.png", 0.1], ["data/sprites/Ice7.png", 0.1], ["data/sprites/Ice8.png", 0.1], ["data/sprites/Ice9.png", 0.1], ["data/sprites/Ice10.png", 0.1], ["data/sprites/Ice11.png", 0.1], ["data/sprites/Ice12.png", 0.1], ["data/sprites/Ice13.png", 0.1], ["data/sprites/Ice14.png", 0.1], ["data/sprites/Ice15.png", 0.1], ["data/sprites/Ice16.png", 0.1], ["data/sprites/Ice17.png", 0.1], ["data/sprites/Ice18.png", 0.1]],
   "fire": [
     [
       "data/sprites/Fire1.png",
@@ -151,6 +158,8 @@
       0.1
     ]
   ],
+  "thunder": [["data/sprites/Thunder1.png", 0.1],
+    ["data/sprites/Thunder2.png", 0.1], ["data/sprites/Thunder3.png", 0.1], ["data/sprites/Thunder4.png", 0.1], ["data/sprites/Thunder5.png", 0.1]],
   "meteor": [
     [
       "data/sprites/meteor/tile000.png",
@@ -263,6 +272,8 @@
       0.1
     ]
   ],
+  "death": [["data/sprites/Death1.png", 0.1],
+    ["data/sprites/Death2.png", 0.1], ["data/sprites/Death3.png", 0.1], ["data/sprites/Death4.png", 0.1], ["data/sprites/Death5.png", 0.1], ["data/sprites/Death6.png", 0.1], ["data/sprites/Death7.png", 0.1], ["data/sprites/Death8.png", 0.1], ["data/sprites/Death9.png", 0.1], ["data/sprites/Death10.png", 0.1], ["data/sprites/Death11.png", 0.1], ["data/sprites/Death12.png", 0.1]],
   "fire slash": [
     [
       "data/sprites/fireslash/tile000.png",
@@ -359,6 +370,8 @@
       0.1
     ]
   ],
+  "tsunami": [["data/sprites/Water1.png", 0.1],
+    ["data/sprites/Water2.png", 0.1], ["data/sprites/Water3.png", 0.1], ["data/sprites/Water4.png", 0.1], ["data/sprites/Water5.png", 0.1], ["data/sprites/Water6.png", 0.1], ["data/sprites/Water7.png", 0.1], ["data/sprites/Water8.png", 0.1], ["data/sprites/Water9.png", 0.1], ["data/sprites/Water10.png", 0.1], ["data/sprites/Water11.png", 0.1], ["data/sprites/Water12.png", 0.1], ["data/sprites/Water13.png", 0.1], ["data/sprites/Water14.png", 0.1], ["data/sprites/Water15.png", 0.1], ["data/sprites/Water16.png", 0.1], ["data/sprites/Water17.png", 0.1], ["data/sprites/Water18.png", 0.1]],
   "cure": [
     [
       "data/sprites/Cure1.png",

@@ -1,12 +1,14 @@
 {
   "battle" : {
     "encounter": "data/sounds&music/Battle2.ogg",
+    "cast": "data/sounds&music/Magic4.ogg",
     "cure": "data/sounds&music/Item3.ogg",
     "ice": "data/sounds&music/Ice4.ogg",
     "burst": "data/sounds&music/Skill1.ogg",
     "death": "data/sounds&music/Darkness5.ogg",
     "fire": "data/sounds&music/Fire2.ogg",
     "fire2": "data/sounds&music/Fire3.ogg",
+    "thunder": "data/sounds&music/Thunder9.ogg",
     "tsunami": "data/sounds&music/Water5.ogg",
     "slash" : "data/sounds&music/Slash1.ogg",
     "slash2" : "data/sounds&music/Slash2.ogg",
