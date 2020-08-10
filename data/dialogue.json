@@ -32,6 +32,43 @@
     ["data/sprites/host_face.png", "Chance", "Also, you can find some interesting people around the Arena, so make sure to talk to them. They may have some useful info for you!"],
     ["data/sprites/host_face.png", "Chance", "Well that's about it.. I have high hopes for you."],
     ["data/sprites/host_face.png", "Chance", "Good luck friend... Lord knows you need it!"]
-  ]
+  ],
+  "first_floor_victory1": [
+    ["data/sprites/host_face.png", "Chance", "Ladies and gentlemen... He's done it!"],
+    ["data/sprites/host_face.png", "Chance", "What a thrilling match! Against all odds, he has emerged victorious!"],
+    ["data/sprites/host_face.png", "Chance", "Could this be the beginning of something amazing?"],
+    ["data/sprites/host_face.png", "Chance", "Could this be the start of the new Champion? Only time will tell."],
+    ["data/sprites/host_face.png", "Chance", "For now let us cheer once again for the wonderful skill displayed by the challenger!"]
 
+  ],
+  "first_floor_victory2": [
+    ["data/sprites/host_face.png", "Chance", "Hey, let me congratulate you personally. To be honest, while I saw potential in you I didn't think you would beat Tho'k that easily!"],
+    ["data/sprites/host_face.png", "Chance", "What I said about him being \"The Gatekeeper\" wasn't an exaggeration. Most challengers don't get past this point."],
+    ["data/sprites/host_face.png", "Chance", "But that means from this point onwards it's going to get much harder. The next floor boss isn't one to take lightly."],
+    ["data/sprites/host_face.png", "Chance", "Let me make a suggestion. Make your way to the town. You'll find some useful info there as well as some equipment that you may not find in the Arena. It doesn't hurt to be prepared."],
+    ["data/sprites/host_face.png", "Chance", "With this victory, you have successfully advanced to the next floor. Take the rest of the day off, we need some time to prepare things on our side. Besides, taking breaks is part of the job!"],
+    ["data/sprites/host_face.png", "Chance", "Remember, when you wake up, try visiting the town. You might find something or rather someone interesting there."],
+    ["data/sprites/host_face.png", "Chance", "Good luck friend! I'm rooting for you!"]
+  ],
+  "first_floor_victory3": [
+    ["data/sprites/rogue.png", "???", "So.. what did you think of the challengers this time around?"],
+    ["data/sprites/rogue.png", "???", "Personally, I've been extremely disappointed so far."],
+    ["data/sprites/mysteryman.png", "Stranger", "Hmm.. there was one person in particular that piqued my interest.. The one that defeated the Gatekeeper."],
+    ["data/sprites/rogue.png", "???", "What? Why him? Sure, he might be better than most of the weaklings that come through this place but I didn't think he was that strong."],
+    ["data/sprites/rogue.png", "???", "He seemed like an amateur to me at first. I admit he was stronger than what I initially thought of him, he did manage to beat that weakling Tho'k after all."],
+    ["data/sprites/rogue.png", "???", "But nowhere during his fight did he strike me as someone with potential."],
+    ["data/sprites/mysteryman.png", "Stranger", "Heh.. You might be right.. But call it.. my intuition."],
+    ["data/sprites/rogue.png", "???", "Intuition? Ha! I think my battle experience is a bit more reliable than your \"Intuition\"!"],
+    ["data/sprites/mysteryman.png", "Stranger", "You may be surprised. Who knows.. I suggest you keep an eye on him. He may be just what we need."],
+    ["data/sprites/rogue.png", "???", "Well, if you say so. We don't have much time after all."],
+    ["data/sprites/rogue.png", "???", "Well.. I would stay here and chat but I've got my own matters to attend to."],
+    ["data/sprites/mysteryman.png", "Stranger", "Oh? Could it be.. you found a lead on.."],
+    ["data/sprites/rogue.png", "???", "We're not sure yet. But the intel this time is solid. If we can get our hands on him we can speed this process up by a lot. Still, what kind of a person is he to be able to stay hidden for so long?"],
+    ["data/sprites/mysteryman.png", "Stranger", "To put it plain and simple.. He was a monster. If it wasn't for him we would have been ready 2 years ago."],
+    ["data/sprites/mysteryman.png", "Stranger", "While he foiled our plans, he took a mortal wound himself. We were sure he was dead. Until people started talking about him again.."],
+    ["data/sprites/rogue.png", "???", "The \"Champion of the Arena\", huh? I wonder If I could get a fight with him?"],
+    ["data/sprites/mysteryman.png", "Stranger", "Don't be stupid. If you see him, capture him and bring him here. He should be nowhere as strong as he once was. There is also a chance that this could be an impostor.."],
+    ["data/sprites/mysteryman.png", "Stranger", "Now go.. Preparations have to be made soon."],
+    ["data/sprites/rogue.png", "???", "Heh. I'm looking forward to it."]
+  ]
 }

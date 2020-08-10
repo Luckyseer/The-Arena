@@ -3380,6 +3380,8 @@ class GameEvents(MainUi):
         self.bossRoar = pygame.mixer.Sound('data/sounds&music/Monster2.ogg')
         self.arena_bg = pygame.image.load("data/backgrounds/arenaDay.png").convert_alpha()
         self.arena_bg = pygame.transform.scale(self.arena_bg, (1280, 720))
+        self.arena_bg_night = pygame.image.load("data/backgrounds/arenaNight.png").convert_alpha()
+        self.arena_bg_night = pygame.transform.scale(self.arena_bg_night, (1280, 720))
         self.boss_face1 = pygame.image.load("data/sprites/Boss1.png")
         self.town_location = 0  # 0-Centre 1-Bar/Inn 2-Slums
         self.game_clock = GameClock()
@@ -3601,7 +3603,7 @@ class GameEvents(MainUi):
             pygame.display.update()
 
     def firstfloor_boss(self, name='Zen'):
-        '''Cutscene when challenging the first_floor boss'''
+        # Cutscene when challenging the first_floor boss
         event_done = False
         pygame.mixer.music.load('data/sounds&music/Dungeon3.ogg')
         global surf
@@ -3733,23 +3735,85 @@ class GameEvents(MainUi):
             pygame.display.set_caption(fps)
             pygame.display.update()
 
-    def first_floor_victory(self):
-        '''Cutscene after beating the first_floor boss'''
+    def first_floor_victory(self, dialogues):
+        # Cutscene after beating the first_floor boss
         event_done = False
         pygame.mixer.music.load('data/sounds&music/Infinite_Arena.mp3')
         global surf
         global screen
-        pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
+        pygame.mixer_music.set_endevent(pygame.constants.USEREVENT)
         self.timekeep.reset()
         self.dialoguecontrol = False
         pygame.mixer_music.play()
+        state = 0
+        cur_song = 'data/sounds&music/Infinite_Arena.mp3'
+        draw_tb = False
+        cur_dialogue = dialogues["first_floor_victory1"]
         while not event_done:
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
-                    pass
-            surf.blit(self.arena_bg, (0, 0))
+                    if self.dialoguecontrol and event.key == pygame.K_RCTRL:
+                        if self.txtbox.progress_dialogue(cur_dialogue):
+                            state += 1
+                            draw_tb = False
+                            self.timekeep.reset()
+                            self.txtbox.reset()
+                            self.dialoguecontrol = False
+                if event.type == pygame.constants.USEREVENT:
+                    pygame.mixer_music.load(cur_song)
+                    pygame.mixer_music.play()
+                    pygame.mixer_music.set_endevent(pygame.constants.USEREVENT)
+                if event.type == pygame.QUIT:
+                    global done
+                    done = True
+                    event_done = True
+                    pygame.quit()
+            if state == 0:
+                if self.timekeep.timing() > 2:
+                    self.applauseSound.play()
+                    state += 1
+            elif state == 1:
+                self.dialoguecontrol = True
+                draw_tb = True
+            elif state == 2:
+                self.applauseSound.play()
+                fadeout(surf, 0.01)
+                state += 1
+                self.timekeep.reset()
+            elif state == 3:
+                if self.timekeep.timing() > 2:
+                    cur_dialogue = dialogues['first_floor_victory2']
+                    self.dialoguecontrol = True
+                    draw_tb = True
+            elif state == 4:
+                pygame.mixer_music.fadeout(200)
+                fadeout(surf, 0.01)
+                pygame.mixer_music.load("data/sounds&music/Dungeon 2.ogg")
+                cur_song = "data/sounds&music/Dungeon 2.ogg"
+                pygame.mixer_music.set_endevent(USEREVENT)
+                pygame.mixer_music.play()
+                state += 1
+                self.timekeep.reset()
+            elif state == 5:
+                if self.timekeep.timing() > 3:
+                    cur_dialogue = dialogues['first_floor_victory3']
+                    state += 1
+            elif state == 6:
+                self.dialoguecontrol = True
+                draw_tb = True
+            elif state == 7:
+                if self.timekeep.timing() > 2:
+                    pygame.mixer_music.fadeout(200)
+                    fadeout(surf)
+                    event_done = True
+            if state < 5:
+                surf.blit(self.arena_bg, (0, 0))
+            else:
+                surf.blit(self.arena_bg_night, (0, 0))
+            if draw_tb:
+                self.txtbox.draw_textbox(cur_dialogue, surf)
             clock.tick(60)
-            screen.blit(0, 0)
+            screen.blit(surf, (0, 0))
             pygame.display.set_caption("FPS:{}".format(int(clock.get_fps())))
             pygame.display.flip()
 
@@ -4617,6 +4681,8 @@ if __name__ == "__main__":
                         player.tkills += 1
                         battle_choice = False
                         post_battle = True
+                        pygame.mixer.music.load('data/sounds&music/Infinite_Arena.mp3')
+                        pygame.mixer.music.play()
                     else:
                         scene = 'menu'
                         pygame.mixer_music.load('data/sounds&music/Theme2.ogg')
@@ -4632,7 +4698,19 @@ if __name__ == "__main__":
                         eventManager.firstfloor_boss(player.name)
                         battler.battle('floor_boss1', player, set_music=1)
                         if battler.check_victory():
+                            eventManager.first_floor_victory(dialogues)
                             player.progress += 1
+                            player.fkills = 0
+                            battle_choice = False
+                            post_battle = False
+                            drawui = True
+                            controlui = True
+                            ui.pb_dialogue = False
+                            scene = 'arena'
+                            player.hours = 6
+                            player.minutes = 0
+                            pygame.mixer.music.load('data/sounds&music/Infinite_Arena.mp3')
+                            pygame.mixer.music.play()
                         else:
                             scene = 'menu'
                             pygame.mixer_music.load('data/sounds&music/Theme2.ogg')
