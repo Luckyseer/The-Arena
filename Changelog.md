@@ -64,6 +64,8 @@
  + Fixed issues with the old textbox events, should be working perfectly now.
  + Added mage skills
  + Added debuffs
+ + Added Cutscene after defeating first boss
+ + Fixed issue of song not updating after victory
 # Known issues:
  - Update current song after victory
 # TODO:
