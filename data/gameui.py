@@ -163,6 +163,7 @@ class TextBox:
         self.popup_flag = False
         self.popup_done = False
         self.load_face = False
+        self.txtbox_height = 0
         self.dialogue_progress = 0
         self.ui_text.reset_buffer()
         self.choice_flag = False
