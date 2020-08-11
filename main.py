@@ -183,12 +183,14 @@ def fadein(rgb, time=0.0001, fadetimer=Timer()):  # fadein effect
     return fade_done
 
 
-def fadeout(surface, time=0.000001, fadetimer=Timer()):  # fadeout effect
+def fadeout(surface, time=0.000001, fadetimer=Timer(), fade_in=False, optional_bg=""):  # fadeout effect
     global screen
+    if optional_bg != "":
+        post_fade_bg = optional_bg   # Image to show on screen when it fades back in
     fade_done = False
     alpha = 255
     while True:
-        while alpha >= 0:
+        while alpha >= 0 and not fade_done:
             if fadetimer.timing(1) >= time:
                 surface.set_alpha(alpha)
                 screen.fill([0, 0, 0])
@@ -198,8 +200,22 @@ def fadeout(surface, time=0.000001, fadetimer=Timer()):  # fadeout effect
                 fadetimer.reset()
         fade_done = True
         if fade_done:
-            surface.set_alpha(255)
-            break
+            if fade_in:
+                while alpha < 255:
+                    if fadetimer.timing(1) >= time:
+                        if optional_bg != "":
+                            surface.blit(post_fade_bg, (0, 0))
+                        surface.set_alpha(alpha)
+                        screen.blit(surface, (0, 0))
+                        pygame.display.flip()
+                        alpha += 3
+                        fadetimer.reset()
+                if alpha >= 255:
+                    fade_in = False
+                    break
+            else:
+                surface.set_alpha(255)
+                break
     return fade_done
 
 
@@ -3776,18 +3792,20 @@ class GameEvents(MainUi):
                 self.dialoguecontrol = True
                 draw_tb = True
             elif state == 2:
-                self.applauseSound.play()
-                fadeout(surf, 0.01)
-                state += 1
-                self.timekeep.reset()
-            elif state == 3:
+                if self.timekeep.timing() <= 1:
+                    self.applauseSound.play()
                 if self.timekeep.timing() > 2:
+                    fadeout(surf, 0.01, fade_in=True, optional_bg=self.arena_bg)
+                    state += 1
+                    self.timekeep.reset()
+            elif state == 3:
+                if self.timekeep.timing() > 1:
                     cur_dialogue = dialogues['first_floor_victory2']
                     self.dialoguecontrol = True
                     draw_tb = True
             elif state == 4:
                 pygame.mixer_music.fadeout(200)
-                fadeout(surf, 0.01)
+                fadeout(surf, 0.01, fade_in=True, optional_bg=self.arena_bg_night)
                 pygame.mixer_music.load("data/sounds&music/Dungeon 2.ogg")
                 cur_song = "data/sounds&music/Dungeon 2.ogg"
                 pygame.mixer_music.set_endevent(USEREVENT)
@@ -4354,7 +4372,7 @@ if __name__ == "__main__":
                         ui.cursorpos = 9
                         pygame.mixer.music.load('data/sounds&music/Infinite_Arena.mp3')
                         pygame.mixer.music.play()
-                    except:
+                    except FileNotFoundError:
                         print("Could not open")
 
                 if event.key == pygame.K_RETURN and cursorpos == 2 and scene == 'menu':  # quit
