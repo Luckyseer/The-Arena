@@ -36,9 +36,9 @@
   "first_floor_victory1": [
     ["data/sprites/host_face.png", "Chance", "Ladies and gentlemen... He's done it!"],
     ["data/sprites/host_face.png", "Chance", "What a thrilling match! Against all odds, he has emerged victorious!"],
-    ["data/sprites/host_face.png", "Chance", "Could this be the beginning of something amazing?"],
-    ["data/sprites/host_face.png", "Chance", "Could this be the start of the new Champion? Only time will tell."],
-    ["data/sprites/host_face.png", "Chance", "For now let us cheer once again for the wonderful skill displayed by the challenger!"]
+    ["data/sprites/host_face.png", "Chance", "Could we finally have a new Champion after 2 years?"],
+    ["data/sprites/host_face.png", "Chance", "Only time will tell."],
+    ["data/sprites/host_face.png", "Chance", "For now let us cheer once again for this wonderful display of skill by the challenger!"]
 
   ],
   "first_floor_victory2": [
