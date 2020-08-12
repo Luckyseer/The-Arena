@@ -240,6 +240,7 @@ class SideBattle:
         self.pshadow = pygame.image.load("data/sprites/Shadow1.png").convert_alpha()
         self.encountersound = pygame.mixer.Sound('data/sounds&music/Battle2.ogg')
         self.cursorsound = pygame.mixer.Sound('data/sounds&music/Cursor1.ogg')
+        self.cursorsound.set_volume(0.05)
         self.buzzer = pygame.mixer.Sound('data/sounds&music/Buzzer1.ogg')
         self.bg = pygame.image.load(bg).convert_alpha()
         self.players[1].convert_alpha()
@@ -1390,6 +1391,7 @@ class NewBattle:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 posfinder()
             if event.type == pygame.constants.USEREVENT:
+                pygame.mixer_music.set_volume(vol)
                 pygame.mixer_music.play()
             if event.type == pygame.KEYDOWN:
                 if self.draw_menu:
@@ -1506,6 +1508,8 @@ class NewBattle:
 
     def play_sound(self, sound):
         self.sound_effect = pygame.mixer.Sound(self.sound_data[sound])
+        global vol
+        self.sound_effect.set_volume(vol)
         self.sound_effect.play()
 
     def play_animation(self, animation, pos=(920, 270)):
@@ -2226,15 +2230,19 @@ class NewBattle:
         fadein(255)
         if set_music == 0:
             pygame.mixer_music.load("data/sounds&music/03_Endless_Battle.ogg")
+            pygame.mixer_music.set_volume(vol)
             pygame.mixer_music.play()
         elif set_music == 1:
             pygame.mixer_music.load("data/sounds&music/boss_music.mp3")
+            pygame.mixer_music.set_volume(vol)
             pygame.mixer_music.play()
         elif set_music == 2:
             pygame.mixer_music.load("data/sounds&music/Dungeon2.ogg")
+            pygame.mixer_music.set_volume(vol)
             pygame.mixer_music.play()
         else:
             pygame.mixer_music.load("data/sounds&music/03_Endless_Battle.ogg")
+            pygame.mixer_music.set_volume(vol)
             pygame.mixer_music.play()
         pygame.mixer_music.set_endevent(pygame.constants.USEREVENT)
         self.player_pos = 1200  # make the player 'move'
@@ -2317,9 +2325,11 @@ class MainUi:
         self.cursor_up = pygame.transform.rotate(self.cursor, 90)
         self.cursor_left = pygame.transform.rotate(self.cursor, 180)
         self.cursorsound = pygame.mixer.Sound('data/sounds&music/Cursor1.ogg')
+        self.cursorsound.set_volume(0.05)
         self.cursorpos = 0
         self.equip_txt = self.uitext.render('Equipment', False, self.txtcolor)
         self.buzzer_sound = pygame.mixer.Sound('data/sounds&music/Buzzer1.ogg')
+        self.buzzer_sound.set_volume(0.05)
         self.stats_txt = self.uitext.render('Stats', False, self.txtcolor)
         self.talktxt = self.uitext.render('Talk', False, self.txtcolor)
         self.talkdesc = self.uitext.render('Talk with people around the Arena.', False, self.txtcolor)
@@ -2360,7 +2370,9 @@ class MainUi:
         self.shopkeep = True
         self.loaditems = False
         self.buysound = pygame.mixer.Sound('data/sounds&music/Shop1.ogg')
+        self.buysound.set_volume(0.05)
         self.equip_sound = pygame.mixer.Sound('data/sounds&music/Open1.ogg')
+        self.equip_sound.set_volume(0.05)
         self.shoplist = {'Potion': 20, 'Iron Sword': 60, 'Iron Armour': 100}
         self.Talk = -1
         self.sysopt1 = self.uitext.render('Save Game', False, self.txtcolor)
@@ -2368,6 +2380,7 @@ class MainUi:
         self.sysopt3 = self.uitext.render('Cancel', False, self.txtcolor)
         self.syscursorpos = 0
         self.savesound = pygame.mixer.Sound('data/sounds&music/Save.ogg')
+        self.savesound.set_volume(0.05)
         self.batopt1 = self.uitext.render('Fight a regular enemy', False, self.txtcolor)
         self.battalk = True
         self.batcursorpos = False
@@ -3019,6 +3032,7 @@ class Shop(MainUi):
         self.box_pos = 2000
         self.current_list = []  # which set of items u are currently viewing
         self.buzzer = pygame.mixer.Sound('data/sounds&music/Buzzer1.ogg')
+        self.buzzer.set_volume(0.05)
 
     def get_player_stats(self, player_data):
         self.player_data = player_data
@@ -3392,8 +3406,11 @@ class GameEvents(MainUi):
         self.dialoguecontrol = False
         self.startEvent = False
         self.thudSound = pygame.mixer.Sound('data/sounds&music/thud.wav')
+        self.thudSound.set_volume(0.05)
         self.applauseSound = pygame.mixer.Sound('data/sounds&music/Applause1.ogg')
+        self.applauseSound.set_volume(0.05)
         self.bossRoar = pygame.mixer.Sound('data/sounds&music/Monster2.ogg')
+        self.bossRoar.set_volume(0.05)
         self.arena_bg = pygame.image.load("data/backgrounds/arenaDay.png").convert_alpha()
         self.arena_bg = pygame.transform.scale(self.arena_bg, (1280, 720))
         self.arena_bg_night = pygame.image.load("data/backgrounds/arenaNight.png").convert_alpha()
@@ -3777,6 +3794,7 @@ class GameEvents(MainUi):
                             self.dialoguecontrol = False
                 if event.type == pygame.constants.USEREVENT:
                     pygame.mixer_music.load(cur_song)
+                    pygame.mixer_music.set_volume(vol)
                     pygame.mixer_music.play()
                     pygame.mixer_music.set_endevent(pygame.constants.USEREVENT)
                 if event.type == pygame.QUIT:
@@ -3807,6 +3825,7 @@ class GameEvents(MainUi):
                 pygame.mixer_music.fadeout(200)
                 fadeout(surf, 0.01, fade_in=True, optional_bg=self.arena_bg_night)
                 pygame.mixer_music.load("data/sounds&music/Dungeon 2.ogg")
+                pygame.mixer_music.set_volume(vol)
                 cur_song = "data/sounds&music/Dungeon 2.ogg"
                 pygame.mixer_music.set_endevent(USEREVENT)
                 pygame.mixer_music.play()
@@ -3839,7 +3858,9 @@ class GameEvents(MainUi):
         event_done = False
         pygame.mixer.music.load('data/sounds&music/Church.mp3')
         door_sound = pygame.mixer.Sound('data/sounds&music/Door1.ogg')
+        door_sound.set_volume(0.05)
         gate_sound = pygame.mixer.Sound('data/sounds&music/Door4.ogg')
+        gate_sound.set_volume(0.05)
         global surf
         global screen
         text_surf = pygame.Surface((1280, 720))
@@ -4054,6 +4075,7 @@ class GameEvents(MainUi):
                 draw_tb = False
                 self.text_box.reset()
                 pygame.mixer_music.load("data/sounds&music/Infinite_Arena.mp3")
+                pygame.mixer_music.set_volume(vol)
                 pygame.mixer_music.play()
                 self.timekeep.reset()
             elif intro_level == 25:
@@ -4149,7 +4171,9 @@ class GameClock:
         self.fadeoutflag = False
         self.area_music = 'data/sounds&music/Infinite_Arena.mp3'  # Music to be played in the area
         self.bell = pygame.mixer.Sound('data/sounds&music/Bell1.ogg')  # Bell sound during night time
+        self.bell.set_volume(0.05)
         self.rooster = pygame.mixer.Sound('data/sounds&music/Roost.ogg')  # Morning sound
+        self.rooster.set_volume(0.05)
         self.paused = False
         self.time_state = "Morning"  # The time of day
 
@@ -4231,10 +4255,11 @@ if __name__ == "__main__":
     newgtxtbox = 0
     pygame.mixer.music.load('data/sounds&music/Theme2.ogg')
     pygame.mixer.music.play()
-    vol = 0.5
+    vol = 0.05
     surf = pygame.Surface((1366, 768))
     pygame.mixer.music.set_volume(vol)
     innsong = pygame.mixer.Sound('data/sounds&music/Town2.ogg')
+    innsong.set_volume(0.05)
     # I deeply apologize for the code below(and above)
     talked = False  # Ui flags
     options = False
@@ -4257,6 +4282,7 @@ if __name__ == "__main__":
                              pmag=2000, pluck=9)
     debugbattle.plevel = 50
     healsound = pygame.mixer.Sound('data/sounds&music/Recovery.ogg')
+    healsound.set_volume(0.05)
     mage.play()
     warrior.play()
     menutext = pygame.font.Font("data/fonts/Daisy_Roots.otf", 40)
@@ -4269,10 +4295,6 @@ if __name__ == "__main__":
     sel3 = seltext.render('Select your class:', False, secretbattle.txtcolor)
     sel4 = text.render('Mage', False, secretbattle.txtcolor)
     sel5 = text.render('Warrior', False, secretbattle.txtcolor)
-    door = pygame.mixer.Sound('data/sounds&music/Door1.ogg')  # Door sound during newgame sequence
-    gate = pygame.mixer.Sound('data/sounds&music/Door4.ogg')  # Gate sound  "          "     "
-    bell = pygame.mixer.Sound('data/sounds&music/Bell1.ogg')  # Bell sound during night time
-    rooster = pygame.mixer.Sound('data/sounds&music/Roost.ogg')  # Morning sound
     loadgamecolor = (255, 255, 0)
     nosavefile = True  # Check if a savefile is already present or not
     load_flag = False
@@ -4300,6 +4322,7 @@ if __name__ == "__main__":
     cursor = pygame.image.load("data/sprites/Cursor.png").convert_alpha()
     newgbg = pygame.image.load("data/backgrounds/Meadow.png").convert_alpha()  # New game screen background
     loadsound = pygame.mixer.Sound('data/sounds&music/Load.ogg')
+    loadsound.set_volume(0.05)
     cursorpos = 0
     Textbox = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()
     scene = 'menu'
@@ -4704,6 +4727,7 @@ if __name__ == "__main__":
                     else:
                         scene = 'menu'
                         pygame.mixer_music.load('data/sounds&music/Theme2.ogg')
+                        pygame.mixer_music.set_volume(0.1)
                         pygame.mixer_music.play()
                         battle_choice = False
                         post_battle = False
@@ -4732,6 +4756,7 @@ if __name__ == "__main__":
                         else:
                             scene = 'menu'
                             pygame.mixer_music.load('data/sounds&music/Theme2.ogg')
+                            pygame.mixer_music.set_volume(0.1)
                             pygame.mixer_music.play()
                             battle_choice = False
                             post_battle = False
