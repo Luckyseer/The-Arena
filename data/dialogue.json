@@ -1,6 +1,6 @@
 {
   "intro1": [
-    ["", "", "You make your way into a fancy looking office. The room is well furnished and in the back of the room is a big metal gate. In there you see a man looking over some documents. "],
+    ["", "", "You make your way into a fancy looking office. The room is well furnished and in the back of the room stands a big metal gate. In the room you see a man looking over some documents. "],
     ["data/sprites/host_face.png", "???", "Oh? Can I help you?"],
     ["", "", "The man gets up to greet you."],
     ["", "", "You exchange pleasantries and state your reason for coming here."],

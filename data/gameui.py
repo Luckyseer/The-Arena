@@ -148,6 +148,7 @@ class TextBox:
         self.popup_flag = False  # Flag for popup animation
         self.popup_done = False  # Check if the popup animation is done or not
         self.ui_text = UiText()
+        self.txtbox_timer = Timer()
         self.ui_text_small = UiText(25)
         self.ui_text_confirm = UiText(27)
         self.ui_text_small.main_font_colour = (255, 21, 45)
@@ -158,6 +159,11 @@ class TextBox:
         self.choice_flag = False
         self.choice_surf = pygame.Surface((400, 300))
         self.choice_surf.set_colorkey((255, 255, 255))
+        self.popup_message_pos_y = 400
+        self.popup_message_flag = False
+        self.popup_message_surf = pygame.Surface((1280, 300))
+        self.popup_message_surf.set_colorkey((255, 255, 255))
+        self.popup_message_surf.set_alpha(255)
 
     def reset(self):
         self.popup_flag = False
@@ -177,6 +183,27 @@ class TextBox:
             self.txtbox_height += 50
         if self.txtbox_height >= 300:
             self.popup_done = True
+
+    def toggle_popup_flag(self):
+        if not self.popup_message_flag:
+            self.popup_message_flag = True
+            self.popup_message_pos_y = 400
+            self.popup_message_surf.set_alpha(255)
+            self.txtbox_timer.reset()
+
+    def popup_message(self, message, surf):  # Creates a quick message on the screen and it scrolls up and fades away
+        if self.popup_message_flag:
+            self.popup_message_surf.fill((255, 255, 255))
+            self.ui_text.draw_text((450, 150), message, False, self.popup_message_surf)
+            surf.blit(self.popup_message_surf, (0, self.popup_message_pos_y))
+            if self.popup_message_pos_y > -100:
+                if self.txtbox_timer.timing(1) > 0.01:
+                    self.popup_message_pos_y -= 5
+                    self.txtbox_timer.reset()
+                if self.popup_message_pos_y < 100:
+                    self.ui_text.fade_out(self.popup_message_surf)
+            else:
+                self.popup_message_flag = False
 
     def progress_dialogue(self, dialogue=[[]]):
         if self.ui_text.scrolling_flag:

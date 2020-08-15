@@ -66,6 +66,9 @@
  + Added debuffs
  + Added Cutscene after defeating first boss
  + Fixed issue of song not updating after victory
+# - Alpha v4.1
+ + Added a popup message when trying to do things that  you can't do(Not enough gold, no stat points, etc.) 
+ 
 # Known issues:
  - Update current song after victory
 # TODO:

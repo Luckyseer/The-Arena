@@ -12,7 +12,7 @@ from pygame.locals import *
 
 icon = pygame.image.load("data/sprites/icon2.png")
 pygame.display.set_icon(icon)
-alphatext = "Alpha v4.0 - Story and the Town"
+alphatext = "Alpha v4.1 - Story and the Town"
 try:
     with open('data/items.json', 'r') as items:
         item_data = json.load(items)
@@ -2384,6 +2384,7 @@ class MainUi:
         self.batopt1 = self.uitext.render('Fight a regular enemy', False, self.txtcolor)
         self.battalk = True
         self.batcursorpos = False
+        self.popup_message = ''
         self.pb_dialogue = False
         self.pbtalk = 0
 
@@ -2516,6 +2517,7 @@ class MainUi:
         surf.blit(floorktxt, (169, 527))
         surf.blit(totktxt, (168, 567))
         self.status_menu(player)
+        self.txtbox.popup_message(self.popup_message, surf)
 
     def change_equipment(self, player=Player(), item_data=item_data):
         surf.blit(self.equip_menu_bg, (self.window_x, 45))
@@ -2735,6 +2737,8 @@ class MainUi:
                                 self.orig_mag = player.mag
                             else:
                                 self.buzzer_sound.play()
+                                self.txtbox.toggle_popup_flag()
+                                self.popup_message = "You don't have any stat points!"
                         if self.confirm:
                             self.confirm = False
                             self.stat_flag = False
@@ -3107,12 +3111,20 @@ class Shop(MainUi):
     def buy_item(self, item_id):
         if self.player_data.gold < self.current_list[item_id]['cost']:
             self.buzzer.play()
+            self.popup_message = "Not enough gold!"
+            self.txtbox.toggle_popup_flag()
         elif self.current_list == self.weapons_list and (item_id in self.player_data.wep_owned or self.player_data.cur_weapon == item_id):
                 self.buzzer.play()
+                self.popup_message = "You already own that weapon!"
+                self.txtbox.toggle_popup_flag()
         elif self.current_list == self.armour_list and (item_id in self.player_data.arm_owned or self.player_data.cur_armour == item_id):
+                self.popup_message = "You already own that armour!"
+                self.txtbox.toggle_popup_flag()
                 self.buzzer.play()
         elif self.current_list == self.acc_list and (item_id in self.player_data.acc_owned or self.player_data.cur_accessory == item_id):
                 self.buzzer.play()
+                self.popup_message = "You already own that accessory!"
+                self.txtbox.toggle_popup_flag()
         else:
             self.buysound.play()
             return True
@@ -3390,6 +3402,7 @@ class Shop(MainUi):
                     else:
                         self.shop_cursor_pos2 = self.max_pos - 1
                 self.status_window(self.current_list[self.shop_cursor_pos2 + self.min_pos], player_data)
+            self.txtbox.popup_message(self.popup_message, surf)
 
 
 class GameEvents(MainUi):
@@ -4326,6 +4339,7 @@ if __name__ == "__main__":
     cursorpos = 0
     Textbox = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()
     scene = 'menu'
+    popup_message = ""
     Currentmusic = 'data/sounds&music/Infinite_Arena.mp3'
     ui = MainUi()
     shh = []
@@ -4397,6 +4411,8 @@ if __name__ == "__main__":
                         pygame.mixer.music.play()
                     except FileNotFoundError:
                         print("Could not open")
+                        popup_message = "Could not open save file!"
+                        txtbox.toggle_popup_flag()
 
                 if event.key == pygame.K_RETURN and cursorpos == 2 and scene == 'menu':  # quit
                     done = True
@@ -4633,7 +4649,7 @@ if __name__ == "__main__":
                         arena_shop.min_pos -= 1"""
                 if (event.key == pygame.K_RETURN and shop) and not arena_shop.shop_selection_flag:
                     if arena_shop.buy_item(arena_shop.min_pos + arena_shop.shop_cursor_pos2):
-                        print(player.gold)
+                        # Buying item from shop
                         player.gold -= arena_shop.current_list[arena_shop.min_pos + arena_shop.shop_cursor_pos2]['cost']
                         if arena_shop.current_list == arena_shop.weapons_list:
                             player.wep_owned.append(arena_shop.min_pos + arena_shop.shop_cursor_pos2)
@@ -4655,7 +4671,6 @@ if __name__ == "__main__":
                                     else:
                                         player.inventory.append({"name": consumable["name"], "amount": 1})
                         player.update_stats()
-                        print(player.wep_owned)
 
                 if (
                         event.key == pygame.K_RETURN and ui.cursorpos == 4) and scene == 'arena' and controlui:  # Inn option
@@ -4928,6 +4943,7 @@ if __name__ == "__main__":
                 scene = 'menu'
         timer.timing()
         surf.blit(ab, (0, 0))
+        txtbox.popup_message(popup_message, surf)
         screen.blit(surf, (0, 0))
         pygame.display.update()
         clock.tick(60)
