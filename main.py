@@ -2502,9 +2502,9 @@ class MainUi:
         classtxt = self.uitext.render(player.pclass.capitalize(), False, self.txtcolor)
         surf.blit(classtxt, (697, 366))
         surf.blit(self.statustxt, (417, 141))
-        weptxt = self.uitext.render('WEAPON: ' + item_data['weapons'][player.cur_weapon]['name'], False, self.txtcolor2)
-        armtxt = self.uitext.render('ARMOR: ' + item_data['armours'][player.cur_armour]['name'], False, self.txtcolor2)
-        acctxt = self.uitext.render('ACCESSORY: ' + item_data['accessories'][player.cur_accessory]['name'], False,
+        weptxt = self.uitext2.render('WEAPON: ' + item_data['weapons'][player.cur_weapon]['name'], False, self.txtcolor2)
+        armtxt = self.uitext2.render('ARMOR: ' + item_data['armours'][player.cur_armour]['name'], False, self.txtcolor2)
+        acctxt = self.uitext2.render('ACCESSORY: ' + item_data['accessories'][player.cur_accessory]['name'], False,
                                     self.txtcolor2)
         surf.blit(self.wepicon, (169, 407))
         surf.blit(weptxt, (209, 407))
@@ -2609,10 +2609,16 @@ class MainUi:
             elif self.equip_cursor1_pos == 1:
                 cur_desc = item_data["armours"]
             elif self.equip_cursor1_pos == 2:
-                cur_desc = item_data["accesories"]
+                cur_desc = item_data["accessories"]
             if not no_item:
                 self.item_desc = self.uitext2.render(cur_desc[self.cur_id]["description"], False, self.txtcolor2)
+                hover_item_str = self.uitext2.render("STR:" + str(cur_desc[self.cur_id]["atk"]), False, self.txtcolor2)
+                hover_item_def = self.uitext2.render("DEF:" + str(cur_desc[self.cur_id]["def"]), False, self.txtcolor2)
+                hover_item_mag = self.uitext2.render("MAG:" + str(cur_desc[self.cur_id]["mag"]), False, self.txtcolor2)
                 surf.blit(self.item_desc, (120, 620))
+                surf.blit(hover_item_str, (605, 500))
+                surf.blit(hover_item_def, (605, 540))
+                surf.blit(hover_item_mag, (605, 580))
 
     def stat_point_alloc(self, player=Player()):
         if self.stat_cursor_pos == 0:
