@@ -2369,11 +2369,11 @@ class MainUi:
         self.coinAnim.play()
         self.shopkeep = True
         self.loaditems = False
+        self.item_desc = ''
         self.buysound = pygame.mixer.Sound('data/sounds&music/Shop1.ogg')
         self.buysound.set_volume(0.05)
         self.equip_sound = pygame.mixer.Sound('data/sounds&music/Open1.ogg')
         self.equip_sound.set_volume(0.05)
-        self.shoplist = {'Potion': 20, 'Iron Sword': 60, 'Iron Armour': 100}
         self.Talk = -1
         self.sysopt1 = self.uitext.render('Save Game', False, self.txtcolor)
         self.sysopt2 = self.uitext.render('Quit Game', False, self.txtcolor)
@@ -2544,6 +2544,7 @@ class MainUi:
         if self.equip_cursor1_pos == 0:
             self.max_pos = len(player.wep_owned)
             if len(player.wep_owned) > 0:
+                no_item = False
                 for i in range(self.min_pos, self.max_pos):
                     if i <= self.min_pos + 4:
                         for weapon in item_data['weapons']:
@@ -2556,10 +2557,12 @@ class MainUi:
                     surf.blit(self.cursor_down, (1085, 360))
 
             else:
+                self.item_desc = ''
                 surf.blit(self.uitext.render("No weapons owned", False, self.txtcolor), (980, 110))
         elif self.equip_cursor1_pos == 1:
             self.max_pos = len(player.arm_owned)
             if len(player.arm_owned) > 0:
+                no_item = False
                 for i in range(self.min_pos, self.max_pos):
                     if i <= self.min_pos + 4:
                         for armour in item_data['armours']:
@@ -2571,10 +2574,12 @@ class MainUi:
                 elif self.min_pos + 5 < self.max_pos:
                     surf.blit(self.cursor_down, (1085, 360))
             else:
+                no_item = True
                 surf.blit(self.uitext.render("No armours owned", False, self.txtcolor), (980, 110))
         elif self.equip_cursor1_pos == 2:
             self.max_pos = len(player.acc_owned)
             if len(player.acc_owned) > 0:
+                no_item = False
                 for i in range(self.min_pos, self.max_pos):
                     if i <= self.min_pos + 4:
                         for acc in item_data['accessories']:
@@ -2586,6 +2591,7 @@ class MainUi:
                 elif self.min_pos + 5 < self.max_pos:
                     surf.blit(self.cursor_down, (1085, 360))
             else:
+                self.item_desc = ''
                 surf.blit(self.uitext.render("No accessories owned", False, self.txtcolor), (980, 110))
         if self.equip_flag2:
             if self.equip_cursor2_pos == 0:
@@ -2598,6 +2604,15 @@ class MainUi:
                 surf.blit(self.cursor, (940, 280))
             elif self.equip_cursor2_pos == 4:
                 surf.blit(self.cursor, (940, 335))
+            if self.equip_cursor1_pos == 0:
+                cur_desc = item_data["weapons"]
+            elif self.equip_cursor1_pos == 1:
+                cur_desc = item_data["armours"]
+            elif self.equip_cursor1_pos == 2:
+                cur_desc = item_data["accesories"]
+            if not no_item:
+                self.item_desc = self.uitext2.render(cur_desc[self.cur_id]["description"], False, self.txtcolor2)
+                surf.blit(self.item_desc, (120, 620))
 
     def stat_point_alloc(self, player=Player()):
         if self.stat_cursor_pos == 0:
@@ -2634,8 +2649,6 @@ class MainUi:
                 surf.blit(self.cursor, (140, 450))
             elif self.equip_cursor1_pos == 2:
                 surf.blit(self.cursor, (140, 490))
-        if self.equip_flag2:
-            pass
         if self.status_cur_pos > 2:
             self.status_cur_pos = 0
         if self.status_cur_pos < 0:
@@ -4271,8 +4284,6 @@ if __name__ == "__main__":
     vol = 0.05
     surf = pygame.Surface((1366, 768))
     pygame.mixer.music.set_volume(vol)
-    innsong = pygame.mixer.Sound('data/sounds&music/Town2.ogg')
-    innsong.set_volume(0.05)
     # I deeply apologize for the code below(and above)
     talked = False  # Ui flags
     options = False
@@ -4676,7 +4687,8 @@ if __name__ == "__main__":
                         event.key == pygame.K_RETURN and ui.cursorpos == 4) and scene == 'arena' and controlui:  # Inn option
                     pygame.mixer.music.pause()
                     fadein(255)
-                    innsong.play()
+                    pygame.mixer.music.load('data/sounds&music/Town2.ogg')
+                    pygame.mixer.music.play()
                     scene = 'inn'
                 if (
                         event.key == pygame.K_RETURN and ui.cursorpos == 5) and scene == 'arena' and controlui:  # System option
@@ -4694,7 +4706,8 @@ if __name__ == "__main__":
                         fadein(255)
                         player.gold -= 20
                 if (event.key == pygame.K_RETURN and ui.cursorpos == 2) and scene == 'inn' and controlui:
-                    innsong.stop()
+                    pygame.mixer.music.stop()
+                    pygame.mixer.music.load('data/sounds&music/Infinite_Arena.mp3')
                     fadein(255)
                     pygame.mixer.music.play()
                     scene = 'arena'
