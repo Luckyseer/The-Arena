@@ -8,7 +8,7 @@ pygame.init()
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 done = False
-text = UiText()
+text = UiText(30)
 text.main_font_colour = (0, 0, 0)
 text.main_font_colour2 = (0, 0, 0)
 fade = False
@@ -58,7 +58,7 @@ while not done:
 
     screen.fill((255, 255, 255))
     bg.fill((255, 255, 255, 255))
-    text.draw_scrolling_text((0, 0), "This is a test line I want to see if this text works properly as intended\nLike this\nOr this.", False, bg, 3)
+    text.draw_text((0, 0), "This is a test line I want to see if this text works properly as intended\nLike this\nOr this.", False, bg)
     if draw_tb:
         tb.draw_textbox(dialogue, screen)
     if tb.choice_flag:

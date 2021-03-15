@@ -69,7 +69,7 @@
     "luck": 3,
     "gold": 500,
     "exp": 10000,
-    "move_list" : ["attack"],
+    "move_list" : ["attack", "burst", "double slash"],
     "bg" : "data/backgrounds/Ruins2.png",
     "weakness" : ["water"],
     "strengths" : []

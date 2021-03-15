@@ -151,7 +151,7 @@ class TextBox:
         self.txtbox_timer = Timer()
         self.ui_text_small = UiText(25)
         self.ui_text_confirm = UiText(27)
-        self.ui_text_small.main_font_colour = (255, 21, 45)
+        self.ui_text_small.main_font_colour = (205, 21, 45)
         self.load_face = False
         self.speaker = pygame.image.load('data/sprites/boy.png').convert_alpha()
         self.confirm_flag = False
@@ -260,16 +260,16 @@ class TextBox:
             else:
                 self.choice_surf.blit(self.choice_bg2, (0, 0))
             self.ui_text_small.draw_text((50, 60), choice_string.join(choices), False, self.choice_surf)
+            if self.choice_cursor_pos > len(choices) - 1:
+                self.choice_cursor_pos = 0
+            elif self.choice_cursor_pos < 0:
+                self.choice_cursor_pos = len(choices) - 1
             if self.choice_cursor_pos == 0:
                 self.choice_surf.blit(self.cursor, (20, 60))
             elif self.choice_cursor_pos == 1:
                 self.choice_surf.blit(self.cursor, (20, 90 + len(choices[0]) / 2))
             elif self.choice_cursor_pos == 2:
                 self.choice_surf.blit(self.cursor, (20, 120 + len(choices[1]) / 2 + len(choices[0]) / 2))
-            if self.choice_cursor_pos > len(choices) - 1:
-                self.choice_cursor_pos = 0
-            elif self.choice_cursor_pos < 0:
-                self.choice_cursor_pos = len(choices) - 1
             surface.blit(self.choice_surf, pos)
 
     def select_choice_inputs(self, event):
