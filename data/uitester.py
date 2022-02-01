@@ -27,6 +27,7 @@ while not done:
             pygame.quit()
             done = False
         if event.type == pygame.KEYDOWN:
+            tb.get_user_input(event, max_chars=128)
             if tb.choice_flag:
                 tb.select_choice_inputs(event)
             if event.key == pygame.K_DOWN:
@@ -43,7 +44,7 @@ while not done:
                 draw_tb = False
                 tb.reset()
             if event.key == pygame.K_c:
-                tb.choice_flag = True
+                tb.choice_flag = False
             if event.key == pygame.K_RCTRL:
                 tb.progress_dialogue(dialogue)
 
@@ -64,6 +65,7 @@ while not done:
     if tb.choice_flag:
         tb.select_choice(['This is one of the choices', 'This is another one, pretty hard huh? What if its kinda long like this or  even like this'], screen, (200, 100))
     # tb.confirm_box('Long confirmation message', screen)
+    tb.display_user_input(screen, (200, 200))
     screen.blit(bg, (0, 0))
     clock.tick()
     fps = clock.get_fps()

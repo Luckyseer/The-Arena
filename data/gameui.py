@@ -40,8 +40,9 @@ class Timer:
 class UiText:
     """The class for text used by UI with some convenient functions. The outline does not work properly currently"""
     def __init__(self, font_size=33):
-        self.main_font = pygame.font.Font("data/fonts/runescape_uf.ttf", font_size)
-        self.main_font_outline = pygame.font.Font("data/fonts/runescape_uf.ttf", font_size + 1)
+        self.font_size = font_size
+        self.main_font = pygame.font.Font("data/fonts/runescape_uf.ttf", self.font_size)
+        self.main_font_outline = pygame.font.Font("data/fonts/runescape_uf.ttf", self.font_size + 1)
         self.main_font_colour = (21, 57, 114)   # The default font colour (Blue-ish)
         self.main_font_colour2 = (23, 18, 96)   # Secondary font colour (Darker than the main font)
         self.text_speed = 0  # The speed for text to be scrolling (upto 3)
@@ -149,6 +150,8 @@ class TextBox:
         self.popup_done = False  # Check if the popup animation is done or not
         self.ui_text = UiText()
         self.txtbox_timer = Timer()
+        self.blink_timer = Timer()  # Timer for cursor blinking
+        self.cursor_char = '_'  # The character that is displayed on the cursor
         self.ui_text_small = UiText(25)
         self.ui_text_confirm = UiText(27)
         self.ui_text_small.main_font_colour = (205, 21, 45)
@@ -164,6 +167,26 @@ class TextBox:
         self.popup_message_surf = pygame.Surface((1280, 300))
         self.popup_message_surf.set_colorkey((255, 255, 255))
         self.popup_message_surf.set_alpha(255)
+        self.user_input = []
+        self.pyg_k_alpha = {
+            pygame.K_a: 'a', pygame.K_b: 'b', pygame.K_c: 'c', pygame.K_d: 'd', pygame.K_e: 'e',
+            pygame.K_f: 'f', pygame.K_g: 'g', pygame.K_h: 'h', pygame.K_i: 'i', pygame.K_j: 'j',
+            pygame.K_k: 'k', pygame.K_l: 'l', pygame.K_m: 'm', pygame.K_n: 'n', pygame.K_o: 'o',
+            pygame.K_p: 'p', pygame.K_q: 'q', pygame.K_r: 'r', pygame.K_s: 's', pygame.K_t: 't',
+            pygame.K_u: 'u', pygame.K_v: 'v', pygame.K_w: 'w', pygame.K_x: 'x', pygame.K_y: 'y',
+            pygame.K_z: 'z'
+        }
+        self.pyg_k_digit = {
+            pygame.K_0: '0', pygame.K_1: '1', pygame.K_2: '2', pygame.K_3: '3',
+            pygame.K_4: '4', pygame.K_5: '5', pygame.K_6: '6', pygame.K_7: '7', pygame.K_8: '8',
+            pygame.K_9: '9'
+        }
+        self.pyg_k_special = {
+            pygame.K_BACKSLASH: '\\', pygame.K_COMMA: ',', pygame.K_QUOTE: '\'',
+            pygame.K_PERIOD: '.', pygame.K_SLASH: '/', pygame.K_SEMICOLON: ';',
+            pygame.K_CARET: '^', pygame.K_LEFTBRACKET: '[', pygame.K_RIGHTBRACKET: ']',
+            pygame.K_MINUS: '-', pygame.K_EQUALS: '=', pygame.K_BACKQUOTE: '`'
+            }
 
     def reset(self):
         self.popup_flag = False
@@ -278,5 +301,37 @@ class TextBox:
         elif event.key == pygame.K_UP:
             self.choice_cursor_pos -= 1
 
+    def get_user_input(self, event, max_chars=32, no_alpha=False, no_special=False, no_digit=False, no_space=False):
+        if len(self.user_input) > 0:
+            if event.key == pygame.K_BACKSPACE:
+                self.user_input = self.user_input[:-1]
+        if len(self.user_input) < max_chars:
+            if not no_alpha:
+                if event.key in self.pyg_k_alpha:
+                    if event.mod & pygame.KMOD_SHIFT:
+                        self.user_input += self.pyg_k_alpha[event.key].upper()
+                    else:
+                        self.user_input += self.pyg_k_alpha[event.key]
+            if not no_special:
+                if event.key in self.pyg_k_special:
+                    self.user_input += self.pyg_k_special[event.key]
+            if not no_digit:
+                if event.key in self.pyg_k_digit:
+                    self.user_input += self.pyg_k_digit[event.key]
+            if not no_space:
+                if event.key == pygame.K_SPACE:
+                    self.user_input += ' '
 
-
+    def display_user_input(self, surface, pos, display_cursor=True, blink_cursor=True):
+        user_input_text = "".join(self.user_input)
+        self.ui_text.draw_text((pos[0], pos[1]), user_input_text, False, surface)
+        if display_cursor:  # The cursor currently only works properly for single line inputs
+            rendered_word = self.ui_text.main_font.render(user_input_text, False, (0, 0, 0))
+            if blink_cursor:
+                if self.blink_timer.timing(mode=1) >= 0.3:
+                    self.blink_timer.reset()
+                    if self.cursor_char == '':
+                        self.cursor_char = '_'
+                    else:
+                        self.cursor_char = ''
+            self.ui_text.draw_text((pos[0] + rendered_word.get_size()[0], pos[1]), self.cursor_char, False, surface)
