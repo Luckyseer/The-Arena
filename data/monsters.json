@@ -9,7 +9,7 @@
     "luck": 1,
     "gold" : 100,
     "exp" : 5000,
-    "move_list" : ["attack"],
+    "move_list" : ["attack_claw"],
     "bg" : "data/backgrounds/Ruins2.png",
     "weakness" : ["fire"],
     "strengths" : ["water"]
@@ -39,7 +39,7 @@
     "luck": 1,
     "gold" : 120,
     "exp" : 5000,
-    "move_list" : ["attack", "quake", "terrify"],
+    "move_list" : ["attack_claw", "quake", "terrify"],
     "bg" : "data/backgrounds/Ruins2.png",
     "weakness" : ["light"],
     "strengths" : ["dark"]
@@ -58,6 +58,36 @@
     "bg" : "data/backgrounds/Ruins2.png",
     "weakness" : ["water"],
     "strengths" : []
+  },
+  "skeleton": {
+    "name" : "Skeleton",
+    "sprites" : "data/sv_enemies/Skeleton.png",
+    "health" : 250,
+    "str" : 65,
+    "def" : 30,
+    "mag" : 1,
+    "luck": 4,
+    "gold" : 300,
+    "exp" : 5000,
+    "move_list" : ["attack", "burst", "attack", "terrify"],
+    "bg" : "data/backgrounds/Ruins2.png",
+    "weakness" : ["light", "fire"],
+    "strengths" : ["dark", "ice"]
+  },
+  "zombie": {
+    "name" : "Zombie",
+    "sprites" : "data/sv_enemies/Zombie.png",
+    "health" : 400,
+    "str" : 35,
+    "def" : 60,
+    "mag" : 1,
+    "luck": 4,
+    "gold" : 300,
+    "exp" : 5000,
+    "move_list" : ["attack_claw", "terrify"],
+    "bg" : "data/backgrounds/Ruins2.png",
+    "weakness" : ["light", "fire"],
+    "strengths" : ["dark", "ice"]
   },
   "floor_boss1": {
     "name": "Tho'k",
@@ -84,7 +114,7 @@
     "luck": 1,
     "gold" : 10000,
     "exp" : 5000,
-    "move_list" : ["attack", "defend"],
+    "move_list" : ["attack_claw", "defend"],
     "bg" : "data/backgrounds/Ruins2.png",
     "weakness" : [],
     "strengths" : []

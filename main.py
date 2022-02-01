@@ -1205,7 +1205,7 @@ class SideBattle:
 
 class NewBattle:
 
-    """The new battle system. Returns True on victory"""
+    """The new battle system. A lot better than the old one."""
 
     def __init__(self, monsterdata, itemdata, sounddata, animationdata, skilldata, sequence_data):
         #  Data
@@ -2332,8 +2332,10 @@ class MainUi:
         self.buzzer_sound.set_volume(0.05)
         self.stats_txt = self.uitext.render('Stats', False, self.txtcolor)
         self.talktxt = self.uitext.render('Talk', False, self.txtcolor)
+        self.casino_text = self.uitext.render('Gamble', False, self.txtcolor)
         self.talkdesc = self.uitext.render('Talk with people around the Arena.', False, self.txtcolor)
         self.talkdesc2 = self.uitext.render('Talk with people around the Inn.', False, self.txtcolor)
+        self.casino_desc = self.uitext.render('Play the dice game.', False, self.txtcolor)
         self.talkdesc3 = self.uitext.render('Talk with people around the Town.', False, self.txtcolor)
         self.battxt = self.uitext.render('Battle', False, self.txtcolor)
         self.batdesc = self.uitext.render('Battle monsters in the Arena.', False, self.txtcolor)
@@ -2557,6 +2559,7 @@ class MainUi:
                     surf.blit(self.cursor_down, (1085, 360))
 
             else:
+                no_item = True
                 self.item_desc = ''
                 surf.blit(self.uitext.render("No weapons owned", False, self.txtcolor), (980, 110))
         elif self.equip_cursor1_pos == 1:
@@ -2591,6 +2594,7 @@ class MainUi:
                 elif self.min_pos + 5 < self.max_pos:
                     surf.blit(self.cursor_down, (1085, 360))
             else:
+                no_item = True
                 self.item_desc = ''
                 surf.blit(self.uitext.render("No accessories owned", False, self.txtcolor), (980, 110))
         if self.equip_flag2:
@@ -2848,7 +2852,25 @@ class MainUi:
         elif self.pbtalk == 3 and progress == 1:
             self.pb_dialogue = True
             ui.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
-                                   'Good work out there! I overheard some strange people talking about you. Something about.. A debt?']], surf, (0, 400))
+                                     'Good work out there! I overheard some strange people talking about you. Something about.. A debt?']], surf, (0, 400))
+        if self.pbtalk == 0 and progress == 2:
+            self.pb_dialogue = True
+            ui.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                     "Good work! Maybe I should bet some money on you next time, huh? *laughs*"
+                                     ]], surf, (0, 400))
+        elif self.pbtalk == 1 and progress == 2:
+            self.pb_dialogue = True
+            ui.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                     "... Oh you're already done? Good job, sorry about that I was a bit lost in my own thoughts!"]], surf, (0, 400))
+        elif self.pbtalk == 2 and progress == 2:
+            self.pb_dialogue = True
+            ui.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                     "Great job! How'd you get so strong? What's your secret?"
+                                     ]], surf, (0, 400))
+        elif self.pbtalk == 3 and progress == 2:
+            self.pb_dialogue = True
+            ui.txtbox.draw_textbox([["data/sprites/host_face.png", 'Chance',
+                                     "If you would like to get stronger, don't forget to buy new equipment! Or just keep killing these monsters for experience!"]], surf, (0, 400))
 
     def draw_inn(self, gold):
         surf.blit(pygame.transform.scale(self.bg, (int(curwidth / 1.5), 300)), (0, 430))  # Description box
@@ -2898,6 +2920,36 @@ class MainUi:
             elif self.cursorpos < 0:
                 self.cursorpos = 3
             self.clock(player.hours, player.minutes)
+
+    def draw_casino(self, player):  # Draws the casino UI
+            surf.blit(pygame.transform.scale(self.bg, (int(curwidth / 1.5), 300)), (0, 430))  # Description box
+            surf.blit(pygame.transform.scale(self.bg, (170, 50)), (10, 29))  # Gold box
+            surf.blit(pygame.transform.scale(self.bg, (300, 300)), (905, 430))  # Actions box
+            surf.blit(self.talktxt, (946, 496))
+            surf.blit(self.sleeptxt, (946, 526))
+            surf.blit(self.casino_text, (946, 556))
+            surf.blit(self.backtxt, (946, 586))
+            gold = self.uitext2.render('Gold:  %d' % player.gold, False, self.txtcolor)  # Current gold with the player
+            self.coinAnim.blit(surf, (22, 45))  # Gold icon
+            surf.blit(gold, (47, 45))
+            if self.cursorpos == 0:
+                surf.blit(self.cursor, (916, 496))
+                surf.blit(self.talkdesc3, (112, 490))
+            elif self.cursorpos == 1:
+                surf.blit(self.cursor, (916, 526))
+                surf.blit(self.inndesc, (112, 490))
+            elif self.cursorpos == 2:
+                surf.blit(self.cursor, (916, 556))
+                surf.blit(self.casino_desc, (112, 490))
+            elif self.cursorpos == 3:
+                surf.blit(self.cursor, (916, 586))
+                surf.blit(self.backdesc, (112, 490))
+            elif self.cursorpos > 3:
+                self.cursorpos = 0
+            elif self.cursorpos < 0:
+                self.cursorpos = 3
+            self.clock(player.hours, player.minutes)
+
 
 
 class SelectOptions(MainUi):
@@ -3432,6 +3484,7 @@ class GameEvents(MainUi):
         self.town_bg_day = pygame.image.load("data/backgrounds/The Medieval Town.jpg").convert_alpha()
         self.town_bg_eve = pygame.image.load("data/backgrounds/The Medieval Town_eve.jpg").convert_alpha()
         self.town_bg_ngt = pygame.image.load("data/backgrounds/The Medieval Town_night.jpg").convert_alpha()
+        self.inn_bg = pygame.image.load("data/backgrounds/inn.png").convert_alpha()
         self.townDialogue = 0  # Progress for the dialogue while in the town.
         self.arenaDialogue = 0
         self.timekeep = Timer()  # Used to time the events and things
@@ -4193,6 +4246,46 @@ class GameEvents(MainUi):
             pygame.display.set_caption(fps)
             pygame.display.flip()
 
+    def casino(self, player_data):
+        # The inn in the town
+        event_done = False
+        global surf
+        global screen
+        area_music = "data/sounds&music/2000_Shop3.ogg"
+        pygame.mixer.music.load(area_music)
+        pygame.mixer.music.play()
+        pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
+        self.timekeep.reset()
+        casino_ui = True
+        while not event_done:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    event_done = True
+                    global done
+                    done = True
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_DOWN:
+                        self.cursorpos += 1
+                    if event.key == pygame.K_UP:
+                        self.cursorpos -= 1
+                    if event.key == pygame.K_RETURN:
+                        if self.cursorpos == 0:
+                            pass
+                        elif self.cursorpos == 1:
+                            pass
+                if event.type == pygame.constants.USEREVENT:
+                    pygame.mixer.music.play()
+            surf.blit(self.inn_bg, (0, 0))
+            if casino_ui:
+                self.draw_casino(player_data)
+            surf.blit(ab, (0, 0))
+            screen.blit(surf, (0, 0))
+            self.game_clock.pass_time(player_data, area_music)
+            clock.tick(60)
+            fps = "FPS:%d" % clock.get_fps()
+            pygame.display.set_caption(fps)
+            pygame.display.flip()
+
 
 class GameClock:
 
@@ -4232,6 +4325,7 @@ class GameClock:
                 player.minutes = 0
             if player.hours > 23:  # 24 hour clock
                 player.hours = 0
+
             if player.hours >= 6 and player.hours < 14:  # Day
                 self.time_state = "Morning"
                 surf.blit(pygame.transform.scale(arena_bg1, (curwidth, curheight)), (0, 0))
@@ -4740,15 +4834,14 @@ if __name__ == "__main__":
                     controlui = True
                     system = False
                 if (event.key == pygame.K_RETURN and ui.batcursorpos == 0) and battle_choice:
-                    randbattle = random.randrange(0, 4)
-                    if randbattle == 0:
-                        rand_mon = 'rat'
-                    if randbattle == 1:
-                        rand_mon = 'snake'
-                    if randbattle == 2:
-                        rand_mon = 'hornet'
-                    if randbattle == 3:
-                        rand_mon = 'imp'
+                    if player.progress == 1:
+                        f1_monsters = ["rat", "snake", "hornet", "imp"]
+                        randbattle = random.randrange(len(f1_monsters))
+                        rand_mon = f1_monsters[randbattle]
+                    elif player.progress == 2:
+                        f1_monsters = ["skeleton", "zombie"]
+                        randbattle = random.randrange(len(f1_monsters))
+                        rand_mon = f1_monsters[randbattle]
                     battler.battle(rand_mon, player_data=player)
                     fight = battler.check_victory()
                     if fight:
@@ -4833,7 +4926,7 @@ if __name__ == "__main__":
                 Zen = Player()
                 Zen.set_player_stats(stre=1000, mag=2000, health=10000, mana=1000, luck=9, level=90)
                 battler.battle("debug_fight", Zen, set_music=2)
-            if shh == ['t', 'o', 'w', 'n'] and scene == 'menu':
+            if shh == ['t''t', 'o', 'w', 'n'] and scene == 'menu':
                 shh = []
                 fadeout(surf)
                 eventManager.town_first_visit(player)
@@ -4850,6 +4943,9 @@ if __name__ == "__main__":
                 shh = []
             if shh == ['t', 's', 't'] and scene == 'menu':
                 eventManager.intro_scene(dialogues)
+                shh = []
+            if shh == ['t', 'o', 's'] and scene == 'menu':
+                eventManager.casino(player)
                 shh = []
             if cursorpos == 0:
                 surf.blit(cursor, (434, 400))
