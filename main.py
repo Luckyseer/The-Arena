@@ -1338,10 +1338,14 @@ class NewBattle:
         self.player_sprites_burst.play()
         self.player_sprites.play()
         self.death_sprite = pygame.image.load("data/sprites/death.png").convert_alpha()  # player death sprite
-        self.player_pos = 1200
+        self.player_pos = 1200  # Player x position
+        self.player_y = 300  # Player y position
+        self.target_pos = [0, 0]  # Target x and y position
+        self.move_target = "player" # Target for move t
+        self.move_flag = False  # Flag to know whether the player/monster is moving or not
         self.window_pos = 1400
         self.initial_window_pos = 0  # For the description window
-        self.monster_pos = -1600
+        self.monster_pos = -1600  # Monster x position
         self.monster_y = 300    # monster y position
         self.shake = False
         #  images to load
@@ -1517,6 +1521,27 @@ class NewBattle:
         self.anim_pos = pos
         self.loaded_anim.play()
 
+    def move_to(self, target="player", pos=(0, 0)):
+        """Moves the player or monster to a specific position"""
+        if target == "player":
+            if self.player_pos > pos[0]:
+                self.player_pos -= 5
+            elif self.player_pos < pos[0]:
+                self.player_pos += 5
+            if self.player_y > pos[1]:
+                self.player_y -= 5
+            elif self.player_y < pos[1]:
+                self.player_y += 5
+        elif target == "monster":
+            if self.monster_pos > pos[0]:
+                self.monster_pos -= 5
+            elif self.monster_pos < pos[0]:
+                self.monster_pos += 5
+            if self.monster_y > pos[1]:
+                self.monster_y -= 5
+            elif self.monster_y < pos[1]:
+                self.monster_y += 5
+
     def check_state(self, player):
         """Keeps track of the game state and updates it accordingly"""
         if self.game_state == 'player_attack':  # Player regular attack
@@ -1690,6 +1715,7 @@ class NewBattle:
                             self.healthbar_flag = False
                             self.alert_box_flag = False
                             self.player_dmg_flag = False
+                            self.move_flag = False
                         elif action[0] == "alert_box":
                             self.alert_box_flag = True
                             self.alert_text = action[1]
@@ -1781,11 +1807,21 @@ class NewBattle:
                                         self.dmg_txt = self.dmg_font.render(str(mp_heal), True, (40, 43, 158))
                                         self.p_mana += mp_heal
                                         self.player_dmg_flag = True
+                        elif action[0] == "move_to":  # sequence syntax: ["move_to", "target", "x", "y", 0]
+                            self.move_flag = True
+                            if action[1] == "cur_target":  # will move who is currently on the turn
+                                if self.turn == "player":
+                                    self.move_target = self.turn
+                                else:
+                                    self.move_target = "monster"
+                            else:
+                                self.move_target = action[1]
+                            self.target_pos[0] = action[2]
+                            self.target_pos[1] = action[3]
                         if action[0] != "end_sequence":
                             self.action_count += 1
                             self.sequence_timer.reset()
-                            self.wait_time = action[2]   # Getting the time to wait for the next action in the sequence
-
+                            self.wait_time = action[len(action) - 1]   # Getting the time to wait for the next action
             else:
                 self.sequence_to_play = "invalid"
                 self.game_state = "player_skill_invalid"
@@ -2259,6 +2295,8 @@ class NewBattle:
                 self.camera_x, self.camera_y = 0, 0
             if self.focus:
                 self.focus_cam(self.focus_target)
+            if self.move_flag:
+                self.move_to(self.move_target, self.target_pos)
             self.draw_alertbox()
             if self.player_dmg_flag:
                 surf.blit(self.dmg_txt, (self.player_pos, 270))
