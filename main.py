@@ -1626,6 +1626,7 @@ class NewBattle:
                             self.sequence_target = (self.monster_pos, self.monster_y)
                         else:
                             self.sequence_target = (920, 270)
+                        break
                     else:
                         self.sequence_target = (920, 270)
                 self.global_timer.reset()
