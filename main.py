@@ -1626,6 +1626,8 @@ class NewBattle:
                             self.sequence_target = (self.monster_pos, self.monster_y)
                         else:
                             self.sequence_target = (920, 270)
+                    else:
+                        self.sequence_target = (920, 270)
                 self.global_timer.reset()
         if self.game_state == 'enemy_skill_done':
             if self.global_timer.timing(1) >= 1.5:
