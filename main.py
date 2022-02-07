@@ -1347,6 +1347,7 @@ class NewBattle:
         self.initial_window_pos = 0  # For the description window
         self.monster_pos = -1600  # Monster x position
         self.monster_y = 300    # monster y position
+        self.monster_y_offset = 0
         self.shake = False
         #  images to load
         self.battle_ui = pygame.transform.scale(pygame.image.load("data/backgrounds/battle_menu.png").convert_alpha(),
@@ -1505,7 +1506,7 @@ class NewBattle:
         else:
             self.player_flag = True
         if self.monster_flag:
-            surf.blit(self.m_sprite, (self.monster_pos, self.monster_y))
+            surf.blit(self.m_sprite, (self.monster_pos, self.monster_y + self.monster_y_offset))
             self.loaded_anim.blit(surf, self.anim_pos)  # Loaded animation
             if self.monster_pos < 200:
                 self.monster_pos += 50
@@ -1537,9 +1538,9 @@ class NewBattle:
                 self.monster_pos -= 5
             elif self.monster_pos < pos[0]:
                 self.monster_pos += 5
-            if self.monster_y > pos[1]:
+            if self.monster_y - self.monster_y_offset > pos[1]:
                 self.monster_y -= 5
-            elif self.monster_y < pos[1]:
+            elif self.monster_y - self.monster_y_offset < pos[1]:
                 self.monster_y += 5
 
     def check_state(self, player):
@@ -2026,9 +2027,9 @@ class NewBattle:
         self.m_status = []
         height = self.m_sprite.get_height()
         if height > 220:
-            self.monster_y = 200
+            self.monster_y_offset = -100
         else:
-            self.monster_y = 300
+            self.monster_y_offset = 0
 
     def get_player_details(self, player_data=Player()):
         player_data.update_stats()
@@ -4989,7 +4990,7 @@ if __name__ == "__main__":
                 Zen = Player()
                 Zen.set_player_stats(stre=1000, mag=2000, health=10000, mana=1000, luck=9, level=90)
                 battler.battle("debug_fight", Zen, set_music=2)
-            if shh == ['t''t', 'o', 'w', 'n'] and scene == 'menu':
+            if shh == ['t', 'o', 'w', 'n'] and scene == 'menu':
                 shh = []
                 fadeout(surf)
                 eventManager.town_first_visit(player)
