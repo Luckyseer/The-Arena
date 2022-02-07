@@ -68,6 +68,7 @@
  + Fixed issue of song not updating after victory
 # - Alpha v4.1
  + Added a popup message when trying to do things that  you can't do(Not enough gold, no stat points, etc.) 
+ + Added elements and weaknesses to enemies
  + Added stat changes to equip screen
  + Added a few monsters to floor 2
  + Added item descriptions to the shop
