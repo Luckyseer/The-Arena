@@ -1532,7 +1532,7 @@ class NewBattle:
                 self.player_y -= 5
             elif self.player_y < pos[1]:
                 self.player_y += 5
-        elif target == "monster":
+        elif target == "enemy":
             if self.monster_pos > pos[0]:
                 self.monster_pos -= 5
             elif self.monster_pos < pos[0]:
@@ -1807,17 +1807,39 @@ class NewBattle:
                                         self.dmg_txt = self.dmg_font.render(str(mp_heal), True, (40, 43, 158))
                                         self.p_mana += mp_heal
                                         self.player_dmg_flag = True
-                        elif action[0] == "move_to":  # sequence syntax: ["move_to", "target", "x", "y", 0]
+                        elif action[0] == "move_to":  # sequence syntax: ["move_to", "target", x, y, 0]
                             self.move_flag = True
                             if action[1] == "cur_target":  # will move who is currently on the turn
-                                if self.turn == "player":
-                                    self.move_target = self.turn
+                                self.move_target = self.turn    # Only to be used for moving during skill/attack anims
+                                if self.move_target == "player":  # Bad solution, but it works
+                                    self.target_pos[0] = 900
+                                    self.target_pos[1] = 300
                                 else:
-                                    self.move_target = "monster"
+                                    self.target_pos[0] = 250
+                                    self.target_pos[1] = 300
                             else:
                                 self.move_target = action[1]
-                            self.target_pos[0] = action[2]
-                            self.target_pos[1] = action[3]
+                                self.target_pos[0] = action[2]
+                                self.target_pos[1] = action[3]
+                        elif action[0] == "reset_pos":
+                            self.move_flag = True
+                            if action[1] == "player":
+                                self.move_target = "player"
+                                self.target_pos[0] = 950
+                                self.target_pos[1] = 300
+                            elif action[1] == "enemy":
+                                self.move_target = "enemy"
+                                self.target_pos[0] = 200
+                                self.target_pos[1] = 300
+                            elif action[1] == "cur_target":
+                                if self.turn == "player":
+                                    self.move_target = "player"
+                                    self.target_pos[0] = 950
+                                    self.target_pos[1] = 300
+                                else:
+                                    self.move_target = "enemy"
+                                    self.target_pos[0] = 200
+                                    self.target_pos[1] = 300
                         if action[0] != "end_sequence":
                             self.action_count += 1
                             self.sequence_timer.reset()
