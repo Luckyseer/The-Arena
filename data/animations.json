@@ -1,9 +1,9 @@
 {
-  "cast": [["data/sprites/Cast1.png", 0.15],
-    ["data/sprites/Cast2.png", 0.15],
-    ["data/sprites/Cast3.png", 0.15],
-    ["data/sprites/Cast4.png", 0.15],
-    ["data/sprites/Cast5.png", 0.15]],
+  "cast": [["data/sprites/cast1.png", 0.15],
+    ["data/sprites/cast2.png", 0.15],
+    ["data/sprites/cast3.png", 0.15],
+    ["data/sprites/cast4.png", 0.15],
+    ["data/sprites/cast5.png", 0.15]],
   "burst": [
     [
       "data/sprites/Special1.png",
