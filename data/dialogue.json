@@ -70,5 +70,23 @@
     ["data/sprites/mysteryman.png", "Stranger", "Don't be stupid. If you see him, capture him and bring him here. He should be nowhere as strong as he once was. There is also a chance that this could be an impostor.."],
     ["data/sprites/mysteryman.png", "Stranger", "Now go.. Preparations have to be made soon."],
     ["data/sprites/rogue.png", "???", "Heh. I'm looking forward to it."]
+  ],
+  "floor2_oldman" : [
+    ["data/sprites/oldman.png", "Old Man", "Oho! So you've beat the first floor! Now the real challenge begins!"],
+    ["data/sprites/oldman.png", "Old Man", "Monsters have different elements that they are weak to. Exploit those weaknesses to come out on top!"]
+  ],
+  "floor2_boy" : [
+    ["data/sprites/boy.png", "Boy", "Mister, I saw you fight! It was sooooo COOL!"],
+    ["data/sprites/boy.png", "Boy", "I'm gonna be watching all your fights from now. I'm your biggest fan!"]
+  ],
+  "floor2_youngman_m" : [
+    ["data/sprites/youngman.png", "Young Man", "You remind me of him, you know."],
+    ["data/sprites/youngman.png", "Young Man", "The legendary hero. I was there when he won the final challenge. Something about the way you move resembles him."],
+    ["data/sprites/youngman.png", "Young Man", "Are you perhaps, his student? No- never mind. He was too young to have a student and besides, he was a warrior, not a mage."]
+  ],
+  "floor2_youngman_w" : [
+    ["data/sprites/youngman.png", "Young Man", "You remind me of him, you know."],
+    ["data/sprites/youngman.png", "Young Man", "The legendary hero. I was there when he won the final challenge. Something about the way you move resembles him."],
+    ["data/sprites/youngman.png", "Young Man", "Are you perhaps, his student? No- never mind. He was too young to have a student and besides, he was a mage, not a warrior."]
   ]
 }

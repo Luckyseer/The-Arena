@@ -2674,6 +2674,7 @@ class MainUi:
         self.popup_message = ''
         self.pb_dialogue = False
         self.pbtalk = 0
+        self.cur_dialogue = [[]]  # Current dialogue in talk
 
     def arena(self, floor=1):  # Main ui in the arena
         surf.blit(pygame.transform.scale(
@@ -2728,26 +2729,37 @@ class MainUi:
         drawui = False
         self.Talk = val
         if not self.talked:
-            if self.Talk == 0 and player.progress == 1:
+            if player.progress == 1:
+                self.cur_dialogue = [[]]  # These are converted from the old textbox, so for compatibility
+                if self.Talk == 0:
+                    self.txtbox.draw_textbox([["data/sprites/oldman.png", 'Old Man',
+                                             'I heard the monsters on the first floor are quite weak. You mustn\'t underestimate them However!\nConsider Equipping yourself with new equipment from the Shop.',
+                                               ]], surf, (0, 400))
+                elif self.Talk == 1:
 
-                self.txtbox.draw_textbox([["data/sprites/oldman.png", 'Old Man',
-                                         'I heard the monsters on the first floor are quite weak. You mustn\'t underestimate them However!\nConsider Equipping yourself with new equipment from the Shop.',
-                                           ]], surf, (0, 400))
-            elif self.Talk == 1 and player.progress == 1:
+                    self.txtbox.draw_textbox(
+                        [["data/sprites/boy.png", 'Boy', 'Wow mister, you\'re going to fight in the Arena? So cool!']], surf, (0, 400))
 
-                self.txtbox.draw_textbox(
-                    [["data/sprites/boy.png", 'Boy', 'Wow mister, you\'re going to fight in the Arena? So cool!']], surf, (0, 400))
+                elif self.Talk == 2:
 
-            elif self.Talk == 2 and player.progress == 1:
-
-                self.txtbox.draw_textbox([["data/sprites/youngman.png", 'Young Man',
-                                         'In the 50 years that the Arena has been open, there has been only one winner. It was the legendary Hero known as Zen. That was 2 years ago though, nobody has seen him since.']], surf, (0, 400))
-            elif self.Talk == 3 and player.progress == 1:
-
-                self.txtbox.draw_textbox([["data/sprites/mysteryman.png", 'Stranger',
-                                         'You...\nNevermind. Good luck in the Arena, I\'ll be keeping an eye on you.']], surf, (0, 400))
-            if self.Talk > 3:
-                self.Talk = -1
+                    self.txtbox.draw_textbox([["data/sprites/youngman.png", 'Young Man',
+                                             'In the 50 years that the Arena has been open, there has been only one winner. It was the legendary Hero known as Zen. That was 2 years ago though, nobody has seen him since.']], surf, (0, 400))
+                elif self.Talk == 3:
+                    self.txtbox.draw_textbox([["data/sprites/mysteryman.png", 'Stranger',
+                                             'You...\nNevermind. Good luck in the Arena, I\'ll be keeping an eye on you.']], surf, (0, 400))
+            elif player.progress == 2:
+                if self.Talk == 0:
+                    self.cur_dialogue = dialogues["floor2_oldman"]
+                    self.txtbox.draw_textbox(self.cur_dialogue, surf, (0, 400))
+                elif self.Talk == 1:
+                    self.cur_dialogue = dialogues["floor2_boy"]
+                    self.txtbox.draw_textbox(self.cur_dialogue, surf, (0, 400))
+                elif self.Talk == 2:
+                    if player.pclass == "mage":
+                        self.cur_dialogue = dialogues["floor2_youngman_m"]
+                    else:
+                        self.cur_dialogue = dialogues["floor2_youngman_w"]
+                    self.txtbox.draw_textbox(self.cur_dialogue, surf, (0, 400))
 
     def status(self, player, item_data=item_data):
         surf.blit(self.status_bg, (53, 30))
@@ -4869,7 +4881,7 @@ if __name__ == "__main__":
     old_battler = SideBattle(monster_data, 'mage', castanim, "data/backgrounds/Ruins2.png",
                              'data/sounds&music/yousayrun2.mp3')
 
-    floor1_talk = SelectOptions()  # Choices for 'Talk' in floor 1
+    floor_talk = SelectOptions()  # Choices for 'Talk' in floor 1
     arena_shop = Shop(item_data)
     #####
 
@@ -5165,7 +5177,7 @@ if __name__ == "__main__":
                     event.key = 1
 
                 if (event.key == pygame.K_RCTRL and options) or (event.key == pygame.K_RCTRL and talking):
-                    if ui.txtbox.progress_dialogue([[]]):
+                    if ui.txtbox.progress_dialogue(ui.cur_dialogue):
                         drawui = True
                         controlui = True
                         ui.talked = False
@@ -5173,40 +5185,50 @@ if __name__ == "__main__":
                         talking = False
 
                 if event.key == pygame.K_LEFT and options:  # Option screen control
-                    floor1_talk.colpos -= 1
+                    floor_talk.colpos -= 1
                     ui.cursorsound.play()
                 if event.key == pygame.K_RIGHT and options:
-                    floor1_talk.colpos += 1
+                    floor_talk.colpos += 1
                     ui.cursorsound.play()
                 if event.key == pygame.K_UP and options:
-                    floor1_talk.rowpos -= 1
+                    floor_talk.rowpos -= 1
                     ui.cursorsound.play()
                 if event.key == pygame.K_DOWN and options:
-                    floor1_talk.rowpos += 1
+                    floor_talk.rowpos += 1
                     ui.cursorsound.play()
                 if event.key == pygame.K_RETURN and options:
                     ui.txtbox.reset()
-                    if floor1_talk.rowpos == 0 and floor1_talk.colpos == 0:  # Option 1
+                    if floor_talk.rowpos == 0 and floor_talk.colpos == 0:  # Option 1
                         talkval = 0
                         options = False
                         talking = True
-                        floor1_talk.alert_off(1)
-                    if floor1_talk.rowpos == 0 and floor1_talk.colpos == 1:  # Option 2
+                        floor_talk.alert_off(1)
+                    if floor_talk.rowpos == 0 and floor_talk.colpos == 1:  # Option 2
                         talkval = 1
                         options = False
                         talking = True
-                        floor1_talk.alert_off(2)
-                    if floor1_talk.rowpos == 0 and floor1_talk.colpos == 2:  # Option 3
+                        floor_talk.alert_off(2)
+                    if floor_talk.rowpos == 0 and floor_talk.colpos == 2:  # Option 3
                         talkval = 2
                         options = False
                         talking = True
-                        floor1_talk.alert_off(3)
-                    if floor1_talk.rowpos == 1 and floor1_talk.colpos == 0:  # Option 4
+                        floor_talk.alert_off(3)
+                    if floor_talk.rowpos == 1 and floor_talk.colpos == 0:  # Option 4
                         talkval = 3
                         options = False
                         talking = True
-                        floor1_talk.alert_off(4)
-                    if floor1_talk.rowpos == 1 and floor1_talk.colpos == 3:  # Back
+                        floor_talk.alert_off(4)
+                    if floor_talk.rowpos == 1 and floor_talk.colpos == 1:  # Option 5
+                        talkval = 4
+                        options = False
+                        talking = True
+                        floor_talk.alert_off(5)
+                    if floor_talk.rowpos == 1 and floor_talk.colpos == 2:  # Option 6
+                        talkval = 5
+                        options = False
+                        talking = True
+                        floor_talk.alert_off(6)
+                    if floor_talk.rowpos == 1 and floor_talk.colpos == 3:  # Back
                         drawui = True
                         controlui = True
                         ui.talked = False
@@ -5556,7 +5578,10 @@ if __name__ == "__main__":
             if talking:
                 ui.talk(talkval)
             if options:
-                floor1_talk.drawUi(4, 'Old Man', 'Boy', 'Villager', 'Stranger')
+                if player.progress == 1:
+                    floor_talk.drawUi(4, 'Old Man', 'Boy', 'Villager', 'Stranger')
+                elif player.progress == 2:
+                    floor_talk.drawUi(4, 'Old Man', 'Boy', 'Villager', 'Pompous Noble')
             if status:
                 ui.status(player, item_data)
             if shop:
