@@ -6,6 +6,7 @@ from math import floor
 import pygame
 from data import pyganim
 from data import gameui
+from data import splashscreen
 import json
 from pygame.locals import *
 
@@ -4953,10 +4954,12 @@ if __name__ == "__main__":
     loadsound.set_volume(0.05)
     cursorpos = 0
     Textbox = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()
-    scene = 'menu'
+    scene = 'splash'
     popup_message = ""
     Currentmusic = 'data/sounds&music/Infinite_Arena.mp3'
     ui = MainUi()
+    splash_screen = splashscreen.Splash(screen)
+    splash_screen.toggle_splash()
     shh = []
     battler = NewBattle(monster_data, item_data, sound_effects,
                         animations, skills, sequences)  # New battle tester
@@ -5428,7 +5431,10 @@ if __name__ == "__main__":
                 pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
 
         name = "".join(namelist)
-        if scene == 'menu':  # Main menu of the game(What you see on start-up)
+        if scene == 'splash':
+            splash_screen.draw_splash(screen, event)
+            scene = 'menu'
+        elif scene == 'menu':  # Main menu of the game(What you see on start-up)
             surf.blit(pygame.transform.scale(
                 menubg1, (curwidth, curheight)), (0, 0))
             surf.blit(logo, (curwidth - 1100, curheight - 600))
