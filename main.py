@@ -2760,6 +2760,10 @@ class MainUi:
                     else:
                         self.cur_dialogue = dialogues["floor2_youngman_w"]
                     self.txtbox.draw_textbox(self.cur_dialogue, surf, (0, 400))
+                elif self.Talk == 3:
+                    self.cur_dialogue = dialogues["floor2_noble"]
+                    self.txtbox.draw_textbox(self.cur_dialogue, surf, (0, 400))
+
 
     def status(self, player, item_data=item_data):
         surf.blit(self.status_bg, (53, 30))
