@@ -6,6 +6,7 @@ from math import floor
 import pygame
 from data import pyganim
 from data import gameui
+from data import splashscreen
 import json
 from pygame.locals import *
 
@@ -1838,7 +1839,7 @@ class NewBattle:
             self.p_mana = 0
 
     def play_sequence(self, sequence, target=(920, 270)):
-        """A sequence is a set of actions/things that should happen in a row ie. something like a skill
+        """A sequence is a set of actions/things that should happen in a row i.e. something like a skill
         All sequences are defined in sequences.json, Can be used for things like cutscenes as well"""
         if self.sequence_flag:
             if sequence in self.sequences:
@@ -2673,6 +2674,7 @@ class MainUi:
         self.popup_message = ''
         self.pb_dialogue = False
         self.pbtalk = 0
+        self.cur_dialogue = [[]]  # Current dialogue in talk
 
     def arena(self, floor=1):  # Main ui in the arena
         surf.blit(pygame.transform.scale(
@@ -2727,26 +2729,41 @@ class MainUi:
         drawui = False
         self.Talk = val
         if not self.talked:
-            if self.Talk == 0 and player.progress == 1:
+            if player.progress == 1:
+                self.cur_dialogue = [[]]  # These are converted from the old textbox, so for compatibility
+                if self.Talk == 0:
+                    self.txtbox.draw_textbox([["data/sprites/oldman.png", 'Old Man',
+                                             'I heard the monsters on the first floor are quite weak. You mustn\'t underestimate them However!\nConsider Equipping yourself with new equipment from the Shop.',
+                                               ]], surf, (0, 400))
+                elif self.Talk == 1:
 
-                self.txtbox.draw_textbox([["data/sprites/oldman.png", 'Old Man',
-                                         'I heard the monsters on the first floor are quite weak. You mustn\'t underestimate them However!\nConsider Equipping yourself with new equipment from the Shop.',
-                                           ]], surf, (0, 400))
-            elif self.Talk == 1 and player.progress == 1:
+                    self.txtbox.draw_textbox(
+                        [["data/sprites/boy.png", 'Boy', 'Wow mister, you\'re going to fight in the Arena? So cool!']], surf, (0, 400))
 
-                self.txtbox.draw_textbox(
-                    [["data/sprites/boy.png", 'Boy', 'Wow mister, you\'re going to fight in the Arena? So cool!']], surf, (0, 400))
+                elif self.Talk == 2:
 
-            elif self.Talk == 2 and player.progress == 1:
+                    self.txtbox.draw_textbox([["data/sprites/youngman.png", 'Young Man',
+                                             'In the 50 years that the Arena has been open, there has been only one winner. It was the legendary Hero known as Zen. That was 2 years ago though, nobody has seen him since.']], surf, (0, 400))
+                elif self.Talk == 3:
+                    self.txtbox.draw_textbox([["data/sprites/mysteryman.png", 'Stranger',
+                                             'You...\nNevermind. Good luck in the Arena, I\'ll be keeping an eye on you.']], surf, (0, 400))
+            elif player.progress == 2:
+                if self.Talk == 0:
+                    self.cur_dialogue = dialogues["floor2_oldman"]
+                    self.txtbox.draw_textbox(self.cur_dialogue, surf, (0, 400))
+                elif self.Talk == 1:
+                    self.cur_dialogue = dialogues["floor2_boy"]
+                    self.txtbox.draw_textbox(self.cur_dialogue, surf, (0, 400))
+                elif self.Talk == 2:
+                    if player.pclass == "mage":
+                        self.cur_dialogue = dialogues["floor2_youngman_m"]
+                    else:
+                        self.cur_dialogue = dialogues["floor2_youngman_w"]
+                    self.txtbox.draw_textbox(self.cur_dialogue, surf, (0, 400))
+                elif self.Talk == 3:
+                    self.cur_dialogue = dialogues["floor2_noble"]
+                    self.txtbox.draw_textbox(self.cur_dialogue, surf, (0, 400))
 
-                self.txtbox.draw_textbox([["data/sprites/youngman.png", 'Young Man',
-                                         'In the 50 years that the Arena has been open, there has been only one winner. It was the legendary Hero known as Zen. That was 2 years ago though, nobody has seen him since.']], surf, (0, 400))
-            elif self.Talk == 3 and player.progress == 1:
-
-                self.txtbox.draw_textbox([["data/sprites/mysteryman.png", 'Stranger',
-                                         'You...\nNevermind. Good luck in the Arena, I\'ll be keeping an eye on you.']], surf, (0, 400))
-            if self.Talk > 3:
-                self.Talk = -1
 
     def status(self, player, item_data=item_data):
         surf.blit(self.status_bg, (53, 30))
@@ -4868,7 +4885,7 @@ if __name__ == "__main__":
     old_battler = SideBattle(monster_data, 'mage', castanim, "data/backgrounds/Ruins2.png",
                              'data/sounds&music/yousayrun2.mp3')
 
-    floor1_talk = SelectOptions()  # Choices for 'Talk' in floor 1
+    floor_talk = SelectOptions()  # Choices for 'Talk' in floor 1
     arena_shop = Shop(item_data)
     #####
 
@@ -4953,10 +4970,12 @@ if __name__ == "__main__":
     loadsound.set_volume(0.05)
     cursorpos = 0
     Textbox = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()
-    scene = 'menu'
+    scene = 'splash'
     popup_message = ""
     Currentmusic = 'data/sounds&music/Infinite_Arena.mp3'
     ui = MainUi()
+    splash_screen = splashscreen.Splash(screen)
+    splash_screen.toggle_splash()
     shh = []
     battler = NewBattle(monster_data, item_data, sound_effects,
                         animations, skills, sequences)  # New battle tester
@@ -5162,7 +5181,7 @@ if __name__ == "__main__":
                     event.key = 1
 
                 if (event.key == pygame.K_RCTRL and options) or (event.key == pygame.K_RCTRL and talking):
-                    if ui.txtbox.progress_dialogue([[]]):
+                    if ui.txtbox.progress_dialogue(ui.cur_dialogue):
                         drawui = True
                         controlui = True
                         ui.talked = False
@@ -5170,40 +5189,50 @@ if __name__ == "__main__":
                         talking = False
 
                 if event.key == pygame.K_LEFT and options:  # Option screen control
-                    floor1_talk.colpos -= 1
+                    floor_talk.colpos -= 1
                     ui.cursorsound.play()
                 if event.key == pygame.K_RIGHT and options:
-                    floor1_talk.colpos += 1
+                    floor_talk.colpos += 1
                     ui.cursorsound.play()
                 if event.key == pygame.K_UP and options:
-                    floor1_talk.rowpos -= 1
+                    floor_talk.rowpos -= 1
                     ui.cursorsound.play()
                 if event.key == pygame.K_DOWN and options:
-                    floor1_talk.rowpos += 1
+                    floor_talk.rowpos += 1
                     ui.cursorsound.play()
                 if event.key == pygame.K_RETURN and options:
                     ui.txtbox.reset()
-                    if floor1_talk.rowpos == 0 and floor1_talk.colpos == 0:  # Option 1
+                    if floor_talk.rowpos == 0 and floor_talk.colpos == 0:  # Option 1
                         talkval = 0
                         options = False
                         talking = True
-                        floor1_talk.alert_off(1)
-                    if floor1_talk.rowpos == 0 and floor1_talk.colpos == 1:  # Option 2
+                        floor_talk.alert_off(1)
+                    if floor_talk.rowpos == 0 and floor_talk.colpos == 1:  # Option 2
                         talkval = 1
                         options = False
                         talking = True
-                        floor1_talk.alert_off(2)
-                    if floor1_talk.rowpos == 0 and floor1_talk.colpos == 2:  # Option 3
+                        floor_talk.alert_off(2)
+                    if floor_talk.rowpos == 0 and floor_talk.colpos == 2:  # Option 3
                         talkval = 2
                         options = False
                         talking = True
-                        floor1_talk.alert_off(3)
-                    if floor1_talk.rowpos == 1 and floor1_talk.colpos == 0:  # Option 4
+                        floor_talk.alert_off(3)
+                    if floor_talk.rowpos == 1 and floor_talk.colpos == 0:  # Option 4
                         talkval = 3
                         options = False
                         talking = True
-                        floor1_talk.alert_off(4)
-                    if floor1_talk.rowpos == 1 and floor1_talk.colpos == 3:  # Back
+                        floor_talk.alert_off(4)
+                    if floor_talk.rowpos == 1 and floor_talk.colpos == 1:  # Option 5
+                        talkval = 4
+                        options = False
+                        talking = True
+                        floor_talk.alert_off(5)
+                    if floor_talk.rowpos == 1 and floor_talk.colpos == 2:  # Option 6
+                        talkval = 5
+                        options = False
+                        talking = True
+                        floor_talk.alert_off(6)
+                    if floor_talk.rowpos == 1 and floor_talk.colpos == 3:  # Back
                         drawui = True
                         controlui = True
                         ui.talked = False
@@ -5428,7 +5457,10 @@ if __name__ == "__main__":
                 pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
 
         name = "".join(namelist)
-        if scene == 'menu':  # Main menu of the game(What you see on start-up)
+        if scene == 'splash':
+            splash_screen.draw_splash(screen, event)
+            scene = 'menu'
+        elif scene == 'menu':  # Main menu of the game(What you see on start-up)
             surf.blit(pygame.transform.scale(
                 menubg1, (curwidth, curheight)), (0, 0))
             surf.blit(logo, (curwidth - 1100, curheight - 600))
@@ -5477,10 +5509,10 @@ if __name__ == "__main__":
                 cursorpos = 2
             if cursorpos > 2:
                 cursorpos = 0
-        if scene == 'new_game' or scene == 'new_game2':
+        elif scene == 'new_game' or scene == 'new_game2':
             surf.blit(pygame.transform.scale(
                 newgbg, (curwidth, curheight)), (0, 0))
-        if scene == 'new_game':
+        elif scene == 'new_game':
             sel1 = seltext.render(
                 'Enter your name:' + name.capitalize(), False, secretbattle.txtcolor)
             if len(namelist) > 11:
@@ -5489,7 +5521,7 @@ if __name__ == "__main__":
             surf.blit(sel2, (500, 500))
             surf.blit(sel1, (300, 300))
             cursorpos = 0
-        if scene == 'new_game2':
+        elif scene == 'new_game2':
 
             surf.blit(sel3, (300, 300))
             surf.blit(sel4, (300, 375))
@@ -5523,12 +5555,12 @@ if __name__ == "__main__":
                 cursorpos = 1
             if cursorpos > 1:
                 cursorpos = 0
-        if scene == 'new_game3':
+        elif scene == 'new_game3':
             fadeout(surf, 0.01)
             eventManager = GameEvents()
             eventManager.intro_scene(dialogues)
             scene = 'arena'
-        if scene == 'arena':
+        elif scene == 'arena':
             clockTime.pass_time(player)  # passage of ingame time
             if clockTime.time_state == 'Morning':
                 surf.blit(pygame.transform.scale(
@@ -5550,7 +5582,10 @@ if __name__ == "__main__":
             if talking:
                 ui.talk(talkval)
             if options:
-                floor1_talk.drawUi(4, 'Old Man', 'Boy', 'Villager', 'Stranger')
+                if player.progress == 1:
+                    floor_talk.drawUi(4, 'Old Man', 'Boy', 'Villager', 'Stranger')
+                elif player.progress == 2:
+                    floor_talk.drawUi(4, 'Old Man', 'Boy', 'Villager', 'Pompous Noble')
             if status:
                 ui.status(player, item_data)
             if shop:
@@ -5561,7 +5596,7 @@ if __name__ == "__main__":
                 ui.battle_choice(player.fkills)
             if post_battle:
                 ui.post_battle(player.progress)
-        if scene == 'inn':
+        elif scene == 'inn':
             surf.blit(pygame.transform.scale(
                 inn_bg, (curwidth, curheight)), (0, 0))
             if drawui:
@@ -5570,7 +5605,7 @@ if __name__ == "__main__":
                 ui.cursorpos = 0
             if ui.cursorpos < 0:
                 ui.cursorpos = 2
-        if scene == 'credits':
+        elif scene == 'credits':
             surf.fill((0, 0, 0))
             if newgtxtbox == 1:
                 txtbox.draw_textbox(

@@ -73,6 +73,9 @@
  + Added a few monsters to floor 2
  + Added item descriptions to the shop
  + Updated first floor boss moves
+# - Alpha v4.2
+ + Added a splash screen on startup
+ + Added new 'talk' dialogue to floor 2 arena.
 # Known issues:
  - Update current song after victory
 # TODO:
