@@ -1838,7 +1838,7 @@ class NewBattle:
             self.p_mana = 0
 
     def play_sequence(self, sequence, target=(920, 270)):
-        """A sequence is a set of actions/things that should happen in a row ie. something like a skill
+        """A sequence is a set of actions/things that should happen in a row i.e. something like a skill
         All sequences are defined in sequences.json, Can be used for things like cutscenes as well"""
         if self.sequence_flag:
             if sequence in self.sequences:
@@ -5477,10 +5477,10 @@ if __name__ == "__main__":
                 cursorpos = 2
             if cursorpos > 2:
                 cursorpos = 0
-        if scene == 'new_game' or scene == 'new_game2':
+        elif scene == 'new_game' or scene == 'new_game2':
             surf.blit(pygame.transform.scale(
                 newgbg, (curwidth, curheight)), (0, 0))
-        if scene == 'new_game':
+        elif scene == 'new_game':
             sel1 = seltext.render(
                 'Enter your name:' + name.capitalize(), False, secretbattle.txtcolor)
             if len(namelist) > 11:
@@ -5489,7 +5489,7 @@ if __name__ == "__main__":
             surf.blit(sel2, (500, 500))
             surf.blit(sel1, (300, 300))
             cursorpos = 0
-        if scene == 'new_game2':
+        elif scene == 'new_game2':
 
             surf.blit(sel3, (300, 300))
             surf.blit(sel4, (300, 375))
@@ -5523,12 +5523,12 @@ if __name__ == "__main__":
                 cursorpos = 1
             if cursorpos > 1:
                 cursorpos = 0
-        if scene == 'new_game3':
+        elif scene == 'new_game3':
             fadeout(surf, 0.01)
             eventManager = GameEvents()
             eventManager.intro_scene(dialogues)
             scene = 'arena'
-        if scene == 'arena':
+        elif scene == 'arena':
             clockTime.pass_time(player)  # passage of ingame time
             if clockTime.time_state == 'Morning':
                 surf.blit(pygame.transform.scale(
@@ -5561,7 +5561,7 @@ if __name__ == "__main__":
                 ui.battle_choice(player.fkills)
             if post_battle:
                 ui.post_battle(player.progress)
-        if scene == 'inn':
+        elif scene == 'inn':
             surf.blit(pygame.transform.scale(
                 inn_bg, (curwidth, curheight)), (0, 0))
             if drawui:
@@ -5570,7 +5570,7 @@ if __name__ == "__main__":
                 ui.cursorpos = 0
             if ui.cursorpos < 0:
                 ui.cursorpos = 2
-        if scene == 'credits':
+        elif scene == 'credits':
             surf.fill((0, 0, 0))
             if newgtxtbox == 1:
                 txtbox.draw_textbox(
