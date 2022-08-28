@@ -90,7 +90,7 @@
     ["data/sprites/youngman.png", "Young Man", "Are you perhaps, his student? No- never mind. He was too young to have a student and besides, he was a mage, not a warrior."]
   ],
   "floor2_noble" : [
-    ["", "", "Hmph! I lost a lot of money there thanks to you!"],
-    ["", "", "I was sure that Tho'k would claim another victim! No matter, I have more opportunities to make money by betting against you."]
+    ["data/sprites/noble.png", "Noble", "Hmph! I lost a lot of money there thanks to you!"],
+    ["data/sprites/noble.png", "Noble", "I was sure that Tho'k would claim another victim! No matter, I have more opportunities to make money by betting against you."]
     ]
 }
