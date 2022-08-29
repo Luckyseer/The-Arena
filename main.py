@@ -1280,7 +1280,7 @@ class SideBattle:
                 if not played_once:
                     self.deadsound.play()
                     enemydead = True
-                    self.battleflow.reset
+                    self.battleflow.reset()
                     played_once = True
                 self.state = 'victory'
                 win = True
@@ -3393,7 +3393,6 @@ class SelectOptions(MainUi):
                 if self.colpos > 0 and self.colpos <= 2:
                     self.rowpos = 1
                     self.colpos = 0
-                6
             elif no == 5:
                 if self.colpos > 1:
                     self.colpos = 3

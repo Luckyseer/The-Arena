@@ -214,7 +214,7 @@ class TextBox:
             self.popup_message_surf.set_alpha(255)
             self.txtbox_timer.reset()
 
-    def popup_message(self, message, surf):  # Creates a quick message on the screen and it scrolls up and fades away
+    def popup_message(self, message, surf):  # Creates a quick message on the screen, and it scrolls up and fades away
         if self.popup_message_flag:
             self.popup_message_surf.fill((255, 255, 255))
             self.ui_text.draw_text((450, 150), message, False, self.popup_message_surf)

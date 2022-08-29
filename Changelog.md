@@ -11,7 +11,7 @@
  + Added a Gold icon next to the player's gold count in the inn.
  + Added a menu to select who you want to talk to when using the 'Talk' option.
  + Added an indicator to show whether you have talked to people before or if their dialogue has been updated.
- + At night the music will stop playing and be replaced with night time ambiance.
+ + At night the music will stop playing and be replaced with nighttime ambiance.
 
 # - Alpha v2.3
  + Added an Event manager to make cutscenes and stuff more manageable.
@@ -29,7 +29,7 @@
        through the status screen.	
  + Added multiple weapons, armour and accessories which can be bought in the shop.
  * Minor bug fixes.
- * Changed the stats for some of the monsters(Still not final).
+ * Changed the stats for some monsters(Still not final).
  * The 'Fading in' effect should work properly now.
  * Changed formatting to be more PEP-8 compliant(getting there).
 # - Alpha v3.0
@@ -39,7 +39,7 @@
  + Added descriptions to items in the shop.
  + Added an indicator when there are more items than shown in the shop.
  + Made the player and monster move while attacking just to make it look a bit more lively.
- + Added skills and the fuctionality to easily make more with 'sequences'!
+ + Added skills and the functionality to easily make more with 'sequences'!
  + Added new warrior skills.
  + Added new status effect "defend" which increases defence.
  + Added status icons to player HUD to indicate the effect.
@@ -56,9 +56,9 @@
  + You can now change your equipment on the status screen.
  + You no longer automatically equip the item after purchase.
 # - Alpha v4.0
- + Updated the textbox system. (Some of the old dialogue is broken as a result haven't gotten round to fixing it.)
+ + Updated the textbox system. (Some old dialogue is broken as a result haven't gotten round to fixing it.)
  + Changed the intro, added some more plot.
- + You no longer gain stats when leveling up. Instead you get stat points that you can spend on your stats as you like. You can spend the points via the status menu.
+ + You no longer gain stats when leveling up. Instead, you get stat points that you can spend on your stats as you like. You can spend the points via the status menu.
  + You get a message when you level up after a battle.
  + Fixed an issue when starting a new game after death
  + Fixed issues with the old textbox events, should be working perfectly now.
@@ -73,6 +73,7 @@
  + Added a few monsters to floor 2
  + Added item descriptions to the shop
  + Updated first floor boss moves
+ + (Moving on to v4.2 due to development after a long time)
 # - Alpha v4.2
  + Added a splash screen on startup
  + Added new 'talk' dialogue to floor 2 arena.
