@@ -228,7 +228,7 @@ def fadeout(surface, time=0.000001, fadetimer=Timer(), fade_in=False, optional_b
 class SideBattle:
     """ The sidebattle class, which provides us with the main gameplay(the battle system)
         Needs some work, could be a lot more efficient.
-        Currently needs some work on the aesthetics side. """
+        Currently, needs some work on the aesthetics side. """
 
     # The stats for the monster are by default for the weakest enemy 'rat', remember to change the stats as needed.
     def __init__(self, mondata, pclass, castanim, bg, bgm, phealth=100, pmana=50, pstr=10, pstrmod=10, pdef=10,
@@ -2711,7 +2711,7 @@ class MainUi:
 
     def clock(self, hours, minutes):  # draw ui for the clock
         if minutes == 0:
-            minutes = '00'  # Double zeros because thats how clocks work
+            minutes = '00'  # Double zeros because that's how clocks work
         timetxt = str(hours) + ':' + str(minutes)
         self.time = self.uitext.render(timetxt, False, self.txtcolor)
         surf.blit(pygame.transform.scale(self.bg, (150, 50)), (10, 81))
@@ -3329,7 +3329,7 @@ class SelectOptions(MainUi):
         self.alertAnim.play()
 
     def drawUi(self, no=1, opt1='1', opt2='2', opt3='3', opt4='4', opt5='5',
-               opt6='6'):  # Select option among 6 or less choices,where no is the number of choices
+               opt6='6'):  # Select option among 6 or fewer choices,where no is the number of choices
         surf.blit(pygame.transform.scale(
             self.bg, (int(curwidth / 1.5), 300)), (0, 430))
         Option1 = self.uitext.render(opt1, False, self.txtcolor)
@@ -3413,7 +3413,7 @@ class SelectOptions(MainUi):
         if self.rowpos == 1 and self.colpos == 3:  # Back
             surf.blit(self.cursor, (650, 590))
 
-    def alert_off(self, alert):  # Switch off the specified alert(from 1 - 6)
+    def alert_off(self, alert):  # Switch off the specified alert(from 1 to 6)
         if alert == 1:
             self.alert1 = False
         if alert == 2:
@@ -3427,7 +3427,7 @@ class SelectOptions(MainUi):
         if alert == 6:
             self.alert6 = False
 
-    def alert_on(self, alert):  # Switch on the specified alert(from 1 - 6)
+    def alert_on(self, alert):  # Switch on the specified alert(from 1 to 6)
         if alert == 1:
             self.alert1 = True
         if alert == 2:
@@ -3472,7 +3472,7 @@ class Shop(MainUi):
         self.green_rgb = (0, 200, 0)
         self.red_rgb = (200, 0, 0)
         self.box_pos = 2000
-        self.current_list = []  # which set of items u are currently viewing
+        self.current_list = []  # which set of items you're currently viewing
         self.buzzer = pygame.mixer.Sound('data/sounds&music/Buzzer1.ogg')
         self.buzzer.set_volume(0.05)
 
@@ -4804,7 +4804,7 @@ class GameClock:
         self.fadeoutflag = False
         # Music to be played in the area
         self.area_music = 'data/sounds&music/Infinite_Arena.mp3'
-        # Bell sound during night time
+        # Bell sound during nighttime
         self.bell = pygame.mixer.Sound('data/sounds&music/Bell1.ogg')
         self.bell.set_volume(0.05)
         self.rooster = pygame.mixer.Sound(
@@ -4831,10 +4831,10 @@ class GameClock:
                 player.minutes += 30
                 self.clockTime.reset()
 
-        if player.minutes >= 60:  # Self explanatory
+        if player.minutes >= 60:  # Self-explanatory
             player.hours += 1
             player.minutes = 0
-        if player.hours > 23:  # 24 hour clock
+        if player.hours > 23:  # 24-hour clock
             player.hours = 0
 
         if player.hours >= 6 and player.hours < 14:  # Day
