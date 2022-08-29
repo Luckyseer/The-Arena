@@ -4002,6 +4002,7 @@ class GameEvents(MainUi):
         self.text_box = gameui.TextBox()
         self.ui_text = gameui.UiText()
         self.ui_text.main_font_colour = (255, 255, 255)
+        self.casino_state = ''  # Current state of the casino
 
     def town_first_visit(self, player_data):
         event_done = False
@@ -4775,11 +4776,16 @@ class GameEvents(MainUi):
                             pass
                         elif self.cursorpos == 1:
                             pass
+                        elif self.cursorpos == 2:
+                            self.casino_state = 'casino'
+                            casino_ui = False
                 if event.type == pygame.constants.USEREVENT:
                     pygame.mixer.music.play()
             surf.blit(self.inn_bg, (0, 0))
             if casino_ui:
                 self.draw_casino(player_data)
+            if self.casino_state == 'casino':
+                pass
             surf.blit(ab, (0, 0))
             screen.blit(surf, (0, 0))
             self.game_clock.pass_time(player_data, area_music)
@@ -4787,7 +4793,7 @@ class GameEvents(MainUi):
             fps = "FPS:%d" % clock.get_fps()
             pygame.display.set_caption(fps)
             pygame.display.flip()
-
+    
 
 class GameClock:
 
@@ -5509,10 +5515,9 @@ if __name__ == "__main__":
                 cursorpos = 2
             if cursorpos > 2:
                 cursorpos = 0
-        elif scene == 'new_game' or scene == 'new_game2':
+        elif scene == 'new_game':
             surf.blit(pygame.transform.scale(
                 newgbg, (curwidth, curheight)), (0, 0))
-        elif scene == 'new_game':
             sel1 = seltext.render(
                 'Enter your name:' + name.capitalize(), False, secretbattle.txtcolor)
             if len(namelist) > 11:
@@ -5522,7 +5527,8 @@ if __name__ == "__main__":
             surf.blit(sel1, (300, 300))
             cursorpos = 0
         elif scene == 'new_game2':
-
+            surf.blit(pygame.transform.scale(
+                newgbg, (curwidth, curheight)), (0, 0))
             surf.blit(sel3, (300, 300))
             surf.blit(sel4, (300, 375))
             surf.blit(sel5, (778, 375))
@@ -5553,7 +5559,7 @@ if __name__ == "__main__":
                 player.defe = 20
             if cursorpos < 0:
                 cursorpos = 1
-            if cursorpos > 1:
+            elif cursorpos > 1:
                 cursorpos = 0
         elif scene == 'new_game3':
             fadeout(surf, 0.01)

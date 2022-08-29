@@ -47,6 +47,8 @@ while not done:
                 tb.choice_flag = False
             if event.key == pygame.K_RCTRL:
                 tb.progress_dialogue(dialogue)
+            if event.key == pygame.K_RETURN:
+                print(f"{tb.user_input}")
 
     if fade_out:
         text.fade_out(bg)
