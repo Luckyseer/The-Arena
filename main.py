@@ -4958,7 +4958,8 @@ if __name__ == "__main__":
     loadgame = menutext.render('Load Game', True, loadgamecolor)
     quitgame = menutext.render('Quit Game', True, (255, 255, 0))
     namelist = ['']
-    menubg1 = pygame.image.load("data/backgrounds/bg2.jpg").convert_alpha()
+    curwidth, curheight = screen.get_size()
+    menubg1 = pygame.transform.scale(pygame.image.load("data/backgrounds/bg2.jpg").convert_alpha(), (curwidth, curheight))
     arena_bg1 = pygame.image.load(
         "data/backgrounds/arenaDay.png").convert_alpha()  # day time arena
     arena_bg2 = pygame.image.load(
@@ -4992,7 +4993,6 @@ if __name__ == "__main__":
     while not done:
         # main
 
-        curwidth, curheight = screen.get_size()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = True
@@ -5464,10 +5464,10 @@ if __name__ == "__main__":
         name = "".join(namelist)
         if scene == 'splash':
             splash_screen.draw_splash(screen, event)
+            fadeout(surf, fade_in=True, optional_bg=menubg1)
             scene = 'menu'
         elif scene == 'menu':  # Main menu of the game(What you see on start-up)
-            surf.blit(pygame.transform.scale(
-                menubg1, (curwidth, curheight)), (0, 0))
+            surf.blit(menubg1, (0, 0))
             surf.blit(logo, (curwidth - 1100, curheight - 600))
             surf.blit(pygame.transform.scale(Textbox, (250, 180)), (450, 368))
             surf.blit(newgame, (474, 391))
