@@ -89,7 +89,7 @@
     "weakness" : ["light", "fire"],
     "strengths" : ["dark", "ice"]
   },
-  "zombie": {
+  "slime": {
     "name" : "Slime",
     "sprites" : "data/sv_enemies/Slime.png",
     "health" : 500,
@@ -104,12 +104,27 @@
     "weakness" : ["fire"],
     "strengths" : ["water", "ice"]
   },
+  "scorpion": {
+    "name" : "Scorpion",
+    "sprites" : "data/sv_enemies/Scorpion.png",
+    "health" : 400,
+    "str" : 50,
+    "def" : 30,
+    "mag" : 15,
+    "luck": 5,
+    "gold" : 300,
+    "exp" : 5000,
+    "move_list" : ["attack_slash", "defend", "double slash"],
+    "bg" : "data/backgrounds/Ruins2.png",
+    "weakness" : ["fire"],
+    "strengths" : ["water", "ice"]
+  },
   "floor_boss1": {
     "name": "Tho'k",
     "sprites": "data/sv_enemies/Orc.png",
     "health": 750,
     "str": 45,
-    "def": 8,
+    "def": 20,
     "mag": 30,
     "luck": 3,
     "gold": 500,

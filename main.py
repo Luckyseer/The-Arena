@@ -5383,13 +5383,12 @@ if __name__ == "__main__":
                     system = False
                 if (event.key == pygame.K_RETURN and ui.batcursorpos == 0) and battle_choice:
                     if player.progress == 1:
-                        f1_monsters = ["rat", "snake", "hornet", "imp"]
-                        randbattle = random.randrange(len(f1_monsters))
-                        rand_mon = f1_monsters[randbattle]
+                        monster_list = ["rat", "snake", "hornet", "imp"]
                     elif player.progress == 2:
-                        f1_monsters = ["skeleton", "zombie"]
-                        randbattle = random.randrange(len(f1_monsters))
-                        rand_mon = f1_monsters[randbattle]
+                        monster_list = ["skeleton", "zombie", "slime", "scorpion"]
+                    randbattle = random.randrange(len(monster_list))
+                    rand_mon = monster_list[randbattle]
+
                     battler.battle(rand_mon, player_data=player)
                     fight = battler.check_victory()
                     if fight:
