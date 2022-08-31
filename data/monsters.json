@@ -159,7 +159,7 @@
     "luck": 1,
     "gold" : 100000,
     "exp" : 50000,
-    "move_list" : ["attack", "fire slash", "defend", "quake", "burst", "double slash", "thunder", "ice", "fire", "terrify", "tsunami"],
+    "move_list" : ["attack", "fire slash", "defend", "quake", "burst", "double slash", "thunder", "ice", "fire", "terrify", "tsunami", "meteor"],
     "bg" : "data/backgrounds/DemonicWorld.png",
     "weakness" : [],
     "strengths" : []

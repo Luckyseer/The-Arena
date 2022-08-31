@@ -2339,6 +2339,12 @@ class NewBattle:
             if dmg_range <= 0:
                 dmg_range = 1
             damage = (dmg_range * magic / (magic + defence)) * 3.5
+        elif atk_type == "meteor":
+            self.element = "fire"
+            dmg_range = magic + random.randrange(-3, 3)
+            if dmg_range <= 0:
+                dmg_range = 1
+            damage = (dmg_range * magic / (magic + defence)) * 3.7
         if self.turn == "player":
             if self.element in self.m_weakness:
                 damage *= 2     # Damage doubles if enemy is weak against that element
