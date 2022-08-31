@@ -2278,6 +2278,8 @@ class NewBattle:
                 strength = strength * 0.5   # Reduce strength by 50%
             elif effect[0] == "mag_down":
                 magic = magic * 0.5     # Reduce magic by 50%
+            elif effect[0] == "def_down":
+                defence = defence * 0.5  # decreases defence by Half
         for effect in e_status:
             if effect[0] == "defend":
                 defence = defence + \
@@ -2498,6 +2500,10 @@ class NewBattle:
             pygame.mixer_music.play()
         elif set_music == 2:
             pygame.mixer_music.load("data/sounds&music/Dungeon2.ogg")
+            pygame.mixer_music.set_volume(vol)
+            pygame.mixer_music.play()
+        elif set_music == 3:
+            pygame.mixer_music.load("data/sounds&music/2000_Thief.ogg")
             pygame.mixer_music.set_volume(vol)
             pygame.mixer_music.play()
         else:
@@ -5027,6 +5033,12 @@ if __name__ == "__main__":
                 if event.key == pygame.K_n and scene == 'menu':
                     shh.append('n')
                     print(shh)
+                if event.key == pygame.K_m and scene == 'menu':
+                    shh.append('m')
+                    print(shh)
+                if event.key == pygame.K_v and scene == 'menu':
+                    shh.append('v')
+                    print(shh)
                 if event.key == pygame.K_BACKSPACE and scene == 'menu':
                     if shh != []:
                         shh.pop(0)
@@ -5488,6 +5500,12 @@ if __name__ == "__main__":
                 Zen.set_player_stats(stre=1000, mag=2000,
                                      health=10000, mana=1000, luck=9, level=90)
                 battler.battle("debug_fight", Zen, set_music=2)
+            if shh == ['m', 'o', 'v', 'e'] and scene == 'menu':
+                shh = []
+                Zen = Player()
+                Zen.set_player_stats(stre=1000, mag=2000,
+                                     health=10000, mana=1000, luck=9, level=90)
+                battler.battle("move_tester", Zen, set_music=3)
             if shh == ['t', 'o', 'w', 'n'] and scene == 'menu':
                 shh = []
                 fadeout(surf)

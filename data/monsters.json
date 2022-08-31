@@ -163,5 +163,20 @@
     "bg" : "data/backgrounds/DemonicWorld.png",
     "weakness" : [],
     "strengths" : []
+  },
+  "move_tester": {
+    "name" : "The Move Master",
+    "sprites" : "data/sv_enemies/Mimic.png",
+    "health" : 24000,
+    "str" : 750,
+    "def" : 150,
+    "mag" : 1000,
+    "luck": 1,
+    "gold" : 100000,
+    "exp" : 50000,
+    "move_list" : ["meteor"],
+    "bg" : "data/backgrounds/Translucent.png",
+    "weakness" : [],
+    "strengths" : []
   }
 }
