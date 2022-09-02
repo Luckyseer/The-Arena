@@ -1,271 +1,279 @@
 {
-  "weapons" : [
-    {
-      "id" : 0,
-      "name": "Wooden Sword",
-      "atk" : 3,
-      "def" : 0,
-      "mag" : 0,
-      "cost" : 0,
-      "attributes" : "null",
-      "description" : "A regular wooden sword used for training."
-    },
-    {
-      "id" : 1,
-      "name" : "Iron Sword",
-      "atk" : 10,
-      "def" : 0,
-      "mag" : 0,
-      "cost" : 30,
-      "attributes" : "null",
-      "description" : "A slightly flimsy sword made of iron."
-    },
-    {
-      "id" : 2,
-      "name" : "Steel Sword",
-      "atk" : 20,
-      "def" : 0,
-      "mag" : 0,
-      "cost" : 1000,
-      "attributes" : "null",
-      "description" : "A sword made of solid steel."
-    },
-    {
-      "id" : 3,
-      "name" : "Gold Sword",
-      "atk" : 10,
-      "def" : 10,
-      "mag" : 0,
-      "cost" : 10000,
-      "attributes" : "null",
-      "description" : "Shiny! Maybe not an effective weapon though."
-    },
-    {
-      "id" : 4,
-      "name" : "Debug Katana",
-      "atk" : 1000,
-      "def" : 1000,
-      "mag" : 1000,
-      "cost" : 10,
-      "attributes" : "null",
-      "description" : "A katana that will destroy your shit."
-    },
-    {
-      "id" : 5,
-      "name" : "Enchanted Stick",
-      "atk" : 5,
-      "def" : 0,
-      "mag" : 5,
-      "cost" : 10,
-      "attributes" : "null",
-      "description" : "A slightly magical stick."
-    },
-    {
-      "id" : 6,
-      "name" : "Enchanted Staff",
-      "atk" : 8,
-      "def" : 0,
-      "mag" : 10,
-      "cost" : 10,
-      "attributes" : "null",
-      "description" : "A staff with some magical power."
-    }
-  ],
-  "armours" : [
-    {
-      "id" : 0,
-      "name" : "Torn Coat",
-      "atk" : 0,
-      "def" : 3,
-      "mag" : 2,
-      "cost" : 100,
-      "attributes" : "null",
-      "description" : "A shabby old coat."
-    },
-    {
-      "id" : 1,
-      "name" : "Leather Armour",
-      "atk" : 0,
-      "def" : 10,
-      "mag" : 0,
-      "cost" : 200,
-      "attributes" : "null",
-      "description" : "An armour made of leather."
-    },
-    {
-      "id" : 2,
-      "name" : "Iron Chainmail",
-      "atk" : 5,
-      "def" : 20,
-      "mag" : 0,
-      "cost" : 300,
-      "attributes" : "null",
-      "description" : "Provides adequate protection without restricting movement."
-    },
-    {
-      "id" : 3,
-      "name" : "Enchanted Robe",
-      "atk" : 0,
-      "def" : 8,
-      "mag" : 10,
-      "cost" : 150,
-      "attributes" : "null",
-      "description" : "This robe has some magic in it. Probably."
-    },
-    {
-      "id" : 4,
-      "name" : "Wizard Robe",
-      "atk" : 0,
-      "def" : 15,
-      "mag" : 25,
-      "cost" : 500,
-      "attributes" : "null",
-      "description" : "This robe is said to have been used by a wise old sage."
-    },
-    {
-      "id" : 5,
-      "name" : "Debug Plate Armour",
-      "atk" : 1000,
-      "def" : 1000,
-      "mag" : 1000,
-      "cost" : 30,
-      "attributes" : "null",
-      "description" : "Ass-kicking outfit."
-    }
-  ],
-  "accessories" : [
-    {
-      "id" : 0,
-      "name" : "Necklace",
-      "atk" : 1,
-      "def" : 0,
-      "mag" : 1,
-      "cost" : 20,
-      "attributes" : "null",
-      "description" : "A shiny necklace."
-    },
-    {
-      "id" : 1,
-      "name" : "Berserker's Necklace",
-      "atk" : 0,
-      "def" : -20,
-      "mag" : -20,
-      "cost" : 600,
-      "attributes" : "AtkDmg 2x",
-      "description" : "Offence is the best offence. (Doubles the users regular attack damage)"
-    },
-    {
-      "id" : 2,
-      "name" : "Ember earrings",
-      "atk" : 0,
-      "def" : 0,
-      "mag" : 10,
-      "cost" : 500,
-      "attributes" : "FireDmg Up",
-      "description" : "Makes you feel warm! (Raises fire damage by 50%)"
-    },
-    {
-      "id" : 3,
-      "name" : "Teardrop amulet",
-      "atk" : 0,
-      "def" : 0,
-      "mag" : 10,
-      "cost" : 500,
-      "attributes" : "WaterDmg Up",
-      "description" : "Makes you a bit emotional. (Raises water damage by 50%)"
-    },
-    {
-      "id" : 4,
-      "name" : "Book of death",
-      "atk" : 0,
-      "def" : 20,
-      "mag" : 10,
-      "cost" : 1000,
-      "attributes" : "Death Resist",
-      "description" : "Might induce heart failure! (Resist instant death effect)"
-    },
-    {
-      "id" : 5,
-      "name" : "Debug Amulet6",
-      "atk" : 500,
-      "def" : 500,
-      "mag" : 500,
-      "cost" : 1000,
-      "attributes" : "AtkDmg 2x",
-      "description" : "Doubles attack"
-    },
-    {
-      "id" : 6,
-      "name" : "Rabbit's foot",
-      "atk" : 5,
-      "def" : 5,
-      "mag" : 5,
-      "cost" : 900,
-      "attributes" : "Luck 2x",
-      "description" : "Said to be a symbol of luck. (Increases luck during battle)"
-    }
-  ],
-  "consumables" : [
-    {
-      "id": 0,
-      "name": "Bandages",
-      "hp": 50,
-      "mp": 0,
-      "cost": 25,
-      "effect": "",
-      "description": "Tis' but a scratch! (Heals 50 HP)",
-      "battle_desc": "Heals 50 HP."
-    },
-    {
-      "id" : 1,
-      "name" : "Potion",
-      "hp" : 200,
-      "mp" : 0,
-      "cost" : 100,
-      "effect": "",
-      "description" : "Tastes a bit salty. (Heals 200 HP)",
-      "battle_desc": "Heals 200 HP."
-    },
-    {
-      "id" : 2,
-      "name" : "Roast Beef",
-      "hp" : 100,
-      "mp" : 100,
-      "cost" : 125,
-      "effect": "",
-      "description" : "Beefy! (Heals 100 HP & MP)",
-      "battle_desc": "Heals 100 HP & MP."
-    },
-    {
-      "id" : 3,
-      "name" : "Mana Potion",
-      "hp" : 0,
-      "mp" : 200,
-      "cost" : 100,
-      "effect": "",
-      "description" : "Tastes a bit sour. (Heals 200 MP)",
-      "battle_desc" : "Heals 200 MP."
-    },
-    {
-      "id" : 4,
-      "name" : "Dragon Tear",
-      "hp" : 500,
-      "mp" : 250,
-      "cost" : 400,
-      "effect": "",
-      "description" : "Said to be the secret to eternal youth. (Heals 500 HP & 250 MP)",
-      "battle_desc": "Heals 500 HP & 250 MP."
-    },
-    {
-      "id" : 5,
-      "name" : "Elixir",
-      "hp" : 9999,
-      "mp" : 9999,
-      "cost" : 1500,
-      "effect": "",
-      "description" : "Said to cure even the most deadliest of injuries. (Fully restore HP & MP)",
-      "battle_desc": "Fully restores HP & MP."
-    }
-  ]
+  "template_shop" : {
+    "weapons": [],
+    "armours": [],
+    "accessories": [],
+    "consumables": []
+  },
+  "arena_shop" : {
+    "weapons": [
+      {
+        "id": 0,
+        "name": "Wooden Sword",
+        "atk": 3,
+        "def": 0,
+        "mag": 0,
+        "cost": 0,
+        "attributes": "null",
+        "description": "A regular wooden sword used for training."
+      },
+      {
+        "id": 1,
+        "name": "Iron Sword",
+        "atk": 10,
+        "def": 0,
+        "mag": 0,
+        "cost": 30,
+        "attributes": "null",
+        "description": "A slightly flimsy sword made of iron."
+      },
+      {
+        "id": 2,
+        "name": "Steel Sword",
+        "atk": 20,
+        "def": 0,
+        "mag": 0,
+        "cost": 1000,
+        "attributes": "null",
+        "description": "A sword made of solid steel."
+      },
+      {
+        "id": 3,
+        "name": "Gold Sword",
+        "atk": 10,
+        "def": 10,
+        "mag": 0,
+        "cost": 10000,
+        "attributes": "null",
+        "description": "Shiny! Maybe not an effective weapon though."
+      },
+      {
+        "id": 4,
+        "name": "Debug Katana",
+        "atk": 1000,
+        "def": 1000,
+        "mag": 1000,
+        "cost": 10,
+        "attributes": "null",
+        "description": "A katana that will destroy your shit."
+      },
+      {
+        "id": 5,
+        "name": "Enchanted Stick",
+        "atk": 5,
+        "def": 0,
+        "mag": 5,
+        "cost": 10,
+        "attributes": "null",
+        "description": "A slightly magical stick."
+      },
+      {
+        "id": 6,
+        "name": "Enchanted Staff",
+        "atk": 8,
+        "def": 0,
+        "mag": 10,
+        "cost": 10,
+        "attributes": "null",
+        "description": "A staff with some magical power."
+      }
+    ],
+    "armours": [
+      {
+        "id": 0,
+        "name": "Torn Coat",
+        "atk": 0,
+        "def": 3,
+        "mag": 2,
+        "cost": 100,
+        "attributes": "null",
+        "description": "A shabby old coat."
+      },
+      {
+        "id": 1,
+        "name": "Leather Armour",
+        "atk": 0,
+        "def": 10,
+        "mag": 0,
+        "cost": 200,
+        "attributes": "null",
+        "description": "An armour made of leather."
+      },
+      {
+        "id": 2,
+        "name": "Iron Chainmail",
+        "atk": 5,
+        "def": 20,
+        "mag": 0,
+        "cost": 300,
+        "attributes": "null",
+        "description": "Provides adequate protection without restricting movement."
+      },
+      {
+        "id": 3,
+        "name": "Enchanted Robe",
+        "atk": 0,
+        "def": 8,
+        "mag": 10,
+        "cost": 150,
+        "attributes": "null",
+        "description": "This robe has some magic in it. Probably."
+      },
+      {
+        "id": 4,
+        "name": "Wizard Robe",
+        "atk": 0,
+        "def": 15,
+        "mag": 25,
+        "cost": 500,
+        "attributes": "null",
+        "description": "This robe is said to have been used by a wise old sage."
+      },
+      {
+        "id": 5,
+        "name": "Debug Plate Armour",
+        "atk": 1000,
+        "def": 1000,
+        "mag": 1000,
+        "cost": 30,
+        "attributes": "null",
+        "description": "Ass-kicking outfit."
+      }
+    ],
+    "accessories": [
+      {
+        "id": 0,
+        "name": "Necklace",
+        "atk": 1,
+        "def": 0,
+        "mag": 1,
+        "cost": 20,
+        "attributes": "null",
+        "description": "A shiny necklace."
+      },
+      {
+        "id": 1,
+        "name": "Berserker's Necklace",
+        "atk": 0,
+        "def": -20,
+        "mag": -20,
+        "cost": 600,
+        "attributes": "AtkDmg 2x",
+        "description": "Offence is the best offence. (Doubles the users regular attack damage)"
+      },
+      {
+        "id": 2,
+        "name": "Ember earrings",
+        "atk": 0,
+        "def": 0,
+        "mag": 10,
+        "cost": 500,
+        "attributes": "FireDmg Up",
+        "description": "Makes you feel warm! (Raises fire damage by 50%)"
+      },
+      {
+        "id": 3,
+        "name": "Teardrop amulet",
+        "atk": 0,
+        "def": 0,
+        "mag": 10,
+        "cost": 500,
+        "attributes": "WaterDmg Up",
+        "description": "Makes you a bit emotional. (Raises water damage by 50%)"
+      },
+      {
+        "id": 4,
+        "name": "Book of death",
+        "atk": 0,
+        "def": 20,
+        "mag": 10,
+        "cost": 1000,
+        "attributes": "Death Resist",
+        "description": "Might induce heart failure! (Resist instant death effect)"
+      },
+      {
+        "id": 5,
+        "name": "Debug Amulet6",
+        "atk": 500,
+        "def": 500,
+        "mag": 500,
+        "cost": 1000,
+        "attributes": "AtkDmg 2x",
+        "description": "Doubles attack"
+      },
+      {
+        "id": 6,
+        "name": "Rabbit's foot",
+        "atk": 5,
+        "def": 5,
+        "mag": 5,
+        "cost": 900,
+        "attributes": "Luck 2x",
+        "description": "Said to be a symbol of luck. (Increases luck during battle)"
+      }
+    ],
+    "consumables": [
+      {
+        "id": 0,
+        "name": "Bandages",
+        "hp": 50,
+        "mp": 0,
+        "cost": 25,
+        "effect": "",
+        "description": "Tis' but a scratch! (Heals 50 HP)",
+        "battle_desc": "Heals 50 HP."
+      },
+      {
+        "id": 1,
+        "name": "Potion",
+        "hp": 200,
+        "mp": 0,
+        "cost": 100,
+        "effect": "",
+        "description": "Tastes a bit salty. (Heals 200 HP)",
+        "battle_desc": "Heals 200 HP."
+      },
+      {
+        "id": 2,
+        "name": "Roast Beef",
+        "hp": 100,
+        "mp": 100,
+        "cost": 125,
+        "effect": "",
+        "description": "Beefy! (Heals 100 HP & MP)",
+        "battle_desc": "Heals 100 HP & MP."
+      },
+      {
+        "id": 3,
+        "name": "Mana Potion",
+        "hp": 0,
+        "mp": 200,
+        "cost": 100,
+        "effect": "",
+        "description": "Tastes a bit sour. (Heals 200 MP)",
+        "battle_desc": "Heals 200 MP."
+      },
+      {
+        "id": 4,
+        "name": "Dragon Tear",
+        "hp": 500,
+        "mp": 250,
+        "cost": 400,
+        "effect": "",
+        "description": "Said to be the secret to eternal youth. (Heals 500 HP & 250 MP)",
+        "battle_desc": "Heals 500 HP & 250 MP."
+      },
+      {
+        "id": 5,
+        "name": "Elixir",
+        "hp": 9999,
+        "mp": 9999,
+        "cost": 1500,
+        "effect": "",
+        "description": "Said to cure even the most deadliest of injuries. (Fully restore HP & MP)",
+        "battle_desc": "Fully restores HP & MP."
+      }
+    ]
+  }
 }
 			

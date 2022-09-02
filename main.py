@@ -16,7 +16,18 @@ pygame.display.set_icon(icon)
 alphatext = "Alpha v4.1 - Story and the Town"
 try:
     with open('data/items.json', 'r') as items:
-        item_data = json.load(items)
+        item_data_shop = json.load(items) # List of all shops and their items
+        item_data = {
+            "weapons": [],
+            "armours": [],
+            "accessories": [],
+            "consumables": []
+        }
+        for shop in item_data_shop:
+            item_data['weapons'].extend(item_data_shop[shop]['weapons'])
+            item_data['armours'].extend(item_data_shop[shop]['armours'])
+            item_data['accessories'].extend(item_data_shop[shop]['accessories'])
+            item_data['consumables'].extend(item_data_shop[shop]['consumables'])
         weapons = item_data['weapons']
     with open('data/monsters.json', 'r') as monsters:
         monster_data = json.load(monsters)
@@ -189,7 +200,7 @@ def fadein(rgb, time=0.0001, fadetimer=Timer()):  # fadein effect
     return fade_done
 
 
-def fadeout(surface, time=0.000001, fadetimer=Timer(), fade_in=False, optional_bg=""):  # fadeout effect
+def fadeout(surface, time=0.000001, fadetimer=Timer(), fade_in=False, optional_bg=pygame.image.load("data/backgrounds/Meadow.png")):  # fadeout effect
     global screen
     if optional_bg != "":
         post_fade_bg = optional_bg   # Image to show on screen when it fades back in
@@ -3476,6 +3487,7 @@ class Shop(MainUi):
         self.min_pos = 0  # minimum position for the item in the list
         self.max_pos = 0  # maximum position for an item in the list
         self.shop_page = 0
+        self.no_sell_flag = False  # Flag for when the shop has no items in a category
         self.shop_selection_flag = True
         self.status_bg = pygame.transform.scale(
             self.bg, (300, 500)).convert_alpha()
@@ -3667,235 +3679,267 @@ class Shop(MainUi):
             surf.blit(self.cur, (962, 56))
             if self.shop_page == 0:
                 self.max_pos = len(self.weapons_list)
-                if self.min_pos in player_data.wep_owned or self.min_pos == self.player_data.cur_weapon:
+                if self.max_pos == 0:
                     item1 = self.uitext.render(
-                        wepnamelist[self.min_pos], False, (86, 91, 99))
+                        "This shop does not sell weapons.", False, self.txtcolor3)
                     cost1 = self.uitext.render(
-                        wepcostlist[self.min_pos], False, (86, 91, 99))
-                    surf.blit(self.uitext2.render(
-                        "Owned", False, (186, 31, 34)), (600, 339))
+                        "", False, self.txtcolor3)
+                    self.no_sell_flag = True
                 else:
-                    item1 = self.uitext.render(
-                        wepnamelist[self.min_pos], False, self.txtcolor3)
-                    cost1 = self.uitext.render(
-                        wepcostlist[self.min_pos], False, self.txtcolor3)
-                if self.max_pos >= 2:
-                    if self.min_pos + 1 in player_data.wep_owned or self.min_pos + 1 == self.player_data.cur_weapon:
-                        item2 = self.uitext.render(
-                            wepnamelist[self.min_pos + 1], False, (86, 91, 99))
-                        cost2 = self.uitext.render(
-                            wepcostlist[self.min_pos + 1], False, (86, 91, 99))
+                    self.no_sell_flag = False
+                    if self.min_pos in player_data.wep_owned or self.min_pos == self.player_data.cur_weapon:
+                        item1 = self.uitext.render(
+                            wepnamelist[self.min_pos], False, (86, 91, 99))
+                        cost1 = self.uitext.render(
+                            wepcostlist[self.min_pos], False, (86, 91, 99))
                         surf.blit(self.uitext2.render(
-                            "Owned", False, (186, 31, 34)), (600, 399))
+                            "Owned", False, (186, 31, 34)), (600, 339))
                     else:
-                        item2 = self.uitext.render(
-                            wepnamelist[self.min_pos + 1], False, self.txtcolor3)
-                        cost2 = self.uitext.render(
-                            wepcostlist[self.min_pos + 1], False, self.txtcolor3)
-                if self.max_pos >= 3:
-                    if self.min_pos + 2 in player_data.wep_owned or self.min_pos + 2 == self.player_data.cur_weapon:
-                        item3 = self.uitext.render(
-                            wepnamelist[self.min_pos + 2], False, (86, 91, 99))
-                        cost3 = self.uitext.render(
-                            wepcostlist[self.min_pos + 2], False, (86, 91, 99))
-                        surf.blit(self.uitext2.render(
-                            "Owned", False, (186, 31, 34)), (600, 459))
-                    else:
-                        item3 = self.uitext.render(
-                            wepnamelist[self.min_pos + 2], False, self.txtcolor3)
-                        cost3 = self.uitext.render(
-                            wepcostlist[self.min_pos + 2], False, self.txtcolor3)
-                if self.max_pos >= 4:
-                    if self.min_pos + 3 in player_data.wep_owned or self.min_pos + 3 == self.player_data.cur_weapon:
-                        item4 = self.uitext.render(
-                            wepnamelist[self.min_pos + 3], False, (86, 91, 99))
-                        cost4 = self.uitext.render(
-                            wepcostlist[self.min_pos + 3], False, (86, 91, 99))
-                        surf.blit(self.uitext2.render(
-                            "Owned", False, (186, 31, 34)), (600, 519))
-                    else:
-                        item4 = self.uitext.render(
-                            wepnamelist[self.min_pos + 3], False, self.txtcolor3)
-                        cost4 = self.uitext.render(
-                            wepcostlist[self.min_pos + 3], False, self.txtcolor3)
-                if self.max_pos >= 5:
-                    if self.min_pos + 4 in player_data.wep_owned or self.min_pos + 4 == self.player_data.cur_weapon:
-                        item5 = self.uitext.render(
-                            wepnamelist[self.min_pos + 4], False, (86, 91, 99))
-                        cost5 = self.uitext.render(
-                            wepcostlist[self.min_pos + 4], False, (86, 91, 99))
-                        surf.blit(self.uitext2.render(
-                            "Owned", False, (186, 31, 34)), (600, 579))
-                    else:
-                        item5 = self.uitext.render(
-                            wepnamelist[self.min_pos + 4], False, self.txtcolor3)
-                        cost5 = self.uitext.render(
-                            wepcostlist[self.min_pos + 4], False, self.txtcolor3)
+                        item1 = self.uitext.render(
+                            wepnamelist[self.min_pos], False, self.txtcolor3)
+                        cost1 = self.uitext.render(
+                            wepcostlist[self.min_pos], False, self.txtcolor3)
+                    if self.max_pos >= 2:
+                        if self.min_pos + 1 in player_data.wep_owned or self.min_pos + 1 == self.player_data.cur_weapon:
+                            item2 = self.uitext.render(
+                                wepnamelist[self.min_pos + 1], False, (86, 91, 99))
+                            cost2 = self.uitext.render(
+                                wepcostlist[self.min_pos + 1], False, (86, 91, 99))
+                            surf.blit(self.uitext2.render(
+                                "Owned", False, (186, 31, 34)), (600, 399))
+                        else:
+                            item2 = self.uitext.render(
+                                wepnamelist[self.min_pos + 1], False, self.txtcolor3)
+                            cost2 = self.uitext.render(
+                                wepcostlist[self.min_pos + 1], False, self.txtcolor3)
+                    if self.max_pos >= 3:
+                        if self.min_pos + 2 in player_data.wep_owned or self.min_pos + 2 == self.player_data.cur_weapon:
+                            item3 = self.uitext.render(
+                                wepnamelist[self.min_pos + 2], False, (86, 91, 99))
+                            cost3 = self.uitext.render(
+                                wepcostlist[self.min_pos + 2], False, (86, 91, 99))
+                            surf.blit(self.uitext2.render(
+                                "Owned", False, (186, 31, 34)), (600, 459))
+                        else:
+                            item3 = self.uitext.render(
+                                wepnamelist[self.min_pos + 2], False, self.txtcolor3)
+                            cost3 = self.uitext.render(
+                                wepcostlist[self.min_pos + 2], False, self.txtcolor3)
+                    if self.max_pos >= 4:
+                        if self.min_pos + 3 in player_data.wep_owned or self.min_pos + 3 == self.player_data.cur_weapon:
+                            item4 = self.uitext.render(
+                                wepnamelist[self.min_pos + 3], False, (86, 91, 99))
+                            cost4 = self.uitext.render(
+                                wepcostlist[self.min_pos + 3], False, (86, 91, 99))
+                            surf.blit(self.uitext2.render(
+                                "Owned", False, (186, 31, 34)), (600, 519))
+                        else:
+                            item4 = self.uitext.render(
+                                wepnamelist[self.min_pos + 3], False, self.txtcolor3)
+                            cost4 = self.uitext.render(
+                                wepcostlist[self.min_pos + 3], False, self.txtcolor3)
+                    if self.max_pos >= 5:
+                        if self.min_pos + 4 in player_data.wep_owned or self.min_pos + 4 == self.player_data.cur_weapon:
+                            item5 = self.uitext.render(
+                                wepnamelist[self.min_pos + 4], False, (86, 91, 99))
+                            cost5 = self.uitext.render(
+                                wepcostlist[self.min_pos + 4], False, (86, 91, 99))
+                            surf.blit(self.uitext2.render(
+                                "Owned", False, (186, 31, 34)), (600, 579))
+                        else:
+                            item5 = self.uitext.render(
+                                wepnamelist[self.min_pos + 4], False, self.txtcolor3)
+                            cost5 = self.uitext.render(
+                                wepcostlist[self.min_pos + 4], False, self.txtcolor3)
             if self.shop_page == 1:
                 self.max_pos = len(self.armour_list)
-                if self.min_pos in player_data.arm_owned or self.min_pos == self.player_data.cur_armour:
+                if self.max_pos == 0:
                     item1 = self.uitext.render(
-                        armnamelist[self.min_pos], False, (86, 91, 99))
+                        "This shop does not sell armours.", False, self.txtcolor3)
                     cost1 = self.uitext.render(
-                        armcostlist[self.min_pos], False, (86, 91, 99))
-                    surf.blit(self.uitext2.render(
-                        "Owned", False, (186, 31, 34)), (600, 339))
+                        "", False, self.txtcolor3)
+                    self.no_sell_flag = True
                 else:
-                    item1 = self.uitext.render(
-                        armnamelist[self.min_pos], False, self.txtcolor3)
-                    cost1 = self.uitext.render(
-                        armcostlist[self.min_pos], False, self.txtcolor3)
-                if self.max_pos >= 2:
-                    if self.min_pos + 1 in player_data.arm_owned or self.min_pos + 1 == self.player_data.cur_armour:
-                        item2 = self.uitext.render(
-                            armnamelist[self.min_pos + 1], False, (86, 91, 99))
-                        cost2 = self.uitext.render(
-                            armcostlist[self.min_pos + 1], False, (86, 91, 99))
+                    self.no_sell_flag = False
+                    if self.min_pos in player_data.arm_owned or self.min_pos == self.player_data.cur_armour:
+                        item1 = self.uitext.render(
+                            armnamelist[self.min_pos], False, (86, 91, 99))
+                        cost1 = self.uitext.render(
+                            armcostlist[self.min_pos], False, (86, 91, 99))
                         surf.blit(self.uitext2.render(
-                            "Owned", False, (186, 31, 34)), (600, 399))
+                            "Owned", False, (186, 31, 34)), (600, 339))
                     else:
-                        item2 = self.uitext.render(
-                            armnamelist[self.min_pos + 1], False, self.txtcolor3)
-                        cost2 = self.uitext.render(
-                            armcostlist[self.min_pos + 1], False, self.txtcolor3)
-                if self.max_pos >= 3:
-                    if self.min_pos + 2 in player_data.arm_owned or self.min_pos + 2 == self.player_data.cur_armour:
-                        item3 = self.uitext.render(
-                            armnamelist[self.min_pos + 2], False, (86, 91, 99))
-                        cost3 = self.uitext.render(
-                            armcostlist[self.min_pos + 2], False, (86, 91, 99))
-                        surf.blit(self.uitext2.render(
-                            "Owned", False, (186, 31, 34)), (600, 459))
-                    else:
-                        item3 = self.uitext.render(
-                            armnamelist[self.min_pos + 2], False, self.txtcolor3)
-                        cost3 = self.uitext.render(
-                            armcostlist[self.min_pos + 2], False, self.txtcolor3)
-                if self.max_pos >= 4:
-                    if self.min_pos + 3 in player_data.arm_owned or self.min_pos + 3 == self.player_data.cur_armour:
-                        item4 = self.uitext.render(
-                            armnamelist[self.min_pos + 3], False, (86, 91, 99))
-                        cost4 = self.uitext.render(
-                            armcostlist[self.min_pos + 3], False, (86, 91, 99))
-                        surf.blit(self.uitext2.render(
-                            "Owned", False, (186, 31, 34)), (600, 519))
-                    else:
-                        item4 = self.uitext.render(
-                            armnamelist[self.min_pos + 3], False, self.txtcolor3)
-                        cost4 = self.uitext.render(
-                            armcostlist[self.min_pos + 3], False, self.txtcolor3)
-                if self.max_pos >= 5:
-                    if self.min_pos + 4 in player_data.arm_owned or self.min_pos + 4 == self.player_data.cur_armour:
-                        item5 = self.uitext.render(
-                            armnamelist[self.min_pos + 4], False, (86, 91, 99))
-                        cost5 = self.uitext.render(
-                            armcostlist[self.min_pos + 4], False, (86, 91, 99))
-                        surf.blit(self.uitext2.render(
-                            "Owned", False, (186, 31, 34)), (600, 579))
-                    else:
-                        item5 = self.uitext.render(
-                            armnamelist[self.min_pos + 4], False, self.txtcolor3)
-                        cost5 = self.uitext.render(
-                            armcostlist[self.min_pos + 4], False, self.txtcolor3)
+                        item1 = self.uitext.render(
+                            armnamelist[self.min_pos], False, self.txtcolor3)
+                        cost1 = self.uitext.render(
+                            armcostlist[self.min_pos], False, self.txtcolor3)
+                    if self.max_pos >= 2:
+                        if self.min_pos + 1 in player_data.arm_owned or self.min_pos + 1 == self.player_data.cur_armour:
+                            item2 = self.uitext.render(
+                                armnamelist[self.min_pos + 1], False, (86, 91, 99))
+                            cost2 = self.uitext.render(
+                                armcostlist[self.min_pos + 1], False, (86, 91, 99))
+                            surf.blit(self.uitext2.render(
+                                "Owned", False, (186, 31, 34)), (600, 399))
+                        else:
+                            item2 = self.uitext.render(
+                                armnamelist[self.min_pos + 1], False, self.txtcolor3)
+                            cost2 = self.uitext.render(
+                                armcostlist[self.min_pos + 1], False, self.txtcolor3)
+                    if self.max_pos >= 3:
+                        if self.min_pos + 2 in player_data.arm_owned or self.min_pos + 2 == self.player_data.cur_armour:
+                            item3 = self.uitext.render(
+                                armnamelist[self.min_pos + 2], False, (86, 91, 99))
+                            cost3 = self.uitext.render(
+                                armcostlist[self.min_pos + 2], False, (86, 91, 99))
+                            surf.blit(self.uitext2.render(
+                                "Owned", False, (186, 31, 34)), (600, 459))
+                        else:
+                            item3 = self.uitext.render(
+                                armnamelist[self.min_pos + 2], False, self.txtcolor3)
+                            cost3 = self.uitext.render(
+                                armcostlist[self.min_pos + 2], False, self.txtcolor3)
+                    if self.max_pos >= 4:
+                        if self.min_pos + 3 in player_data.arm_owned or self.min_pos + 3 == self.player_data.cur_armour:
+                            item4 = self.uitext.render(
+                                armnamelist[self.min_pos + 3], False, (86, 91, 99))
+                            cost4 = self.uitext.render(
+                                armcostlist[self.min_pos + 3], False, (86, 91, 99))
+                            surf.blit(self.uitext2.render(
+                                "Owned", False, (186, 31, 34)), (600, 519))
+                        else:
+                            item4 = self.uitext.render(
+                                armnamelist[self.min_pos + 3], False, self.txtcolor3)
+                            cost4 = self.uitext.render(
+                                armcostlist[self.min_pos + 3], False, self.txtcolor3)
+                    if self.max_pos >= 5:
+                        if self.min_pos + 4 in player_data.arm_owned or self.min_pos + 4 == self.player_data.cur_armour:
+                            item5 = self.uitext.render(
+                                armnamelist[self.min_pos + 4], False, (86, 91, 99))
+                            cost5 = self.uitext.render(
+                                armcostlist[self.min_pos + 4], False, (86, 91, 99))
+                            surf.blit(self.uitext2.render(
+                                "Owned", False, (186, 31, 34)), (600, 579))
+                        else:
+                            item5 = self.uitext.render(
+                                armnamelist[self.min_pos + 4], False, self.txtcolor3)
+                            cost5 = self.uitext.render(
+                                armcostlist[self.min_pos + 4], False, self.txtcolor3)
             if self.shop_page == 2:
                 self.max_pos = len(self.acc_list)
-                if self.min_pos in player_data.acc_owned or self.min_pos == self.player_data.cur_accessory:
+                if self.max_pos == 0:
                     item1 = self.uitext.render(
-                        accnamelist[self.min_pos], False, (86, 91, 99))
+                        "This shop does not sell accessories.", False, self.txtcolor3)
                     cost1 = self.uitext.render(
-                        acccostlist[self.min_pos], False, (86, 91, 99))
-                    surf.blit(self.uitext2.render(
-                        "Owned", False, (186, 31, 34)), (600, 339))
+                        "", False, self.txtcolor3)
+                    self.no_sell_flag = True
                 else:
-                    item1 = self.uitext.render(
-                        accnamelist[self.min_pos], False, self.txtcolor3)
-                    cost1 = self.uitext.render(
-                        acccostlist[self.min_pos], False, self.txtcolor3)
-                if self.max_pos >= 2:
-                    if self.min_pos + 1 in player_data.acc_owned or self.min_pos + 1 == self.player_data.cur_accessory:
-                        item2 = self.uitext.render(
-                            accnamelist[self.min_pos + 1], False, (86, 91, 99))
-                        cost2 = self.uitext.render(
-                            acccostlist[self.min_pos + 1], False, (86, 91, 99))
+                    self.no_sell_flag = False
+                    if self.min_pos in player_data.acc_owned or self.min_pos == self.player_data.cur_accessory:
+                        item1 = self.uitext.render(
+                            accnamelist[self.min_pos], False, (86, 91, 99))
+                        cost1 = self.uitext.render(
+                            acccostlist[self.min_pos], False, (86, 91, 99))
                         surf.blit(self.uitext2.render(
-                            "Owned", False, (186, 31, 34)), (600, 399))
+                            "Owned", False, (186, 31, 34)), (600, 339))
                     else:
-                        item2 = self.uitext.render(
-                            accnamelist[self.min_pos + 1], False, self.txtcolor3)
-                        cost2 = self.uitext.render(
-                            acccostlist[self.min_pos + 1], False, self.txtcolor3)
-                if self.max_pos >= 3:
-                    if self.min_pos + 2 in player_data.acc_owned or self.min_pos + 2 == self.player_data.cur_accessory:
-                        item3 = self.uitext.render(
-                            accnamelist[self.min_pos + 2], False, (86, 91, 99))
-                        cost3 = self.uitext.render(
-                            acccostlist[self.min_pos + 2], False, (86, 91, 99))
-                        surf.blit(self.uitext2.render(
-                            "Owned", False, (186, 31, 34)), (600, 459))
-                    else:
-                        item3 = self.uitext.render(
-                            accnamelist[self.min_pos + 2], False, self.txtcolor3)
-                        cost3 = self.uitext.render(
-                            acccostlist[self.min_pos + 2], False, self.txtcolor3)
-                if self.max_pos >= 4:
-                    if self.min_pos + 3 in player_data.acc_owned or self.min_pos + 3 == self.player_data.cur_accessory:
-                        item4 = self.uitext.render(
-                            accnamelist[self.min_pos + 3], False, (86, 91, 99))
-                        cost4 = self.uitext.render(
-                            acccostlist[self.min_pos + 3], False, (86, 91, 99))
-                        surf.blit(self.uitext2.render(
-                            "Owned", False, (186, 31, 34)), (600, 519))
-                    else:
-                        item4 = self.uitext.render(
-                            accnamelist[self.min_pos + 3], False, self.txtcolor3)
-                        cost4 = self.uitext.render(
-                            acccostlist[self.min_pos + 3], False, self.txtcolor3)
-                if self.max_pos >= 5:
-                    if self.min_pos + 4 in player_data.acc_owned or self.min_pos + 4 == self.player_data.cur_accessory:
-                        item5 = self.uitext.render(
-                            accnamelist[self.min_pos + 4], False, (86, 91, 99))
-                        cost5 = self.uitext.render(
-                            acccostlist[self.min_pos + 4], False, (86, 91, 99))
-                        surf.blit(self.uitext2.render(
-                            "Owned", False, (186, 31, 34)), (600, 579))
-                    else:
-                        item5 = self.uitext.render(
-                            accnamelist[self.min_pos + 4], False, self.txtcolor3)
-                        cost5 = self.uitext.render(
-                            acccostlist[self.min_pos + 4], False, self.txtcolor3)
+                        item1 = self.uitext.render(
+                            accnamelist[self.min_pos], False, self.txtcolor3)
+                        cost1 = self.uitext.render(
+                            acccostlist[self.min_pos], False, self.txtcolor3)
+                    if self.max_pos >= 2:
+                        if self.min_pos + 1 in player_data.acc_owned or self.min_pos + 1 == self.player_data.cur_accessory:
+                            item2 = self.uitext.render(
+                                accnamelist[self.min_pos + 1], False, (86, 91, 99))
+                            cost2 = self.uitext.render(
+                                acccostlist[self.min_pos + 1], False, (86, 91, 99))
+                            surf.blit(self.uitext2.render(
+                                "Owned", False, (186, 31, 34)), (600, 399))
+                        else:
+                            item2 = self.uitext.render(
+                                accnamelist[self.min_pos + 1], False, self.txtcolor3)
+                            cost2 = self.uitext.render(
+                                acccostlist[self.min_pos + 1], False, self.txtcolor3)
+                    if self.max_pos >= 3:
+                        if self.min_pos + 2 in player_data.acc_owned or self.min_pos + 2 == self.player_data.cur_accessory:
+                            item3 = self.uitext.render(
+                                accnamelist[self.min_pos + 2], False, (86, 91, 99))
+                            cost3 = self.uitext.render(
+                                acccostlist[self.min_pos + 2], False, (86, 91, 99))
+                            surf.blit(self.uitext2.render(
+                                "Owned", False, (186, 31, 34)), (600, 459))
+                        else:
+                            item3 = self.uitext.render(
+                                accnamelist[self.min_pos + 2], False, self.txtcolor3)
+                            cost3 = self.uitext.render(
+                                acccostlist[self.min_pos + 2], False, self.txtcolor3)
+                    if self.max_pos >= 4:
+                        if self.min_pos + 3 in player_data.acc_owned or self.min_pos + 3 == self.player_data.cur_accessory:
+                            item4 = self.uitext.render(
+                                accnamelist[self.min_pos + 3], False, (86, 91, 99))
+                            cost4 = self.uitext.render(
+                                acccostlist[self.min_pos + 3], False, (86, 91, 99))
+                            surf.blit(self.uitext2.render(
+                                "Owned", False, (186, 31, 34)), (600, 519))
+                        else:
+                            item4 = self.uitext.render(
+                                accnamelist[self.min_pos + 3], False, self.txtcolor3)
+                            cost4 = self.uitext.render(
+                                acccostlist[self.min_pos + 3], False, self.txtcolor3)
+                    if self.max_pos >= 5:
+                        if self.min_pos + 4 in player_data.acc_owned or self.min_pos + 4 == self.player_data.cur_accessory:
+                            item5 = self.uitext.render(
+                                accnamelist[self.min_pos + 4], False, (86, 91, 99))
+                            cost5 = self.uitext.render(
+                                acccostlist[self.min_pos + 4], False, (86, 91, 99))
+                            surf.blit(self.uitext2.render(
+                                "Owned", False, (186, 31, 34)), (600, 579))
+                        else:
+                            item5 = self.uitext.render(
+                                accnamelist[self.min_pos + 4], False, self.txtcolor3)
+                            cost5 = self.uitext.render(
+                                acccostlist[self.min_pos + 4], False, self.txtcolor3)
             if self.shop_page == 3:
                 surf.blit(self.uitext2.render("In Inventory",
                           False, (186, 31, 34)), (590, 290))
                 self.max_pos = len(self.consume_list)
-                item1 = self.uitext.render(
-                    connamelist[self.min_pos], False, self.txtcolor3)
-                cost1 = self.uitext.render(
-                    concostlist[self.min_pos], False, self.txtcolor3)
-                for i in range(self.min_pos, self.max_pos):
-                    for item in self.player_data.inventory:
-                        if item["name"] == connamelist[i] and i <= self.min_pos + 4:
-                            surf.blit(self.uitext2.render(
-                                str(item["amount"]), False, (31, 22, 21)), (610, 339 + 60 * (i - self.min_pos)))
-                if self.max_pos >= 2:
-                    item2 = self.uitext.render(
-                        connamelist[self.min_pos + 1], False, self.txtcolor3)
-                    cost2 = self.uitext.render(
-                        concostlist[self.min_pos + 1], False, self.txtcolor3)
-                if self.max_pos >= 3:
-                    item3 = self.uitext.render(
-                        connamelist[self.min_pos + 2], False, self.txtcolor3)
-                    cost3 = self.uitext.render(
-                        concostlist[self.min_pos + 2], False, self.txtcolor3)
-                if self.max_pos >= 4:
-                    item4 = self.uitext.render(
-                        connamelist[self.min_pos + 3], False, self.txtcolor3)
-                    cost4 = self.uitext.render(
-                        concostlist[self.min_pos + 3], False, self.txtcolor3)
-                if self.max_pos >= 5:
-                    item5 = self.uitext.render(
-                        connamelist[self.min_pos + 4], False, self.txtcolor3)
-                    cost5 = self.uitext.render(
-                        concostlist[self.min_pos + 4], False, self.txtcolor3)
+                if self.max_pos == 0:
+                    item1 = self.uitext.render(
+                        "This shop does not sell consumables.", False, self.txtcolor3)
+                    cost1 = self.uitext.render(
+                        "", False, self.txtcolor3)
+                    self.no_sell_flag = True
+                else:
+                    self.no_sell_flag = False
+                    item1 = self.uitext.render(
+                        connamelist[self.min_pos], False, self.txtcolor3)
+                    cost1 = self.uitext.render(
+                        concostlist[self.min_pos], False, self.txtcolor3)
+                    for i in range(self.min_pos, self.max_pos):
+                        for item in self.player_data.inventory:
+                            if item["name"] == connamelist[i] and i <= self.min_pos + 4:
+                                surf.blit(self.uitext2.render(
+                                    str(item["amount"]), False, (31, 22, 21)), (610, 339 + 60 * (i - self.min_pos)))
+                    if self.max_pos >= 2:
+                        item2 = self.uitext.render(
+                            connamelist[self.min_pos + 1], False, self.txtcolor3)
+                        cost2 = self.uitext.render(
+                            concostlist[self.min_pos + 1], False, self.txtcolor3)
+                    if self.max_pos >= 3:
+                        item3 = self.uitext.render(
+                            connamelist[self.min_pos + 2], False, self.txtcolor3)
+                        cost3 = self.uitext.render(
+                            concostlist[self.min_pos + 2], False, self.txtcolor3)
+                    if self.max_pos >= 4:
+                        item4 = self.uitext.render(
+                            connamelist[self.min_pos + 3], False, self.txtcolor3)
+                        cost4 = self.uitext.render(
+                            concostlist[self.min_pos + 3], False, self.txtcolor3)
+                    if self.max_pos >= 5:
+                        item5 = self.uitext.render(
+                            connamelist[self.min_pos + 4], False, self.txtcolor3)
+                        cost5 = self.uitext.render(
+                            concostlist[self.min_pos + 4], False, self.txtcolor3)
 
             surf.blit(item1, (161, 339))
             surf.blit(cost1, (449, 339))
@@ -4903,7 +4947,7 @@ if __name__ == "__main__":
                              'data/sounds&music/yousayrun2.mp3')
 
     floor_talk = SelectOptions()  # Choices for 'Talk' in floor 1
-    arena_shop = Shop(item_data)
+    arena_shop = Shop(item_data_shop["arena_shop"])
     #####
 
     randbattle = 0
@@ -5303,8 +5347,11 @@ if __name__ == "__main__":
                     else:
                         arena_shop.shop_selection_flag = True
                 if (event.key == pygame.K_RETURN and shop) and not arena_shop.shopkeep and arena_shop.shop_selection_flag:
-                    arena_shop.shop_selection_flag = False
-                    event.key = 0
+                    if arena_shop.no_sell_flag:
+                        secretbattle.buzzer.play()
+                    else:
+                        arena_shop.shop_selection_flag = False
+                        event.key = 0
                 if (event.key == pygame.K_LEFT and shop) and not arena_shop.shopkeep:
                     arena_shop.shop_cursor_pos1 -= 1
                 if (event.key == pygame.K_RIGHT and shop) and not arena_shop.shopkeep:
