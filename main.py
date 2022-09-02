@@ -1,4 +1,4 @@
-# Alpha V2.4
+# Alpha V4.2
 from __future__ import print_function  # For compatibility with python 2.x
 import pickle
 import random
@@ -13,7 +13,7 @@ from pygame.locals import *
 
 icon = pygame.image.load("data/sprites/Icon2.png")
 pygame.display.set_icon(icon)
-alphatext = "Alpha v4.1 - Story and the Town"
+alphatext = "Alpha v4.2 - Story and the Town"
 try:
     with open('data/items.json', 'r') as items:
         item_data_shop = json.load(items) # List of all shops and their items
@@ -4054,10 +4054,13 @@ class GameEvents(MainUi):
         self.game_clock = GameClock()
         self.option_selector = SelectOptions()
         self.town_talk1 = False  # Flag for drawing options menu for the 'Talk' Screen
+        self.talking = False  # Flag to know if dialogue is currently being spoken
+        self.talk_val = 0  # Used to know which option was chosen.
         self.text_box = gameui.TextBox()
         self.ui_text = gameui.UiText()
         self.ui_text.main_font_colour = (255, 255, 255)
         self.casino_state = ''  # Current state of the casino
+        self.dialogue = [[]]  # Current Dialogue
 
     def town_first_visit(self, player_data):
         event_done = False
@@ -4735,8 +4738,8 @@ class GameEvents(MainUi):
             pygame.display.set_caption("FPS:{}".format(int(clock.get_fps())))
             pygame.display.flip()
 
-    def town(self, player_data):
-        ''' The town and all the locations present in it. '''
+    def town(self, player_data, dialogues):
+        """The town and all the locations present in it."""
         if not player_data.town_first_flag:
             self.town_first_visit(player_data)
         event_done = False
@@ -4774,13 +4777,52 @@ class GameEvents(MainUi):
                             self.option_selector.colpos += 1
                         elif event.key == pygame.K_LEFT:
                             self.option_selector.colpos -= 1
+                        elif event.key == pygame.K_RETURN:
+                            if self.option_selector.colpos != 3:
+                                self.talking = True
+                                self.town_talk1 = False
+                            if self.option_selector.rowpos == 0 and self.option_selector.colpos == 0:  # Option 1
+                                self.talk_val = 0
+                                self.option_selector.alert_off(1)
+                            elif self.option_selector.rowpos == 0 and self.option_selector.colpos == 1:  # Option 2
+                                self.talk_val = 1
+                                self.option_selector.alert_off(2)
+                            elif self.option_selector.rowpos == 0 and self.option_selector.colpos == 2:  # Option 3
+                                self.talk_val = 2
+                                self.option_selector.alert_off(3)
+                            elif self.option_selector.rowpos == 1 and self.option_selector.colpos == 0:  # Option 4
+                                self.talk_val = 3
+                                self.option_selector.alert_off(4)
+                            elif self.option_selector.rowpos == 1 and self.option_selector.colpos == 1:  # Option 5
+                                self.talk_val = 4
+                                self.option_selector.alert_off(5)
+                            elif self.option_selector.rowpos == 1 and self.option_selector.colpos == 2:  # Option 6
+                                self.talk_val = 5
+                                self.option_selector.alert_off(6)
+                            elif self.option_selector.rowpos == 1 and self.option_selector.colpos == 3:  # Back Option
+                                self.town_talk1 = False
+                                town_ui = True
+                        if player_data.progress == 2:
+                            if self.talk_val == 0:
+                                self.dialogue = dialogues['town1_citizen']
+                            elif self.talk_val == 1:
+                                self.dialogue = dialogues['town1_richlady']
+                            elif self.talk_val == 2:
+                                self.dialogue = dialogues['town1_drunkman']
+
                     if event.key == pygame.K_RETURN:
                         if self.cursorpos == 0:  # Talk option
                             if self.town_location == 0:  # In main town square
                                 self.town_talk1 = True
                                 town_ui = False
+
                     if event.key == pygame.K_RCTRL:
-                        if self.town_talk1:
+                        if self.talking:
+                            if self.text_box.progress_dialogue(self.dialogue):
+                                self.talking = False
+                                self.town_talk1 = True
+                                self.text_box.reset()
+                        if self.town_talk1 and not self.talking:
                             self.town_talk1 = False
                             town_ui = True
                 if event.type == pygame.constants.USEREVENT:
@@ -4795,8 +4837,14 @@ class GameEvents(MainUi):
                 if town_ui:
                     self.draw_town(player_data)
                 if self.town_talk1:
-                    self.option_selector.drawUi(
-                        3, 'Citizen', 'Rich Lady', 'Fan boy')
+                    if player_data.progress == 2:
+                        self.option_selector.drawUi(
+                            3, 'Citizen', 'Rich Lady', 'Drunk Man')
+                    else:
+                        self.option_selector.drawUi(
+                            3, 'How\'d', 'This', 'Happen?')
+                if self.talking:
+                    self.text_box.draw_textbox(self.dialogue, surf, (0, 400))
                 screen.blit(surf, (0, 0))
             self.game_clock.pass_time(player_data, area_music)
             clock.tick(60)
@@ -4951,7 +4999,7 @@ if __name__ == "__main__":
     #####
 
     randbattle = 0
-    timepassed = False  # Flag to check if the time passed or6 not
+    timepassed = False  # Flag to check if the time passed or not
     newgtxtbox = 0
     pygame.mixer.music.load('data/sounds&music/Theme2.ogg')
     pygame.mixer.music.play()
@@ -5565,8 +5613,9 @@ if __name__ == "__main__":
                 battler.battle('rat', player)
                 shh = []
             if shh == ['t', 'o', 't'] and scene == 'menu':
-                player.town_first_flag = False
-                eventManager.town(player)
+                player.town_first_flag = True
+                player.progress = 2
+                eventManager.town(player, dialogues)
                 shh = []
             if shh == ['t', 's', 't'] and scene == 'menu':
                 eventManager.intro_scene(dialogues)
