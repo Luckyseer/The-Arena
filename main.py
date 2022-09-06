@@ -239,7 +239,8 @@ def fadeout(surface, time=0.000001, fadetimer=Timer(), fade_in=False, optional_b
 class SideBattle:
     """ The sidebattle class, which provides us with the main gameplay(the battle system)
         Needs some work, could be a lot more efficient.
-        Currently, needs some work on the aesthetics side. """
+        Currently, needs some work on the aesthetics side.
+        THIS CLASS IS DEPRECATED AND ONLY EXISTS FOR COMPATIBILITY"""
 
     # The stats for the monster are by default for the weakest enemy 'rat', remember to change the stats as needed.
     def __init__(self, mondata, pclass, castanim, bg, bgm, phealth=100, pmana=50, pstr=10, pstrmod=10, pdef=10,
@@ -2789,7 +2790,6 @@ class MainUi:
                     self.cur_dialogue = dialogues["floor2_noble"]
                     self.txtbox.draw_textbox(self.cur_dialogue, surf, (0, 400))
 
-
     def status(self, player, item_data=item_data):
         surf.blit(self.status_bg, (53, 30))
         nametxt = self.uitext.render(
@@ -4761,7 +4761,7 @@ class GameEvents(MainUi):
                     event_done = True
                     global done
                     done = True
-                if event.type == pygame.KEYDOWN:
+                elif event.type == pygame.KEYDOWN:
                     if town_ui:
                         if event.key == pygame.K_DOWN:
                             self.cursorpos += 1
@@ -4803,6 +4803,7 @@ class GameEvents(MainUi):
                             elif self.option_selector.rowpos == 1 and self.option_selector.colpos == 3:  # Back Option
                                 self.town_talk1 = False
                                 town_ui = True
+
                         if player_data.progress == 2:
                             if self.talk_val == 0:
                                 self.dialogue = dialogues['town1_citizen']
@@ -4811,7 +4812,7 @@ class GameEvents(MainUi):
                             elif self.talk_val == 2:
                                 self.dialogue = dialogues['town1_drunkman']
 
-                    if event.key == pygame.K_RETURN:
+                    elif event.key == pygame.K_RETURN:
                         if self.cursorpos == 0:  # Talk option
                             if self.town_location == 0:  # In main town square
                                 self.town_talk1 = True
@@ -4823,10 +4824,10 @@ class GameEvents(MainUi):
                                 self.talking = False
                                 self.town_talk1 = True
                                 self.text_box.reset()
-                        if self.town_talk1 and not self.talking:
+                        elif self.town_talk1 and not self.talking:
                             self.town_talk1 = False
                             town_ui = True
-                if event.type == pygame.constants.USEREVENT:
+                elif event.type == pygame.constants.USEREVENT:
                     pygame.mixer.music.play()
             if self.town_location == 0:
                 if self.game_clock.time_state == 'Morning':
