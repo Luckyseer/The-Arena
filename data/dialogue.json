@@ -1,4 +1,7 @@
 {
+  "template" : [
+    ["Path to image of face goes here", "Name/Title goes here", "Dialogue goes here."]
+  ],
   "intro1": [
     ["", "", "You make your way into a fancy looking office. The room is well furnished and in the back of the room stands a big metal gate. In the room you see a man looking over some documents. "],
     ["data/sprites/host_face.png", "???", "Oh? Can I help you?"],
