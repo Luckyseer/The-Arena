@@ -136,7 +136,7 @@ if __name__ == '__main__':
     screen_height = 720
     is_fullscreen = False
     if not is_fullscreen:
-        screen = pygame.display.set_mode([screen_width, screen_height])
+        screen = pygame.display.set_mode([screen_width, screen_height], pygame.HWACCEL)
     else:
         screen = pygame.display.set_mode(
             [screen_width, screen_height], pygame.FULLSCREEN)
@@ -1658,6 +1658,8 @@ class NewBattle:
         self.loaded_anim = pyganim.PygAnimation(
             self.animation_data[animation], False)
         self.anim_pos = pos
+        if pos == (920, 270):   # If animation on player(aka enemy using skill) we flip it (bad solution)
+            self.loaded_anim.flip(True, False)
         self.loaded_anim.play()
 
     def move_to(self, target="player", pos=(0, 0)):
