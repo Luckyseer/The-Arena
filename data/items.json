@@ -1,9 +1,30 @@
 {
   "template_shop" : {
-    "weapons": [],
+    "weapons": [
+      {
+      "id": 9999,
+      "name": "NULL WEAPON",
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "cost": 0,
+      "attributes": "null",
+      "description": "TEMPLATE SWORD"
+      }
+    ],
     "armours": [],
     "accessories": [],
-    "consumables": []
+    "consumables": [
+      {
+        "id": 9999,
+        "name": "NULL CONSUMABLE",
+        "hp": 0,
+        "mp": 0,
+        "cost": 25,
+        "effect": "",
+        "description": "TEMPLATE CONSUMABLE",
+        "battle_desc": "TEMPLATE BATTLE DESCRIPTION"
+    }]
   },
   "arena_shop" : {
     "weapons": [
