@@ -4293,7 +4293,6 @@ class GameEvents(MainUi):
         self.arenaDialogue = 0
         dialogue_choice = 0
         while not event_done:
-            curwidth, curheight = screen.get_size()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     event_done = True
