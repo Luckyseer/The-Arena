@@ -5733,21 +5733,7 @@ if __name__ == "__main__":
                 ui.cursorpos = 2
         elif scene == 'credits':
             surf.fill((0, 0, 0))
-            if newgtxtbox == 1:
-                txtbox.draw_textbox(
-                    "data/sprites/host_face.png", 'Chance', 'Hey congrats you beat the demo!')
-            if newgtxtbox == 2:
-                txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                    'There is more to come but ill save that for another time.')
-            if newgtxtbox == 3:
-                txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                    'This was a project made by Hameel and Nihal!')
-            if newgtxtbox == 4:
-                txtbox.draw_textbox(
-                    "data/sprites/host_face.png", 'Chance', 'Stay tuned for the final project!')
-
-            if newgtxtbox > 4:
-                scene = 'menu'
+        
         timer.timing()
         surf.blit(ab, (0, 0))
         txtbox.popup_message(popup_message, surf)
