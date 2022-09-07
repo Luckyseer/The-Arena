@@ -1438,6 +1438,12 @@ class NewBattle:
         self.sequence_to_play = ""
         self.sequence_timer = Timer()
         self.sequence_target = ""
+        self.turns_to_wait_player = 0  # Turns to wait after a sequence
+        self.post_wait_sequence_player = ""    # sequence to play after waiting
+        self.wait_flag_player = False  # Flag to signify if we are waiting this turn
+        self.turns_to_wait_enemy = 0  # Turns to wait after a sequence
+        self.post_wait_sequence_enemy = ""  # sequence to play after waiting
+        self.wait_flag_enemy = False  # Flag to signify if we are waiting this turn
         self.action_count = 0
         self.monster_flag = True
         self.focus = False
@@ -1748,15 +1754,24 @@ class NewBattle:
                 self.turn = 'enemy'
                 self.game_state = 'enemy_turn'
         if self.game_state == 'enemy_turn' and self.m_cur_health > 0:  # Enemy turn begins
-            choose_move = random.randrange(0, len(self.m_move_list))
-            enemy_action = self.m_move_list[choose_move]
-            if enemy_action == 'attack':
-                self.game_state = 'enemy_attack'
-                self.global_timer.reset()
+            if not self.wait_flag_enemy:
+                choose_move = random.randrange(0, len(self.m_move_list))
+                enemy_action = self.m_move_list[choose_move]
+                if enemy_action == 'attack':
+                    self.game_state = 'enemy_attack'
+                    self.global_timer.reset()
+                else:
+                    self.sequence_to_play = enemy_action
+                    self.game_state = 'enemy_skill'
+                    self.global_timer.reset()
             else:
-                self.sequence_to_play = enemy_action
-                self.game_state = 'enemy_skill'
-                self.global_timer.reset()
+                if self.turns_to_wait_enemy >= self.turn_count:
+                    self.sequence_to_play = self.post_wait_sequence_enemy
+                    self.game_state = 'enemy_skill'
+                    self.wait_flag_enemy = False
+                    self.global_timer.reset()
+                else:
+                    self.game_state = 'enemy_skill_done'
         if self.game_state == 'enemy_skill':
             if self.sequence_done:
                 self.sequence_done = False
@@ -1778,10 +1793,9 @@ class NewBattle:
         if self.game_state == 'enemy_skill_done':
             if self.global_timer.timing(1) >= 1.5:
                 self.turn = 'player'
-                self.game_state = ''
+                self.game_state = 'check_player_wait'
                 self.global_timer.reset()
                 self.turn_count += 1
-                self.draw_menu = True
                 self.ui_state = 'main'
         if self.game_state == 'enemy_attack':  # Enemy regular attack
             enemy_attacking = False
@@ -1806,9 +1820,18 @@ class NewBattle:
                 self.player_dmg_flag = False
                 self.turn_count += 1
                 self.turn = 'player'
-                self.game_state = ''
+                self.game_state = 'check_player_wait'
+        if self.game_state == 'check_player_wait':
+            if not self.wait_flag_player:
                 self.draw_menu = True
                 self.ui_state = 'main'
+            else:
+                if self.turns_to_wait_player >= self.turn_count:
+                    self.sequence_to_play = self.post_wait_sequence_player
+                    self.game_state = 'player_skill'
+                    self.wait_flag_player = False
+                else:
+                    self.game_state = 'player_skill_done'
         # Enemy dies
         if self.game_state == 'enemy_death' and self.global_timer.timing(1) >= 1.5:
             self.monster_flag = False
@@ -2006,11 +2029,20 @@ class NewBattle:
                                     self.move_target = "enemy"
                                     self.target_pos[0] = 200
                                     self.target_pos[1] = 300
+                        elif action[0] == "wait_turn":
+                            if self.turn == "player":
+                                self.turns_to_wait_player = self.turn_count + action[1]
+                                self.post_wait_sequence_player = action[2]
+                                self.wait_flag_player = True
+                            else:
+                                self.turns_to_wait_enemy = self.turn_count + action[1]
+                                self.post_wait_sequence_enemy = action[2]
+                                self.wait_flag_enemy = True
                         if action[0] != "end_sequence":
                             self.action_count += 1
                             self.sequence_timer.reset()
                             # Getting the time to wait for the next action
-                            self.wait_time = action[len(action) - 1]
+                            self.wait_time = action[-1]
             else:
                 self.sequence_to_play = "invalid"
                 self.game_state = "player_skill_invalid"
@@ -5733,7 +5765,7 @@ if __name__ == "__main__":
                 ui.cursorpos = 2
         elif scene == 'credits':
             surf.fill((0, 0, 0))
-        
+
         timer.timing()
         surf.blit(ab, (0, 0))
         txtbox.popup_message(popup_message, surf)
