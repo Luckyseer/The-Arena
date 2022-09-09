@@ -1676,9 +1676,9 @@ class NewBattle:
                 self.monster_pos -= 5
             elif self.monster_pos < pos[0]:
                 self.monster_pos += 5
-            if self.monster_y - self.monster_y_offset > pos[1]:
+            if self.monster_y + self.monster_y_offset > pos[1]:
                 self.monster_y -= 5
-            elif self.monster_y - self.monster_y_offset < pos[1]:
+            elif self.monster_y + self.monster_y_offset < pos[1]:
                 self.monster_y += 5
 
     def check_state(self, player):
@@ -1979,7 +1979,7 @@ class NewBattle:
                                     self.target_pos[1] = 300
                                 else:
                                     self.target_pos[0] = 250
-                                    self.target_pos[1] = 300
+                                    self.target_pos[1] = 300 + self.monster_y_offset
                             else:
                                 self.move_target = action[1]
                                 self.target_pos[0] = action[2]
@@ -1993,7 +1993,7 @@ class NewBattle:
                             elif action[1] == "enemy":
                                 self.move_target = "enemy"
                                 self.target_pos[0] = 200
-                                self.target_pos[1] = 300
+                                self.target_pos[1] = 300 + self.monster_y_offset
                             elif action[1] == "cur_target":
                                 if self.turn == "player":
                                     self.move_target = "player"
@@ -2002,7 +2002,7 @@ class NewBattle:
                                 else:
                                     self.move_target = "enemy"
                                     self.target_pos[0] = 200
-                                    self.target_pos[1] = 300
+                                    self.target_pos[1] = 300 + self.monster_y_offset
                         if action[0] != "end_sequence":
                             self.action_count += 1
                             self.sequence_timer.reset()
@@ -4752,7 +4752,7 @@ class GameEvents(MainUi):
             area_music = 'data/sounds&music/Bustling_Streets.mp3'
             pygame.mixer.music.load(area_music)
             pygame.mixer.music.play()
-            pygame.mixer.music.set_volume(0.5)
+            pygame.mixer.music.set_volume(0.05)
         self.town_location = 0
         while not event_done:
             for event in pygame.event.get():
@@ -4926,6 +4926,7 @@ class GameClock:
         self.clockTime.reset()
 
     def pass_time(self, player_details, area_music='data/sounds&music/Infinite_Arena.mp3'):
+        global Currentmusic
         player = player_details
         self.area_music = area_music
         self.curTime = self.clockTime.timing()  # Current time
@@ -4967,13 +4968,17 @@ class GameClock:
             pygame.mixer.music.stop()
             pygame.mixer.music.load(Currentmusic)
             pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
-            pygame.mixer.music.set_volume(0.3)
+            pygame.mixer.music.set_volume(0.05)
             pygame.mixer.music.play()
             self.bellflag = True
 
         # Playing rooster sound when it becomes day
         if (player.hours >= 6 and player.hours < 14) and self.bellflag:
             self.rooster.play()
+            Currentmusic = self.area_music
+            pygame.mixer.music.stop()
+            pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
+            pygame.mixer.music.set_volume(0.05)
             pygame.mixer.music.load(self.area_music)
             pygame.mixer.music.play()
             self.bellflag = False
@@ -5471,6 +5476,7 @@ if __name__ == "__main__":
                         'data/sounds&music/Infinite_Arena.mp3')
                     fadein(255)
                     pygame.mixer.music.play()
+                    pygame.mixer.music.set_volume(vol)
                     scene = 'arena'
                 if (event.key == pygame.K_RETURN and ui.syscursorpos == 0) and system:
                     try:
@@ -5510,7 +5516,7 @@ if __name__ == "__main__":
                         battle_choice = False
                         post_battle = True
                         pygame.mixer.music.load(
-                            'data/sounds&music/Infinite_Arena.mp3')
+                            Currentmusic)
                         pygame.mixer.music.play()
                     else:
                         scene = 'menu'
