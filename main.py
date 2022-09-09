@@ -136,7 +136,7 @@ if __name__ == '__main__':
     screen_height = 720
     is_fullscreen = False
     if not is_fullscreen:
-        screen = pygame.display.set_mode([screen_width, screen_height])
+        screen = pygame.display.set_mode([screen_width, screen_height], pygame.HWACCEL)
     else:
         screen = pygame.display.set_mode(
             [screen_width, screen_height], pygame.FULLSCREEN)
@@ -239,7 +239,8 @@ def fadeout(surface, time=0.000001, fadetimer=Timer(), fade_in=False, optional_b
 class SideBattle:
     """ The sidebattle class, which provides us with the main gameplay(the battle system)
         Needs some work, could be a lot more efficient.
-        Currently, needs some work on the aesthetics side. """
+        Currently, needs some work on the aesthetics side.
+        THIS CLASS IS DEPRECATED AND ONLY EXISTS FOR COMPATIBILITY"""
 
     # The stats for the monster are by default for the weakest enemy 'rat', remember to change the stats as needed.
     def __init__(self, mondata, pclass, castanim, bg, bgm, phealth=100, pmana=50, pstr=10, pstrmod=10, pdef=10,
@@ -1437,6 +1438,12 @@ class NewBattle:
         self.sequence_to_play = ""
         self.sequence_timer = Timer()
         self.sequence_target = ""
+        self.turns_to_wait_player = 0  # Turns to wait after a sequence
+        self.post_wait_sequence_player = ""    # sequence to play after waiting
+        self.wait_flag_player = False  # Flag to signify if we are waiting this turn
+        self.turns_to_wait_enemy = 0  # Turns to wait after a sequence
+        self.post_wait_sequence_enemy = ""  # sequence to play after waiting
+        self.wait_flag_enemy = False  # Flag to signify if we are waiting this turn
         self.action_count = 0
         self.monster_flag = True
         self.focus = False
@@ -1658,6 +1665,8 @@ class NewBattle:
         self.loaded_anim = pyganim.PygAnimation(
             self.animation_data[animation], False)
         self.anim_pos = pos
+        if pos == (920, 270):   # If animation on player(aka enemy using skill) we flip it (bad solution)
+            self.loaded_anim.flip(True, False)
         self.loaded_anim.play()
 
     def move_to(self, target="player", pos=(0, 0)):
@@ -1676,9 +1685,9 @@ class NewBattle:
                 self.monster_pos -= 5
             elif self.monster_pos < pos[0]:
                 self.monster_pos += 5
-            if self.monster_y + self.monster_y_offset > pos[1]:
+            if self.monster_y - self.monster_y_offset > pos[1]:
                 self.monster_y -= 5
-            elif self.monster_y + self.monster_y_offset < pos[1]:
+            elif self.monster_y - self.monster_y_offset < pos[1]:
                 self.monster_y += 5
 
     def check_state(self, player):
@@ -1745,15 +1754,24 @@ class NewBattle:
                 self.turn = 'enemy'
                 self.game_state = 'enemy_turn'
         if self.game_state == 'enemy_turn' and self.m_cur_health > 0:  # Enemy turn begins
-            choose_move = random.randrange(0, len(self.m_move_list))
-            enemy_action = self.m_move_list[choose_move]
-            if enemy_action == 'attack':
-                self.game_state = 'enemy_attack'
-                self.global_timer.reset()
+            if not self.wait_flag_enemy:
+                choose_move = random.randrange(0, len(self.m_move_list))
+                enemy_action = self.m_move_list[choose_move]
+                if enemy_action == 'attack':
+                    self.game_state = 'enemy_attack'
+                    self.global_timer.reset()
+                else:
+                    self.sequence_to_play = enemy_action
+                    self.game_state = 'enemy_skill'
+                    self.global_timer.reset()
             else:
-                self.sequence_to_play = enemy_action
-                self.game_state = 'enemy_skill'
-                self.global_timer.reset()
+                if self.turns_to_wait_enemy >= self.turn_count:
+                    self.sequence_to_play = self.post_wait_sequence_enemy
+                    self.game_state = 'enemy_skill'
+                    self.wait_flag_enemy = False
+                    self.global_timer.reset()
+                else:
+                    self.game_state = 'enemy_skill_done'
         if self.game_state == 'enemy_skill':
             if self.sequence_done:
                 self.sequence_done = False
@@ -1775,10 +1793,9 @@ class NewBattle:
         if self.game_state == 'enemy_skill_done':
             if self.global_timer.timing(1) >= 1.5:
                 self.turn = 'player'
-                self.game_state = ''
+                self.game_state = 'check_player_wait'
                 self.global_timer.reset()
                 self.turn_count += 1
-                self.draw_menu = True
                 self.ui_state = 'main'
         if self.game_state == 'enemy_attack':  # Enemy regular attack
             enemy_attacking = False
@@ -1803,9 +1820,18 @@ class NewBattle:
                 self.player_dmg_flag = False
                 self.turn_count += 1
                 self.turn = 'player'
-                self.game_state = ''
+                self.game_state = 'check_player_wait'
+        if self.game_state == 'check_player_wait':
+            if not self.wait_flag_player:
                 self.draw_menu = True
                 self.ui_state = 'main'
+            else:
+                if self.turns_to_wait_player >= self.turn_count:
+                    self.sequence_to_play = self.post_wait_sequence_player
+                    self.game_state = 'player_skill'
+                    self.wait_flag_player = False
+                else:
+                    self.game_state = 'player_skill_done'
         # Enemy dies
         if self.game_state == 'enemy_death' and self.global_timer.timing(1) >= 1.5:
             self.monster_flag = False
@@ -1979,7 +2005,7 @@ class NewBattle:
                                     self.target_pos[1] = 300
                                 else:
                                     self.target_pos[0] = 250
-                                    self.target_pos[1] = 300 + self.monster_y_offset
+                                    self.target_pos[1] = 300
                             else:
                                 self.move_target = action[1]
                                 self.target_pos[0] = action[2]
@@ -1993,7 +2019,7 @@ class NewBattle:
                             elif action[1] == "enemy":
                                 self.move_target = "enemy"
                                 self.target_pos[0] = 200
-                                self.target_pos[1] = 300 + self.monster_y_offset
+                                self.target_pos[1] = 300
                             elif action[1] == "cur_target":
                                 if self.turn == "player":
                                     self.move_target = "player"
@@ -2002,12 +2028,21 @@ class NewBattle:
                                 else:
                                     self.move_target = "enemy"
                                     self.target_pos[0] = 200
-                                    self.target_pos[1] = 300 + self.monster_y_offset
+                                    self.target_pos[1] = 300
+                        elif action[0] == "wait_turn":
+                            if self.turn == "player":
+                                self.turns_to_wait_player = self.turn_count + action[1]
+                                self.post_wait_sequence_player = action[2]
+                                self.wait_flag_player = True
+                            else:
+                                self.turns_to_wait_enemy = self.turn_count + action[1]
+                                self.post_wait_sequence_enemy = action[2]
+                                self.wait_flag_enemy = True
                         if action[0] != "end_sequence":
                             self.action_count += 1
                             self.sequence_timer.reset()
                             # Getting the time to wait for the next action
-                            self.wait_time = action[len(action) - 1]
+                            self.wait_time = action[-1]
             else:
                 self.sequence_to_play = "invalid"
                 self.game_state = "player_skill_invalid"
@@ -2786,7 +2821,6 @@ class MainUi:
                 elif self.Talk == 3:
                     self.cur_dialogue = dialogues["floor2_noble"]
                     self.txtbox.draw_textbox(self.cur_dialogue, surf, (0, 400))
-
 
     def status(self, player, item_data=item_data):
         surf.blit(self.status_bg, (53, 30))
@@ -4293,7 +4327,6 @@ class GameEvents(MainUi):
         self.arenaDialogue = 0
         dialogue_choice = 0
         while not event_done:
-            curwidth, curheight = screen.get_size()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     event_done = True
@@ -4752,7 +4785,7 @@ class GameEvents(MainUi):
             area_music = 'data/sounds&music/Bustling_Streets.mp3'
             pygame.mixer.music.load(area_music)
             pygame.mixer.music.play()
-            pygame.mixer.music.set_volume(0.05)
+            pygame.mixer.music.set_volume(0.5)
         self.town_location = 0
         while not event_done:
             for event in pygame.event.get():
@@ -4760,7 +4793,7 @@ class GameEvents(MainUi):
                     event_done = True
                     global done
                     done = True
-                if event.type == pygame.KEYDOWN:
+                elif event.type == pygame.KEYDOWN:
                     if town_ui:
                         if event.key == pygame.K_DOWN:
                             self.cursorpos += 1
@@ -4802,6 +4835,7 @@ class GameEvents(MainUi):
                             elif self.option_selector.rowpos == 1 and self.option_selector.colpos == 3:  # Back Option
                                 self.town_talk1 = False
                                 town_ui = True
+
                         if player_data.progress == 2:
                             if self.talk_val == 0:
                                 self.dialogue = dialogues['town1_citizen']
@@ -4810,7 +4844,7 @@ class GameEvents(MainUi):
                             elif self.talk_val == 2:
                                 self.dialogue = dialogues['town1_drunkman']
 
-                    if event.key == pygame.K_RETURN:
+                    elif event.key == pygame.K_RETURN:
                         if self.cursorpos == 0:  # Talk option
                             if self.town_location == 0:  # In main town square
                                 self.town_talk1 = True
@@ -4822,10 +4856,10 @@ class GameEvents(MainUi):
                                 self.talking = False
                                 self.town_talk1 = True
                                 self.text_box.reset()
-                        if self.town_talk1 and not self.talking:
+                        elif self.town_talk1 and not self.talking:
                             self.town_talk1 = False
                             town_ui = True
-                if event.type == pygame.constants.USEREVENT:
+                elif event.type == pygame.constants.USEREVENT:
                     pygame.mixer.music.play()
             if self.town_location == 0:
                 if self.game_clock.time_state == 'Morning':
@@ -4926,7 +4960,6 @@ class GameClock:
         self.clockTime.reset()
 
     def pass_time(self, player_details, area_music='data/sounds&music/Infinite_Arena.mp3'):
-        global Currentmusic
         player = player_details
         self.area_music = area_music
         self.curTime = self.clockTime.timing()  # Current time
@@ -4968,17 +5001,13 @@ class GameClock:
             pygame.mixer.music.stop()
             pygame.mixer.music.load(Currentmusic)
             pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
-            pygame.mixer.music.set_volume(0.05)
+            pygame.mixer.music.set_volume(0.3)
             pygame.mixer.music.play()
             self.bellflag = True
 
         # Playing rooster sound when it becomes day
         if (player.hours >= 6 and player.hours < 14) and self.bellflag:
             self.rooster.play()
-            Currentmusic = self.area_music
-            pygame.mixer.music.stop()
-            pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
-            pygame.mixer.music.set_volume(0.05)
             pygame.mixer.music.load(self.area_music)
             pygame.mixer.music.play()
             self.bellflag = False
@@ -5476,7 +5505,6 @@ if __name__ == "__main__":
                         'data/sounds&music/Infinite_Arena.mp3')
                     fadein(255)
                     pygame.mixer.music.play()
-                    pygame.mixer.music.set_volume(vol)
                     scene = 'arena'
                 if (event.key == pygame.K_RETURN and ui.syscursorpos == 0) and system:
                     try:
@@ -5516,7 +5544,7 @@ if __name__ == "__main__":
                         battle_choice = False
                         post_battle = True
                         pygame.mixer.music.load(
-                            Currentmusic)
+                            'data/sounds&music/Infinite_Arena.mp3')
                         pygame.mixer.music.play()
                     else:
                         scene = 'menu'
@@ -5737,21 +5765,7 @@ if __name__ == "__main__":
                 ui.cursorpos = 2
         elif scene == 'credits':
             surf.fill((0, 0, 0))
-            if newgtxtbox == 1:
-                txtbox.draw_textbox(
-                    "data/sprites/host_face.png", 'Chance', 'Hey congrats you beat the demo!')
-            if newgtxtbox == 2:
-                txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                    'There is more to come but ill save that for another time.')
-            if newgtxtbox == 3:
-                txtbox.draw_textbox("data/sprites/host_face.png", 'Chance',
-                                    'This was a project made by Hameel and Nihal!')
-            if newgtxtbox == 4:
-                txtbox.draw_textbox(
-                    "data/sprites/host_face.png", 'Chance', 'Stay tuned for the final project!')
 
-            if newgtxtbox > 4:
-                scene = 'menu'
         timer.timing()
         surf.blit(ab, (0, 0))
         txtbox.popup_message(popup_message, surf)

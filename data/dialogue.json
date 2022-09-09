@@ -1,4 +1,7 @@
 {
+  "template" : [
+    ["Path to image of face goes here", "Name/Title goes here", "Dialogue goes here."]
+  ],
   "intro1": [
     ["", "", "You make your way into a fancy looking office. The room is well furnished and in the back of the room stands a big metal gate. In the room you see a man looking over some documents. "],
     ["data/sprites/host_face.png", "???", "Oh? Can I help you?"],
@@ -94,13 +97,14 @@
     ["data/sprites/noble.png", "Noble", "I was sure that Tho'k would claim another victim! No matter, I have more opportunities to make money by betting against you."]
     ],
   "town1_citizen" : [
-    ["data/sprites/citizen.png", "Citizen", "Ever since the arena was opened, the town has begun thriving!"],
+    ["data/sprites/citizen.png", "Citizen", "Ever since the arena came into this town, business has been thriving!"],
     ["data/sprites/citizen.png", "Citizen", "The town quickly began to expand, attracting merchants and people looking to settle."],
-    ["data/sprites/citizen.png", "Citizen", "However, the town's growth hasn't been smooth sailing. The population of the slums have been growing at an alarming rate."],
-    ["data/sprites/citizen.png", "Citizen", "There's been reports of lots more crime and the guards can't keep up! Just the other day I heard about a house being burglarized. Hopefully the guards can get things under control soon."]
+    ["data/sprites/citizen.png", "Citizen", "However, the town's growth hasn't been all smooth sailing. The population of the slums have been growing at an alarming rate."],
+    ["data/sprites/citizen.png", "Citizen", "There's been reports of a lot more crime and the guards just can't keep up!"],
+    ["data/sprites/citizen.png", "Citizen", "People are getting mugged by low-life thieves and brigands. Hopefully the guards can get things under control soon."]
   ],
   "town1_richlady" : [
-    ["data/sprites/richlady.png", "Rich Lady", "I've been seeing shady figure lurking in and out of the slums. How terrifying!"]
+    ["data/sprites/richlady.png", "Rich Lady", "I've been seeing shady figures lurking in and out of the slums. How terrifying!"]
     ],
   "town1_drunkman" : [
     ["data/sprites/youngman.png", "Young Man", "*Hic* I ended up losing all my money at the casino! *Hic* My wife is gonna kill me.."]

@@ -78,6 +78,7 @@
  + Added a splash screen on startup
  + Added new 'talk' dialogue to floor 2 arena.
  + Added a move tester to test specific moves by the enemy. (Type in 'move' on the main menu)
+ + Added new talk options to town.
 # Known issues:
  - Update current song after victory
 # TODO:
