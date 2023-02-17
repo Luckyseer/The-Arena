@@ -1825,6 +1825,7 @@ class NewBattle:
             if not self.wait_flag_player:
                 self.draw_menu = True
                 self.ui_state = 'main'
+                self.game_state = ''
             else:
                 if self.turns_to_wait_player >= self.turn_count:
                     self.sequence_to_play = self.post_wait_sequence_player
