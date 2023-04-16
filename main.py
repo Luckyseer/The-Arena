@@ -13,7 +13,7 @@ from pygame.locals import *
 
 icon = pygame.image.load("data/sprites/Icon2.png")
 pygame.display.set_icon(icon)
-alphatext = "Alpha v4.2 - Story and the Town"
+alphatext = "Demo Mode - Pygame Devpost Hackathon"
 try:
     with open('data/items.json', 'r') as items:
         item_data_shop = json.load(items) # List of all shops and their items
@@ -4772,6 +4772,132 @@ class GameEvents(MainUi):
             pygame.display.set_caption("FPS:{}".format(int(clock.get_fps())))
             pygame.display.flip()
 
+    def demo_end(self):
+        event_done = False
+        pygame.mixer.music.load('data/sounds&music/2000_Blackmarket.ogg')
+        door_sound = pygame.mixer.Sound('data/sounds&music/Door1.ogg')
+        door_sound.set_volume(0.05)
+        gate_sound = pygame.mixer.Sound('data/sounds&music/Door4.ogg')
+        gate_sound.set_volume(0.05)
+        global surf
+        global screen
+        text_surf = pygame.Surface((1280, 720))
+        text_surf.set_alpha(0)
+        text_surf.set_colorkey((0, 0, 0))
+        pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
+        self.timekeep.reset()
+        self.dialoguecontrol = False
+        intro_level = 0
+        pygame.mixer_music.play()
+        text_x = 100
+        text_y = 100
+        text = ''
+        while not event_done:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    event_done = True
+                    global done
+                    done = True
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_s:
+                        if intro_level < 20:
+                            intro_level = 20
+            if intro_level < 24:
+                surf.fill((0, 0, 0, 255))
+            text_surf.fill((0, 0, 0, 0))
+            if intro_level == 0:
+                if self.timekeep.timing(1) > 3:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 1:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = "Thank you for playing the demo of the Arena!"
+                if self.timekeep.timing(1) > 3:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 2:
+                text_x += 0.1
+                self.ui_text.fade_out(text_surf)
+                if self.timekeep.timing(1) > 3:
+                    text_x = 100
+                    text_y = 200
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 3:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = "The game is not complete yet, but I hope I'll be able to finish it one day!"
+                if self.timekeep.timing(1) > 3:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 4:
+                text_x += 0.1
+                self.ui_text.fade_out(text_surf)
+                if self.timekeep.timing(1) > 4:
+                    intro_level += 1
+                    text_x = 100
+                    text_y = 300
+                    self.timekeep.reset()
+            elif intro_level == 5:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = "It was a mix between a visual novel and an old school rpg."
+                if self.timekeep.timing(1) > 4:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 6:
+                text_x += 0.1
+                self.ui_text.fade_out(text_surf)
+                if self.timekeep.timing(1) > 2:
+                    intro_level += 1
+                    text_x = 100
+                    text_y = 400
+                    self.timekeep.reset()
+            elif intro_level == 7:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = "Well that's it for now, if you'd like to keep up with updates on the game"
+                if self.timekeep.timing(1) > 4:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 8:
+                text_x += 0.1
+                self.ui_text.fade_out(text_surf)
+                if self.timekeep.timing(1) > 2:
+                    intro_level += 1
+                    text_x = 100
+                    text_y = 500
+                    self.timekeep.reset()
+            elif intro_level == 9:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = "Look for Luckyseer on GitHub!"
+                if self.timekeep.timing(1) > 4:
+                    intro_level += 1
+                    self.timekeep.reset()
+            elif intro_level == 10:
+                text_x += 0.1
+                self.ui_text.fade_out(text_surf)
+                if self.timekeep.timing(1) > 2:
+                    intro_level += 1
+                    text_x = 100
+                    text_y = 100
+                    self.timekeep.reset()
+            elif intro_level == 11:
+                text_x += 0.1
+                self.ui_text.fade_in(text_surf)
+                text = "Thank you for playing! Goodbye!"
+                if self.timekeep.timing(1) > 4:
+                    intro_level += 1
+                    self.timekeep.reset()
+            self.ui_text.draw_text((text_x, text_y), text, False, text_surf)
+            surf.blit(text_surf, (0, 0))
+            screen.blit(surf, (0, 0))
+            clock.tick(60)
+            pygame.display.set_caption("FPS:{}".format(int(clock.get_fps())))
+            pygame.display.flip()
+
     def town(self, player_data, dialogues):
         """The town and all the locations present in it."""
         if not player_data.town_first_flag:
@@ -5564,6 +5690,7 @@ if __name__ == "__main__":
                         battler.battle('floor_boss1', player, set_music=1)
                         if battler.check_victory():
                             eventManager.first_floor_victory(dialogues)
+                            eventManager.demo_end()
                             player.progress += 1
                             player.fkills = 0
                             battle_choice = False
