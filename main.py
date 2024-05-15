@@ -2030,6 +2030,11 @@ class NewBattle:
                                     self.move_target = "enemy"
                                     self.target_pos[0] = 200
                                     self.target_pos[1] = 300
+                        elif action[0] == "toggle_screen_shake":
+                            if not self.shake:
+                                self.shake = True
+                            else:
+                                self.shake = False
                         elif action[0] == "wait_turn":
                             if self.turn == "player":
                                 self.turns_to_wait_player = self.turn_count + action[1]

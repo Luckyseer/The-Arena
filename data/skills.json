@@ -150,6 +150,13 @@
       "desc" : "Summon a meteor to fall on your enemy.",
       "mp_cost" : 100,
       "level_req" : 12
+    },
+    {
+      "name" : "Giga Slash",
+      "type" : "dmg",
+      "desc" : "Giga.",
+      "mp_cost" : 69,
+      "level_req" : 99
     }
   ]
 }

@@ -174,7 +174,7 @@
     "luck": 1,
     "gold" : 100000,
     "exp" : 50000,
-    "move_list" : ["meteor"],
+    "move_list" : ["giga slash"],
     "bg" : "data/backgrounds/Translucent.png",
     "weakness" : [],
     "strengths" : []
