@@ -1,4 +1,5 @@
 import pygame
+import sys
 from data import pyganim
 from data import gameui
 
@@ -22,6 +23,7 @@ class Splash:
             self.splash_anim.blit(self.splash_surf, (450, 200))
             target_screen.blit(self.splash_surf, (0, 0))
             self.check_inputs(event)
+            if not self.splash_start: break
             pygame.display.flip()
             if self.splash_timer.timing() > 3:
                 self.splash_start = False
@@ -39,4 +41,6 @@ class Splash:
             if event.type == pygame.KEYDOWN:
                 self.splash_start = False
             elif event.type == pygame.QUIT:
+                self.splash_start = False
                 pygame.quit()
+                sys.exit()

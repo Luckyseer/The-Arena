@@ -18,7 +18,9 @@ bg.set_colorkey((255, 255, 255))
 bg.set_alpha(255)
 tb = TextBox()
 draw_tb = False
-with open("dialogue.json", "r") as f:
+menu = MenuSystem(['Option 1', 'Option 2', 'Option 3'])
+
+with open("data/dialogue.json", "r") as f:
     data = json.load(f)
     dialogue = data["intro1"]
 while not done:
@@ -27,6 +29,7 @@ while not done:
             pygame.quit()
             done = False
         if event.type == pygame.KEYDOWN:
+            menu.select_menu_option(event)
             tb.get_user_input(event, max_chars=128)
             if tb.choice_flag:
                 tb.select_choice_inputs(event)
@@ -67,6 +70,7 @@ while not done:
     if tb.choice_flag:
         tb.select_choice(['This is one of the choices', 'This is another one, pretty hard huh? What if its kinda long like this or  even like this'], screen, (200, 100))
     # tb.confirm_box('Long confirmation message', screen)
+    menu.draw_menu(screen, (200, 200))
     tb.display_user_input(screen, (200, 200))
     screen.blit(bg, (0, 0))
     clock.tick()

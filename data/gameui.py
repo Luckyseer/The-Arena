@@ -335,3 +335,48 @@ class TextBox:
                     else:
                         self.cursor_char = ''
             self.ui_text.draw_text((pos[0] + rendered_word.get_size()[0], pos[1]), self.cursor_char, False, surface)
+
+
+class MenuSystem:
+    """The class for the menu system, used to create menus and handle menu interactions.
+    options : The options for that particular menu"""
+
+    def __init__(self, options=[]):
+        self.menu_surf = pygame.Surface((0, 0))
+        self.menu_surf.set_colorkey((0, 0, 0))
+        self.menu_bg = pygame.image.load("data/backgrounds/rpgtxt.png").convert_alpha()
+        self.menu_bg = pygame.transform.scale(self.menu_bg, (1280, 720)).convert_alpha()
+        self.menu_cursor = pygame.image.load("data/sprites/Cursor.png").convert_alpha()
+        self.menu_surf.set_alpha(255)
+        self.menu_surf.blit(self.menu_bg, (0, 0))
+        self.menu_surf.fill((0, 0, 0))
+        self.menu_surf.blit(self.menu_bg, (
+            self.menu_surf.get_width() / 2 - self.menu_bg.get_width() / 2,
+            self.menu_surf.get_height() / 2 - self.menu_bg.get_height() / 2
+        ))
+        self.menu_timer = Timer()
+        self.menu_text = UiText()
+        self.menu_options = options
+        self.menu_cursor_pos = 0
+
+    def draw_menu(self, surface=pygame.Surface((0, 0)), pos=(0, 0)):
+        surface.blit(self.menu_surf, pos)
+        self.draw_menu_options()
+
+    def draw_menu_options(self):
+        for i in range(len(self.menu_options)):
+            self.menu_text.draw_text((500, 200 + i * 50), self.menu_options[i], False, self.menu_surf)
+        self.menu_surf.blit(self.menu_cursor, (450, 200 + self.menu_cursor_pos * 50))
+
+
+    def select_menu_option(self, event):
+        if event.key == pygame.K_DOWN:
+            self.menu_cursor_pos += 1
+        elif event.key == pygame.K_UP:
+            self.menu_cursor_pos -= 1
+        elif event.key == pygame.K_RETURN:
+            return self.menu_options[self.menu_cursor_pos]
+        if self.menu_cursor_pos > len(self.menu_options) - 1:
+            self.menu_cursor_pos = 0
+        elif self.menu_cursor_pos < 0:
+            self.menu_cursor_pos = len(self.menu_options) - 1
