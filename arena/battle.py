@@ -1,4 +1,5 @@
 import random
+import math
 import pygame
 from data import pyganim
 
@@ -1413,6 +1414,7 @@ class NewBattle:
         )
         self.check_level = False
         self.dmg_txt = "0"
+        self.floating_texts = []
         self.cursor = pygame.image.load("data/sprites/Cursor.png")
         self.cursor_down = pygame.transform.rotate(self.cursor, -90)
         self.cursor_up = pygame.transform.rotate(self.cursor, 90)
@@ -1719,6 +1721,86 @@ class NewBattle:
             self.loaded_anim.flip(True, False)
         self.loaded_anim.play()
 
+    def spawn_floating_text(
+        self,
+        text,
+        color,
+        pos,
+        scale=1.0,
+        life=70,
+        rise=-0.9,
+        wobble=0.45,
+        x_jitter=2,
+    ):
+        x, y = pos
+        self.floating_texts.append(
+            {
+                "text": str(text),
+                "color": color,
+                "x": float(x),
+                "y": float(y),
+                "vx": random.uniform(-x_jitter, x_jitter) * 0.1,
+                "vy": float(rise),
+                "age": 0,
+                "life": life,
+                "scale": scale,
+                "wobble": wobble,
+            }
+        )
+
+    def spawn_damage_text(self, dmg, pos, is_player_hit=False):
+        color = self.dmg_font_colour.get(self.element, (255, 255, 255))
+        self.spawn_floating_text(dmg, color, pos, scale=1.35, life=80, rise=-0.9)
+        if self.crit_chance == 10:
+            self.spawn_floating_text(
+                "Critical!",
+                (225, 0, 100),
+                (pos[0], pos[1] - 25),
+                scale=1.45,
+                life=85,
+                rise=-0.9,
+            )
+        if not is_player_hit:
+            if self.element in self.m_weakness:
+                self.spawn_floating_text(
+                    "Weak!",
+                    (225, 0, 100),
+                    (pos[0], pos[1] - 45),
+                    scale=1.1,
+                    life=70,
+                    rise=-0.9,
+                )
+            elif self.element in self.m_strengths:
+                self.spawn_floating_text(
+                    "Strong!",
+                    (4, 19, 219),
+                    (pos[0], pos[1] - 45),
+                    scale=1.1,
+                    life=70,
+                    rise=-0.9,
+                )
+
+    def update_floating_texts(self):
+        alive = []
+        for t in self.floating_texts:
+            t["age"] += 1
+            t["x"] += t["vx"]
+            t["y"] += t["vy"]
+            if t["age"] < t["life"]:
+                alive.append(t)
+        self.floating_texts = alive
+
+    def draw_floating_texts(self):
+        for t in self.floating_texts:
+            life_ratio = t["age"] / float(t["life"])
+            alpha = max(0, int(255 * (1.0 - life_ratio)))
+            bounce_offset = math.sin(t["age"] * t["wobble"]) * (10 * (1.0 - life_ratio))
+            surf = self.dmg_font.render(t["text"], True, t["color"])
+            surf.set_alpha(alpha)
+            scaled = pygame.transform.rotozoom(surf, 0, t["scale"])
+            rect = scaled.get_rect(center=(int(t["x"]), int(t["y"] + bounce_offset)))
+            state.surf.blit(scaled, rect)
+
     def move_to(self, target="player", pos=(0, 0)):
         """Moves the player or monster to a specific position"""
         if target == "player":
@@ -1751,9 +1833,7 @@ class NewBattle:
                 self.play_animation("slash", (self.monster_pos, 300))
                 self.play_sound("slash")
                 dmg = self.calc_damage("attack")
-                self.dmg_txt = self.dmg_font.render(
-                    str(dmg), True, self.dmg_font_colour[self.element]
-                )
+                self.spawn_damage_text(dmg, (self.monster_pos, self.monster_y - 40))
                 self.m_cur_health -= dmg
                 player_attacking = True
                 self.game_state = "player_attack_done"
@@ -1870,9 +1950,7 @@ class NewBattle:
                 self.play_animation("claw", (self.player_pos, 300))
                 self.play_sound("slash2")
                 dmg = self.calc_damage("attack")
-                self.dmg_txt = self.dmg_font.render(
-                    str(dmg), True, self.dmg_font_colour[self.element]
-                )
+                self.spawn_damage_text(dmg, (self.player_pos, 270), is_player_hit=True)
                 self.p_health -= dmg
                 enemy_attacking = True
                 self.game_state = "enemy_attack_done"
@@ -2044,15 +2122,15 @@ class NewBattle:
                             dmg = self.calc_damage(action[1])
                             if self.turn == "player":
                                 self.m_cur_health -= dmg
-                                self.dmg_txt = self.dmg_font.render(
-                                    str(dmg), True, self.dmg_font_colour[self.element]
+                                self.spawn_damage_text(
+                                    dmg, (self.monster_pos, self.monster_y - 40)
                                 )
                                 self.healthbar_flag = True
                             else:
                                 self.player_dmg_flag = True
                                 self.p_health -= dmg
-                                self.dmg_txt = self.dmg_font.render(
-                                    str(dmg), True, self.dmg_font_colour[self.element]
+                                self.spawn_damage_text(
+                                    dmg, (self.player_pos, 270), is_player_hit=True
                                 )
                         elif action[0] == "heal_hp":
                             if self.turn == "player":
@@ -2065,8 +2143,12 @@ class NewBattle:
                                             if items["name"] == item:
                                                 hp_heal = items["hp"]
                                     if hp_heal != 0:
-                                        self.dmg_txt = self.dmg_font.render(
-                                            str(hp_heal), True, (3, 102, 16)
+                                        self.spawn_floating_text(
+                                            f"+{hp_heal}",
+                                            (3, 102, 16),
+                                            (self.player_pos, 260),
+                                            scale=1.0,
+                                            life=55,
                                         )
                                         self.p_health += hp_heal
                                         self.player_dmg_flag = True
@@ -2081,8 +2163,12 @@ class NewBattle:
                                             if items["name"] == item:
                                                 mp_heal = items["mp"]
                                     if mp_heal != 0:
-                                        self.dmg_txt = self.dmg_font.render(
-                                            str(mp_heal), True, (40, 43, 158)
+                                        self.spawn_floating_text(
+                                            f"+{mp_heal}",
+                                            (40, 43, 158),
+                                            (self.player_pos, 260),
+                                            scale=1.0,
+                                            life=55,
                                         )
                                         self.p_mana += mp_heal
                                         self.player_dmg_flag = True
@@ -2710,6 +2796,7 @@ class NewBattle:
         self.sequence_done = False
         self.player_dmg_flag = False
         self.player_flag = True
+        self.floating_texts = []
         self.element = "none"
         self.player_sprites_burst.play()
         self.turn_count = 0
@@ -2792,24 +2879,9 @@ class NewBattle:
             if self.move_flag:
                 self.move_to(self.move_target, self.target_pos)
             self.draw_alertbox()
-            if self.player_dmg_flag:
-                state.surf.blit(self.dmg_txt, (self.player_pos, 270))
-                if self.crit_chance == 10:
-                    state.surf.blit(self.crit_text, (self.player_pos, 240))
+            self.update_floating_texts()
+            self.draw_floating_texts()
             if self.healthbar_flag:
-                state.surf.blit(self.dmg_txt, (self.monster_pos, self.monster_y - 40))
-                if self.crit_chance == 10:
-                    state.surf.blit(
-                        self.crit_text, (self.monster_pos, self.monster_y - 70)
-                    )
-                if self.element in self.m_weakness:
-                    state.surf.blit(
-                        self.weak_text, (self.monster_pos, self.monster_y - 70)
-                    )
-                elif self.element in self.m_strengths:
-                    state.surf.blit(
-                        self.strong_text, (self.monster_pos, self.monster_y - 70)
-                    )
                 self.draw_healthbar(self.m_cur_health)
             self.update_status_effects()
             self.play_sequence(self.sequence_to_play, self.sequence_target)
