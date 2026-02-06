@@ -1885,7 +1885,7 @@ class NewBattle:
             if self.player_pos > 900:
                 self.player_pos -= 5
                 self.global_timer.reset()
-            if self.global_timer.timing(1) >= 0.4 and not player_attacking:
+            if self.global_timer.timing(1) >= 0.25 and not player_attacking:
                 self.play_animation("slash", (self.monster_pos, 300))
                 self.play_sound("slash")
                 dmg = self.calc_damage("attack")
@@ -1901,7 +1901,7 @@ class NewBattle:
                 self.player_pos += 5
                 self.global_timer.reset()
             if (
-                self.global_timer.timing(1) >= 1.5
+                self.global_timer.timing(1) >= 1.0
                 and self.virtualMonsterHealth == self.m_cur_health
             ):
                 self.turn = "enemy"
@@ -1943,13 +1943,13 @@ class NewBattle:
             self.game_state == "player_skill_done"
             or self.game_state == "player_item_done"
         ):
-            if self.global_timer.timing(1) >= 1.5:
+            if self.global_timer.timing(1) >= 1.0:
                 self.update_player_inventory()
                 self.turn = "enemy"
                 self.game_state = "enemy_turn"
                 self.global_timer.reset()
         if self.game_state == "player_skill_invalid":
-            if self.global_timer.timing(1) >= 3.5:
+            if self.global_timer.timing(1) >= 2.5:
                 self.sequence_done = False
                 self.turn = "enemy"
                 self.game_state = "enemy_turn"
@@ -1992,7 +1992,7 @@ class NewBattle:
                         self.sequence_target = (920, 270)
                 self.global_timer.reset()
         if self.game_state == "enemy_skill_done":
-            if self.global_timer.timing(1) >= 1.5:
+            if self.global_timer.timing(1) >= 1.0:
                 self.turn = "player"
                 self.game_state = "check_player_wait"
                 self.global_timer.reset()
@@ -2003,7 +2003,7 @@ class NewBattle:
             if self.monster_pos < 250:
                 self.monster_pos += 5
                 self.global_timer.reset()
-            if self.global_timer.timing(1) >= 0.4 and not enemy_attacking:
+            if self.global_timer.timing(1) >= 0.25 and not enemy_attacking:
                 self.play_animation("claw", (self.player_pos, 300))
                 self.play_sound("slash2")
                 dmg = self.calc_damage("attack")
@@ -2018,7 +2018,7 @@ class NewBattle:
             self.player_dmg_flag = True
             if self.monster_pos > 200:
                 self.monster_pos -= 5
-            if self.global_timer.timing(1) >= 1.5:
+            if self.global_timer.timing(1) >= 1.0:
                 self.player_dmg_flag = False
                 self.turn_count += 1
                 self.turn = "player"
@@ -2036,18 +2036,18 @@ class NewBattle:
                 else:
                     self.game_state = "player_skill_done"
                     # Enemy dies
-        if self.game_state == "enemy_death" and self.global_timer.timing(1) >= 1.5:
+        if self.game_state == "enemy_death" and self.global_timer.timing(1) >= 1.0:
             if self.enemy_fade_active:
                 self.monster_flag = False
                 self.enemy_fade_active = False
             self.game_state = "victory"
             self.global_timer.reset()
             # Victory state
-        if self.game_state == "victory" and self.global_timer.timing(1) >= 1:
+        if self.game_state == "victory" and self.global_timer.timing(1) >= 0.8:
             self.victory(player)
         if self.game_state == "defeat_done":
             state.surf.blit(self.death_sprite, (self.player_x + 20, self.player_y + 20))
-            if self.global_timer.timing(1) >= 1:
+            if self.global_timer.timing(1) >= 0.8:
                 self.player_dmg_flag = False
                 self.defeat()
         if self.p_health <= 0 and (
@@ -2056,7 +2056,7 @@ class NewBattle:
             self.game_state = "defeat"
             self.global_timer.reset()
         if self.game_state == "defeat":
-            if self.global_timer.timing(1) >= 1.5:
+            if self.global_timer.timing(1) >= 1.0:
                 self.player_sprites.stop()
                 self.player_sprites_burst.stop()
                 state.surf.blit(
@@ -2069,7 +2069,7 @@ class NewBattle:
             0 >= self.m_cur_health == self.virtualMonsterHealth
             and self.game_state != "victory"
         ):
-            if self.global_timer.timing(1) >= 1.5:
+            if self.global_timer.timing(1) >= 1.0:
                 self.game_state = "enemy_death"
                 if not self.enemy_death_sound_played:
                     self.play_sound("enemy_dead")
