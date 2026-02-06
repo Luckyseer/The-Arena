@@ -1467,6 +1467,12 @@ class NewBattle:
         self.element = "none"
         self.cur_level = 0
         self.victory_flag = False
+        self.player_hit_flash = 0
+        self.enemy_hit_flash = 0
+        self.enemy_fade_active = False
+        self.enemy_fade_duration = 0.6
+        self.enemy_fade_delay = 0.2
+        self.enemy_death_sound_played = False
         #  Temp stuff remove later
         self.crit_text = self.dmg_font.render("Critical!", True, (225, 0, 100))
         self.weak_text = self.dmg_font.render("Weak!", True, (225, 0, 100))
@@ -1691,17 +1697,58 @@ class NewBattle:
             self.player_sprites.blit(state.surf, (self.player_pos, 300))
             if self.player_pos > 950:
                 self.player_pos -= 50
+        player_burst = False
         for status in self.p_status:
             if "burst" in status[0]:
                 self.player_sprites_burst.blit(state.surf, (self.player_pos, 300))
                 self.player_flag = False
+                player_burst = True
         else:
             self.player_flag = True
+        if self.player_hit_flash > 0:
+            if player_burst:
+                player_frame = self.player_sprites_burst.getCurrentFrame()
+            else:
+                player_frame = self.player_sprites.getCurrentFrame()
+            flash = player_frame.copy()
+            flash.fill((255, 60, 60, 255), special_flags=pygame.BLEND_RGBA_MULT)
+            flash.set_alpha(180)
+            state.surf.blit(flash, (self.player_pos, 300))
+            self.player_hit_flash -= 1
         if self.monster_flag:
-            state.surf.blit(
-                self.m_sprite,
-                (self.monster_pos, self.monster_y + self.monster_y_offset),
-            )
+            if self.enemy_fade_active:
+                elapsed = self.global_timer.timing(1)
+                if elapsed < self.enemy_fade_delay:
+                    alpha = 255
+                else:
+                    t = min(
+                        1.0,
+                        (elapsed - self.enemy_fade_delay) / self.enemy_fade_duration,
+                    )
+                    alpha = max(0, int(255 * (1.0 - t)))
+                sprite = self.m_sprite.copy()
+                sprite.set_alpha(alpha)
+                state.surf.blit(
+                    sprite,
+                    (self.monster_pos, self.monster_y + self.monster_y_offset),
+                )
+                if alpha <= 0:
+                    self.monster_flag = False
+                    self.enemy_fade_active = False
+            else:
+                state.surf.blit(
+                    self.m_sprite,
+                    (self.monster_pos, self.monster_y + self.monster_y_offset),
+                )
+            if self.enemy_hit_flash > 0 and self.monster_flag:
+                flash = self.m_sprite.copy()
+                flash.fill((255, 60, 60, 255), special_flags=pygame.BLEND_RGBA_MULT)
+                flash.set_alpha(180)
+                state.surf.blit(
+                    flash,
+                    (self.monster_pos, self.monster_y + self.monster_y_offset),
+                )
+                self.enemy_hit_flash -= 1
             self.loaded_anim.blit(state.surf, self.anim_pos)  # Loaded animation
             if self.monster_pos < 200:
                 self.monster_pos += 50
@@ -1834,6 +1881,7 @@ class NewBattle:
                 self.play_sound("slash")
                 dmg = self.calc_damage("attack")
                 self.spawn_damage_text(dmg, (self.monster_pos, self.monster_y - 40))
+                self.enemy_hit_flash = 6
                 self.m_cur_health -= dmg
                 player_attacking = True
                 self.game_state = "player_attack_done"
@@ -1951,6 +1999,7 @@ class NewBattle:
                 self.play_sound("slash2")
                 dmg = self.calc_damage("attack")
                 self.spawn_damage_text(dmg, (self.player_pos, 270), is_player_hit=True)
+                self.player_hit_flash = 6
                 self.p_health -= dmg
                 enemy_attacking = True
                 self.game_state = "enemy_attack_done"
@@ -1978,8 +2027,9 @@ class NewBattle:
                     self.game_state = "player_skill_done"
                     # Enemy dies
         if self.game_state == "enemy_death" and self.global_timer.timing(1) >= 1.5:
-            self.monster_flag = False
-            self.play_sound("enemy_dead")
+            if self.enemy_fade_active:
+                self.monster_flag = False
+                self.enemy_fade_active = False
             self.game_state = "victory"
             self.global_timer.reset()
             # Victory state
@@ -2011,6 +2061,11 @@ class NewBattle:
         ):
             if self.global_timer.timing(1) >= 1.5:
                 self.game_state = "enemy_death"
+                if not self.enemy_death_sound_played:
+                    self.play_sound("enemy_dead")
+                    self.enemy_death_sound_played = True
+                self.enemy_fade_active = True
+                self.global_timer.reset()
         if self.m_cur_health > self.m_max_health:
             self.m_cur_health = self.m_max_health
         if self.m_cur_health < 0:
@@ -2125,6 +2180,7 @@ class NewBattle:
                                 self.spawn_damage_text(
                                     dmg, (self.monster_pos, self.monster_y - 40)
                                 )
+                                self.enemy_hit_flash = 6
                                 self.healthbar_flag = True
                             else:
                                 self.player_dmg_flag = True
@@ -2132,6 +2188,7 @@ class NewBattle:
                                 self.spawn_damage_text(
                                     dmg, (self.player_pos, 270), is_player_hit=True
                                 )
+                                self.player_hit_flash = 6
                         elif action[0] == "heal_hp":
                             if self.turn == "player":
                                 if action[1] == "item":
@@ -2797,6 +2854,10 @@ class NewBattle:
         self.player_dmg_flag = False
         self.player_flag = True
         self.floating_texts = []
+        self.player_hit_flash = 0
+        self.enemy_hit_flash = 0
+        self.enemy_fade_active = False
+        self.enemy_death_sound_played = False
         self.element = "none"
         self.player_sprites_burst.play()
         self.turn_count = 0
