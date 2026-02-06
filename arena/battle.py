@@ -1482,6 +1482,9 @@ class NewBattle:
         self.hud_pulse_mp = 0
         self.hud_hit_flash = 0
         self.hud_hit_level = 0
+        self.impact_flashes = []
+        self.impact_shake_timer = 0
+        self.impact_shake_strength = 0
         #  Temp stuff remove later
         self.crit_text = self.dmg_font.render("Critical!", True, (225, 0, 100))
         self.weak_text = self.dmg_font.render("Weak!", True, (225, 0, 100))
@@ -1855,7 +1858,60 @@ class NewBattle:
             surf.set_alpha(alpha)
             scaled = pygame.transform.rotozoom(surf, 0, t["scale"])
             rect = scaled.get_rect(center=(int(t["x"]), int(t["y"] + bounce_offset)))
+            shadow = self.dmg_font.render(t["text"], True, (0, 0, 0))
+            shadow.set_alpha(max(0, int(alpha * 0.5)))
+            shadow_scaled = pygame.transform.rotozoom(shadow, 0, t["scale"])
+            shadow_rect = shadow_scaled.get_rect(
+                center=(int(t["x"] + 1), int(t["y"] + bounce_offset + 1))
+            )
+            state.surf.blit(shadow_scaled, shadow_rect)
             state.surf.blit(scaled, rect)
+
+    def trigger_impact(self, pos, dmg, target_max, crit=False):
+        if target_max and target_max > 0:
+            ratio = dmg / float(target_max)
+        else:
+            ratio = 0.0
+        heavy = ratio >= 0.25
+        flash_life = 10 if not crit else 14
+        radius = 10 if not heavy else 14
+        self.impact_flashes.append(
+            {
+                "x": pos[0],
+                "y": pos[1],
+                "age": 0,
+                "life": flash_life,
+                "radius": radius,
+                "crit": crit,
+            }
+        )
+        if crit:
+            self.impact_shake_timer = 10
+            self.impact_shake_strength = 7
+        elif heavy:
+            self.impact_shake_timer = 7
+            self.impact_shake_strength = 5
+        else:
+            self.impact_shake_timer = 4
+            self.impact_shake_strength = 3
+
+    def update_impact_flashes(self):
+        alive = []
+        for f in self.impact_flashes:
+            f["age"] += 1
+            if f["age"] < f["life"]:
+                alive.append(f)
+        self.impact_flashes = alive
+
+    def draw_impact_flashes(self):
+        for f in self.impact_flashes:
+            life_ratio = f["age"] / float(f["life"])
+            alpha = max(0, int(200 * (1.0 - life_ratio)))
+            radius = int(f["radius"] + (f["radius"] * 1.5 * life_ratio))
+            color = (255, 220, 220) if f["crit"] else (255, 255, 255)
+            spark = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+            pygame.draw.circle(spark, (*color, alpha), (radius, radius), radius)
+            state.surf.blit(spark, (f["x"] - radius, f["y"] - radius))
 
     def move_to(self, target="player", pos=(0, 0)):
         """Moves the player or monster to a specific position"""
@@ -1891,6 +1947,12 @@ class NewBattle:
                 dmg = self.calc_damage("attack")
                 self.spawn_damage_text(dmg, (self.monster_pos, self.monster_y - 40))
                 self.enemy_hit_flash = 6
+                self.trigger_impact(
+                    (self.monster_pos, self.monster_y),
+                    dmg,
+                    self.m_max_health,
+                    crit=(self.crit_chance == 10),
+                )
                 self.m_cur_health -= dmg
                 player_attacking = True
                 self.game_state = "player_attack_done"
@@ -2010,6 +2072,12 @@ class NewBattle:
                 self.spawn_damage_text(dmg, (self.player_pos, 270), is_player_hit=True)
                 self.player_hit_flash = 6
                 self.trigger_hp_hit_effect(dmg)
+                self.trigger_impact(
+                    (self.player_pos, 300),
+                    dmg,
+                    self.p_max_health,
+                    crit=(self.crit_chance == 10),
+                )
                 self.p_health -= dmg
                 enemy_attacking = True
                 self.game_state = "enemy_attack_done"
@@ -2191,6 +2259,12 @@ class NewBattle:
                                     dmg, (self.monster_pos, self.monster_y - 40)
                                 )
                                 self.enemy_hit_flash = 6
+                                self.trigger_impact(
+                                    (self.monster_pos, self.monster_y),
+                                    dmg,
+                                    self.m_max_health,
+                                    crit=(self.crit_chance == 10),
+                                )
                                 self.healthbar_flag = True
                             else:
                                 self.player_dmg_flag = True
@@ -2200,6 +2274,12 @@ class NewBattle:
                                 )
                                 self.player_hit_flash = 6
                                 self.trigger_hp_hit_effect(dmg)
+                                self.trigger_impact(
+                                    (self.player_pos, 300),
+                                    dmg,
+                                    self.p_max_health,
+                                    crit=(self.crit_chance == 10),
+                                )
                         elif action[0] == "heal_hp":
                             if self.turn == "player":
                                 if action[1] == "item":
@@ -2911,7 +2991,10 @@ class NewBattle:
         return int(damage)
 
     def shake_screen(self):
-        self.camera_x, self.camera_y = random.randrange(-5, 5), random.randrange(-5, 5)
+        strength = self.impact_shake_strength if self.impact_shake_timer > 0 else 5
+        self.camera_x, self.camera_y = random.randrange(
+            -strength, strength
+        ), random.randrange(-strength, strength)
 
     def victory(self, player):
         if not self.add_flag:
@@ -3025,6 +3108,9 @@ class NewBattle:
         self.enemy_hit_flash = 0
         self.enemy_fade_active = False
         self.enemy_death_sound_played = False
+        self.impact_flashes = []
+        self.impact_shake_timer = 0
+        self.impact_shake_strength = 0
         self.display_hp = self.p_health
         self.display_mp = self.p_mana
         self.last_hp = self.p_health
@@ -3108,6 +3194,9 @@ class NewBattle:
                 self.shake_screen()
             if not self.shake:  # To reset the screen back to its initial position
                 self.camera_x, self.camera_y = 0, 0
+            if self.impact_shake_timer > 0:
+                self.shake_screen()
+                self.impact_shake_timer -= 1
             if self.focus:
                 self.focus_cam(self.focus_target)
             if self.move_flag:
@@ -3116,6 +3205,8 @@ class NewBattle:
             self.update_hud_anim()
             if self.show_hud:
                 self.draw_hud()
+            self.update_impact_flashes()
+            self.draw_impact_flashes()
             self.update_floating_texts()
             self.draw_floating_texts()
             if self.healthbar_flag:
