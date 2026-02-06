@@ -1433,6 +1433,7 @@ class NewBattle:
         self.game_state = "player"
         self.ui_state = "main"
         self.ui_flag = True
+        self.show_hud = True
         # Flag to know whether the alert box should be drawn or not
         self.alert_box_flag = False
         self.alert_text = "Undefined"
@@ -1473,6 +1474,14 @@ class NewBattle:
         self.enemy_fade_duration = 0.6
         self.enemy_fade_delay = 0.2
         self.enemy_death_sound_played = False
+        self.display_hp = self.p_health
+        self.display_mp = self.p_mana
+        self.last_hp = self.p_health
+        self.last_mp = self.p_mana
+        self.hud_pulse_hp = 0
+        self.hud_pulse_mp = 0
+        self.hud_hit_flash = 0
+        self.hud_hit_level = 0
         #  Temp stuff remove later
         self.crit_text = self.dmg_font.render("Critical!", True, (225, 0, 100))
         self.weak_text = self.dmg_font.render("Weak!", True, (225, 0, 100))
@@ -2000,6 +2009,7 @@ class NewBattle:
                 dmg = self.calc_damage("attack")
                 self.spawn_damage_text(dmg, (self.player_pos, 270), is_player_hit=True)
                 self.player_hit_flash = 6
+                self.trigger_hp_hit_effect(dmg)
                 self.p_health -= dmg
                 enemy_attacking = True
                 self.game_state = "enemy_attack_done"
@@ -2189,6 +2199,7 @@ class NewBattle:
                                     dmg, (self.player_pos, 270), is_player_hit=True
                                 )
                                 self.player_hit_flash = 6
+                                self.trigger_hp_hit_effect(dmg)
                         elif action[0] == "heal_hp":
                             if self.turn == "player":
                                 if action[1] == "item":
@@ -2378,27 +2389,179 @@ class NewBattle:
             txt = self.ui_font.render(self.alert_text, False, (55, 0, 200))
             state.surf.blit(txt, (500, 120))
 
+    def update_hud_anim(self):
+        if self.p_health != self.last_hp:
+            self.hud_pulse_hp = 18
+            self.last_hp = self.p_health
+        if self.p_mana != self.last_mp:
+            self.hud_pulse_mp = 18
+            self.last_mp = self.p_mana
+        hp_diff = self.p_health - self.display_hp
+        if abs(hp_diff) >= 1:
+            big_snap = max(self.p_max_health * 0.5, 500)
+            big_step = max(self.p_max_health * 0.2, 150)
+            if abs(hp_diff) >= big_snap:
+                self.display_hp = self.p_health
+            elif abs(hp_diff) >= big_step:
+                self.display_hp += max(min(hp_diff * 0.6, 20), -20)
+            else:
+                self.display_hp += max(min(hp_diff * 0.25, 6), -6)
+        else:
+            self.display_hp = self.p_health
+        mp_diff = self.p_mana - self.display_mp
+        if abs(mp_diff) >= 1:
+            self.display_mp += max(min(mp_diff * 0.25, 6), -6)
+        else:
+            self.display_mp = self.p_mana
+        if self.hud_pulse_hp > 0:
+            self.hud_pulse_hp -= 1
+        if self.hud_pulse_mp > 0:
+            self.hud_pulse_mp -= 1
+        if self.hud_hit_flash > 0:
+            self.hud_hit_flash -= 1
+
+    def trigger_hp_hit_effect(self, dmg):
+        if self.p_max_health <= 0:
+            return
+        ratio = dmg / float(self.p_max_health)
+        if ratio >= 0.35:
+            self.hud_hit_level = 2
+            self.hud_hit_flash = 20
+        elif ratio >= 0.2:
+            self.hud_hit_level = 1
+            self.hud_hit_flash = 14
+
+    def draw_hud(self):
+        curwidth = state.curwidth or state.screen.get_width()
+        y = 20
+        hp_text = f"HP {int(self.display_hp)}/{self.p_max_health}"
+        mp_text = f"MP {int(self.display_mp)}/{self.p_max_mana}"
+        hp_scale = (
+            1.0 + (0.08 * math.sin(self.hud_pulse_hp * 0.6))
+            if self.hud_pulse_hp
+            else 1.0
+        )
+        mp_scale = (
+            1.0 + (0.08 * math.sin(self.hud_pulse_mp * 0.6))
+            if self.hud_pulse_mp
+            else 1.0
+        )
+        hp_surf = self.ui_font.render(hp_text, True, (240, 220, 210))
+        mp_surf = self.ui_font.render(mp_text, True, (210, 220, 240))
+        hp_surf = pygame.transform.rotozoom(hp_surf, 0, hp_scale)
+        mp_surf = pygame.transform.rotozoom(mp_surf, 0, mp_scale)
+
+        text_w = max(hp_surf.get_width(), mp_surf.get_width())
+        pad = 16
+        gap = 12
+        bar_w = 200
+        panel_w = max(320, pad + bar_w + gap + text_w + pad)
+        # Status icons layout (under MP bar)
+        icon_size = 28
+        icon_gap = 6
+        icons_per_row = max(1, (bar_w // (icon_size + icon_gap)))
+        status_icons = [
+            self.status_icons[s[0]] for s in self.p_status if s[0] in self.status_icons
+        ]
+        rows = (len(status_icons) + icons_per_row - 1) // icons_per_row
+        status_block_h = rows * icon_size + max(0, rows - 1) * icon_gap
+
+        panel_h = 120 + (status_block_h + 10 if rows > 0 else 0)
+        x = curwidth - panel_w - 20
+        panel = pygame.Rect(x, y, panel_w, panel_h)
+        inner = pygame.Rect(x + 6, y + 6, panel_w - 12, panel_h - 12)
+        pygame.draw.rect(state.surf, (24, 20, 24), panel, border_radius=8)
+        pygame.draw.rect(state.surf, (122, 98, 36), panel, 2, border_radius=8)
+        pygame.draw.rect(state.surf, (44, 36, 30), inner, border_radius=6)
+        name_txt = self.title_font.render(self.p_name, True, (230, 220, 190))
+        state.surf.blit(name_txt, (x + pad, y + 10))
+
+        hp_ratio = (
+            0
+            if self.p_max_health <= 0
+            else max(0, min(1, self.display_hp / self.p_max_health))
+        )
+        mp_ratio = (
+            0
+            if self.p_max_mana <= 0
+            else max(0, min(1, self.display_mp / self.p_max_mana))
+        )
+        hp_bar = pygame.Rect(x + pad, y + 48, bar_w, 16)
+        mp_bar = pygame.Rect(x + pad, y + 76, bar_w, 12)
+        pygame.draw.rect(state.surf, (20, 10, 10), hp_bar, border_radius=4)
+        pygame.draw.rect(state.surf, (10, 10, 24), mp_bar, border_radius=4)
+        pygame.draw.rect(
+            state.surf,
+            (170, 40, 50),
+            pygame.Rect(hp_bar.x, hp_bar.y, int(hp_bar.w * hp_ratio), hp_bar.h),
+            border_radius=4,
+        )
+        pygame.draw.rect(
+            state.surf,
+            (40, 80, 180),
+            pygame.Rect(mp_bar.x, mp_bar.y, int(mp_bar.w * mp_ratio), mp_bar.h),
+            border_radius=4,
+        )
+
+        if self.hud_hit_flash > 0:
+            pulse = 1.0 + 0.2 * math.sin(self.hud_hit_flash * 0.8)
+            if self.hud_hit_level == 2:
+                col = (255, 80, 80)
+                alpha = 180
+                grow = 6
+            else:
+                col = (255, 150, 80)
+                alpha = 140
+                grow = 4
+            glow = pygame.Surface(
+                (hp_bar.w + grow * 2, hp_bar.h + grow * 2), pygame.SRCALPHA
+            )
+            glow.fill((*col, int(alpha * pulse)))
+            state.surf.blit(glow, (hp_bar.x - grow, hp_bar.y - grow))
+            pygame.draw.rect(
+                state.surf,
+                col,
+                hp_bar.inflate(grow * 2, grow * 2),
+                2,
+                border_radius=6,
+            )
+
+        text_x = hp_bar.right + gap
+        state.surf.blit(hp_surf, (text_x, y + 42))
+        state.surf.blit(mp_surf, (text_x, y + 70))
+
+        if rows > 0:
+            start_x = hp_bar.x
+            start_y = mp_bar.y + mp_bar.h + 10
+            for idx, icon in enumerate(status_icons):
+                row = idx // icons_per_row
+                col = idx % icons_per_row
+                ix = start_x + col * (icon_size + icon_gap)
+                iy = start_y + row * (icon_size + icon_gap)
+                state.surf.blit(
+                    pygame.transform.scale(icon, (icon_size, icon_size)), (ix, iy)
+                )
+
     def draw_ui(self):
         state.surf.blit(self.battle_ui, (self.window_pos, 400))
-        state.surf.blit(self.battle_ui3, (self.window_pos - 30, -10))
         if self.window_pos > 900:
             self.window_pos -= 50
 
         if self.window_pos <= 900:  # when the 'animation' finishes
-            hp_text = self.ui_font.render(
-                "HP: %d/%d" % (self.p_health, self.p_max_health), True, (230, 0, 50)
-            )
-            mp_text = self.ui_font.render(
-                "MP: %d/%d" % (self.p_mana, self.p_max_mana), True, (20, 0, 230)
-            )
-
-            state.surf.blit(hp_text, (920, 90))  # Text for hp
-            state.surf.blit(mp_text, (920, 110))  # Text for mp
-            for index, status in enumerate(self.p_status):
-                if status[0] in self.status_icons:
-                    state.surf.blit(
-                        self.status_icons[status[0]], (900 + (40 * index), 140)
-                    )
+            if not self.show_hud:
+                hp_text = self.ui_font.render(
+                    "HP: %d/%d" % (self.p_health, self.p_max_health),
+                    True,
+                    (230, 0, 50),
+                )
+                mp_text = self.ui_font.render(
+                    "MP: %d/%d" % (self.p_mana, self.p_max_mana),
+                    True,
+                    (20, 0, 230),
+                )
+                state.surf.blit(hp_text, (920, 90))  # Text for hp
+                state.surf.blit(mp_text, (920, 110))  # Text for mp
+            # Status icons are now drawn in the HUD
             if self.ui_state == "main":
                 self.current_title = 0
                 state.surf.blit(self.atk_txt, (945, 475))
@@ -2606,8 +2769,12 @@ class NewBattle:
         for items in self.p_item_equipped:
             if items["attributes"] != "null":
                 self.p_item_effects.append(items["attributes"])
+        self.display_hp = self.p_health
+        self.display_mp = self.p_mana
+        self.last_hp = self.p_health
+        self.last_mp = self.p_mana
 
-                # Updates the player object with the cur hp and mana
+        # Updates the player object with the cur hp and mana
 
     def update_player_details(self, player_data=Player()):
         """I don't remember the original reason that I didn't just directly update the player object.
@@ -2858,6 +3025,12 @@ class NewBattle:
         self.enemy_hit_flash = 0
         self.enemy_fade_active = False
         self.enemy_death_sound_played = False
+        self.display_hp = self.p_health
+        self.display_mp = self.p_mana
+        self.last_hp = self.p_health
+        self.last_mp = self.p_mana
+        self.hud_pulse_hp = 0
+        self.hud_pulse_mp = 0
         self.element = "none"
         self.player_sprites_burst.play()
         self.turn_count = 0
@@ -2940,6 +3113,9 @@ class NewBattle:
             if self.move_flag:
                 self.move_to(self.move_target, self.target_pos)
             self.draw_alertbox()
+            self.update_hud_anim()
+            if self.show_hud:
+                self.draw_hud()
             self.update_floating_texts()
             self.draw_floating_texts()
             if self.healthbar_flag:
