@@ -1382,6 +1382,7 @@ class NewBattle:
         self.ui_font = pygame.font.Font("data/fonts/alagard.ttf", 25)
         self.title_font = pygame.font.Font("data/fonts/Daisy_Roots.otf", 25)
         self.dmg_font = pygame.font.Font("data/fonts/Vecna.otf", 30)
+        self.status_font = pygame.font.Font("data/fonts/alagard.ttf", 16)
         self.ui_text = [
             "Menu",
             "Attack",
@@ -1485,6 +1486,9 @@ class NewBattle:
         self.impact_flashes = []
         self.impact_shake_timer = 0
         self.impact_shake_strength = 0
+        self.turn_banner_timer = 0
+        self.turn_banner_text = ""
+        self.turn_banner_duration = 30
         #  Temp stuff remove later
         self.crit_text = self.dmg_font.render("Critical!", True, (225, 0, 100))
         self.weak_text = self.dmg_font.render("Weak!", True, (225, 0, 100))
@@ -1913,6 +1917,32 @@ class NewBattle:
             pygame.draw.circle(spark, (*color, alpha), (radius, radius), radius)
             state.surf.blit(spark, (f["x"] - radius, f["y"] - radius))
 
+    def announce_turn(self, turn):
+        if self.game_state == "victory" or self.m_cur_health <= 0:
+            return
+        if turn == "player":
+            self.turn_banner_text = "Player Turn"
+        else:
+            self.turn_banner_text = "Enemy Turn"
+        self.turn_banner_timer = self.turn_banner_duration
+
+    def draw_turn_banner(self):
+        if self.turn_banner_timer <= 0:
+            return
+        alpha = int(220 * (self.turn_banner_timer / self.turn_banner_duration))
+        text_surf = self.title_font.render(self.turn_banner_text, True, (230, 220, 190))
+        pad_x = 18
+        pad_y = 8
+        w = text_surf.get_width() + pad_x * 2
+        h = text_surf.get_height() + pad_y * 2
+        x = (state.curwidth - w) // 2
+        y = 12
+        box = pygame.Surface((w, h), pygame.SRCALPHA)
+        pygame.draw.rect(box, (24, 20, 24, alpha), (0, 0, w, h), border_radius=8)
+        pygame.draw.rect(box, (122, 98, 36, alpha), (0, 0, w, h), 2, border_radius=8)
+        box.blit(text_surf, (pad_x, pad_y))
+        state.surf.blit(box, (x, y))
+
     def move_to(self, target="player", pos=(0, 0)):
         """Moves the player or monster to a specific position"""
         if target == "player":
@@ -1967,6 +1997,7 @@ class NewBattle:
                 and self.virtualMonsterHealth == self.m_cur_health
             ):
                 self.turn = "enemy"
+                self.announce_turn("enemy")
                 self.healthbar_flag = False
                 self.game_state = "enemy_turn"
                 self.global_timer.reset()
@@ -2008,6 +2039,7 @@ class NewBattle:
             if self.global_timer.timing(1) >= 1.0:
                 self.update_player_inventory()
                 self.turn = "enemy"
+                self.announce_turn("enemy")
                 self.game_state = "enemy_turn"
                 self.global_timer.reset()
         if self.game_state == "player_skill_invalid":
@@ -2056,6 +2088,7 @@ class NewBattle:
         if self.game_state == "enemy_skill_done":
             if self.global_timer.timing(1) >= 1.0:
                 self.turn = "player"
+                self.announce_turn("player")
                 self.game_state = "check_player_wait"
                 self.global_timer.reset()
                 self.turn_count += 1
@@ -2090,6 +2123,7 @@ class NewBattle:
                 self.player_dmg_flag = False
                 self.turn_count += 1
                 self.turn = "player"
+                self.announce_turn("player")
                 self.game_state = "check_player_wait"
         if self.game_state == "check_player_wait":
             if not self.wait_flag_player:
@@ -2621,6 +2655,25 @@ class NewBattle:
                 state.surf.blit(
                     pygame.transform.scale(icon, (icon_size, icon_size)), (ix, iy)
                 )
+                remaining = max(0, self.p_status[idx][1] - self.turn_count)
+                if remaining > 0:
+                    text = str(remaining)
+                    num = self.status_font.render(text, True, (255, 240, 200))
+                    outline = self.status_font.render(text, True, (0, 0, 0))
+                    state.surf.blit(
+                        outline,
+                        (
+                            ix + icon_size - num.get_width(),
+                            iy,
+                        ),
+                    )
+                    state.surf.blit(
+                        num,
+                        (
+                            ix + icon_size - num.get_width() - 1,
+                            iy + 1,
+                        ),
+                    )
 
     def draw_ui(self):
         state.surf.blit(self.battle_ui, (self.window_pos, 400))
@@ -3097,6 +3150,7 @@ class NewBattle:
         self.game_state = ""
         self.ui_state = "main"
         self.turn = "player"
+        self.announce_turn("player")
         self.get_player_details(player_data)
         self.p_status = []
         self.sequence_flag = False
@@ -3209,6 +3263,9 @@ class NewBattle:
             self.draw_impact_flashes()
             self.update_floating_texts()
             self.draw_floating_texts()
+            if self.turn_banner_timer > 0:
+                self.draw_turn_banner()
+                self.turn_banner_timer -= 1
             if self.healthbar_flag:
                 self.draw_healthbar(self.m_cur_health)
             self.update_status_effects()

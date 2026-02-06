@@ -645,7 +645,7 @@ class GameEvents(MainUi):
         self.timekeep.reset()
         self.dialoguecontrol = False
         pygame.mixer_music.play()
-        state = 0
+        phase = 0
         cur_song = "data/sounds&music/Infinite_Arena.mp3"
         draw_tb = False
         cur_dialogue = dialogues["first_floor_victory1"]
@@ -654,7 +654,7 @@ class GameEvents(MainUi):
                 if event.type == pygame.KEYDOWN:
                     if self.dialoguecontrol and event.key == pygame.K_RCTRL:
                         if self.txtbox.progress_dialogue(cur_dialogue):
-                            state += 1
+                            phase += 1
                             draw_tb = False
                             self.timekeep.reset()
                             self.txtbox.reset()
@@ -668,48 +668,48 @@ class GameEvents(MainUi):
                     state.done = True
                     event_done = True
                     pygame.quit()
-            if state == 0:
+            if phase == 0:
                 if self.timekeep.timing() > 2:
                     self.applauseSound.play()
-                    state += 1
-            elif state == 1:
+                    phase += 1
+            elif phase == 1:
                 self.dialoguecontrol = True
                 draw_tb = True
-            elif state == 2:
+            elif phase == 2:
                 if self.timekeep.timing() <= 1:
                     self.applauseSound.play()
                 if self.timekeep.timing() > 2:
                     fadeout(state.surf, 0.01, fade_in=True, optional_bg=self.arena_bg)
-                    state += 1
+                    phase += 1
                     self.timekeep.reset()
-            elif state == 3:
+            elif phase == 3:
                 if self.timekeep.timing() > 1:
                     cur_dialogue = dialogues["first_floor_victory2"]
                     self.dialoguecontrol = True
                     draw_tb = True
-            elif state == 4:
+            elif phase == 4:
                 pygame.mixer_music.fadeout(200)
                 fadeout(state.surf, 0.01, fade_in=True, optional_bg=self.arena_bg_night)
                 pygame.mixer_music.load("data/sounds&music/Dungeon 2.ogg")
                 pygame.mixer_music.set_volume(state.vol)
                 cur_song = "data/sounds&music/Dungeon 2.ogg"
-                pygame.mixer_music.set_endevent(USEREVENT)
+                pygame.mixer_music.set_endevent(pygame.constants.USEREVENT)
                 pygame.mixer_music.play()
-                state += 1
+                phase += 1
                 self.timekeep.reset()
-            elif state == 5:
+            elif phase == 5:
                 if self.timekeep.timing() > 3:
                     cur_dialogue = dialogues["first_floor_victory3"]
-                    state += 1
-            elif state == 6:
+                    phase += 1
+            elif phase == 6:
                 self.dialoguecontrol = True
                 draw_tb = True
-            elif state == 7:
+            elif phase == 7:
                 if self.timekeep.timing() > 2:
                     pygame.mixer_music.fadeout(200)
                     fadeout(state.surf)
                     event_done = True
-            if state < 5:
+            if phase < 5:
                 state.surf.blit(self.arena_bg, (0, 0))
             else:
                 state.surf.blit(self.arena_bg_night, (0, 0))
