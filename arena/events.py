@@ -1100,41 +1100,540 @@ class GameEvents(MainUi):
             pygame.display.flip()
 
     def casino(self, player_data):
-        # The inn in the town
         event_done = False
-        global surf
-        global screen
+        prev_repeat = pygame.key.get_repeat()
+        pygame.key.set_repeat(250, 35)
         area_music = "data/sounds&music/2000_Shop3.ogg"
         pygame.mixer.music.load(area_music)
         pygame.mixer.music.play()
         pygame.mixer.music.set_endevent(pygame.constants.USEREVENT)
         self.timekeep.reset()
-        casino_ui = True
+        self.cursorpos = 0
+        text = pygame.font.Font("data/fonts/runescape_uf.ttf", 30)
+        ab = text.render(alphatext, False, (255, 255, 0))
+
+        ui_font = pygame.font.Font("data/fonts/alagard.ttf", 26)
+        title_font = pygame.font.Font("data/fonts/Daisy_Roots.otf", 36)
+        small_font = pygame.font.Font("data/fonts/alagard.ttf", 22)
+        card_back = pygame.image.load(
+            "data/sprites/cards/back_red_basic_white.png"
+        ).convert_alpha()
+        card_scale = 0.75
+
+        ranks = [
+            "ace",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "jack",
+            "queen",
+            "king",
+        ]
+        suits = ["clubs", "diamonds", "hearts", "spades"]
+        card_cache = {}
+
+        def load_card(rank, suit):
+            key = (rank, suit)
+            if key in card_cache:
+                return card_cache[key]
+            path = f"data/sprites/cards/{rank}_{suit}_white.png"
+            img = pygame.image.load(path).convert_alpha()
+            if card_scale != 1.0:
+                img = pygame.transform.smoothscale(
+                    img,
+                    (
+                        int(img.get_width() * card_scale),
+                        int(img.get_height() * card_scale),
+                    ),
+                )
+            card_cache[key] = img
+            return img
+
+        if card_scale != 1.0:
+            card_back = pygame.transform.smoothscale(
+                card_back,
+                (
+                    int(card_back.get_width() * card_scale),
+                    int(card_back.get_height() * card_scale),
+                ),
+            )
+
+        def create_deck():
+            deck = [(r, s) for r in ranks for s in suits]
+            random.shuffle(deck)
+            return deck
+
+        def card_value(rank):
+            if rank in ("jack", "queen", "king"):
+                return 10
+            if rank == "ace":
+                return 11
+            return int(rank)
+
+        def hand_value(hand):
+            total = 0
+            aces = 0
+            for card in hand:
+                val = card_value(card["rank"])
+                total += val
+                if card["rank"] == "ace":
+                    aces += 1
+            while total > 21 and aces > 0:
+                total -= 10
+                aces -= 1
+            return total
+
+        def enqueue_deal(target, face_up=True):
+            deal_queue.append({"target": target, "face_up": face_up})
+
+        def deal_card(target, face_up=True):
+            if not deck:
+                return
+            rank, suit = deck.pop()
+            image = load_card(rank, suit)
+            card = {
+                "rank": rank,
+                "suit": suit,
+                "face": image,
+                "face_up": face_up,
+                "pos": [deck_pos[0], deck_pos[1]],
+                "start": [deck_pos[0], deck_pos[1]],
+                "target": [0, 0],
+                "anim_start": pygame.time.get_ticks(),
+                "anim_dur": 220,
+            }
+            if target == "player":
+                idx = len(player_hand)
+                card["target"] = [player_base[0] + idx * card_spacing, player_base[1]]
+                player_hand.append(card)
+            else:
+                idx = len(dealer_hand)
+                card["target"] = [dealer_base[0] + idx * card_spacing, dealer_base[1]]
+                dealer_hand.append(card)
+
+        def update_card_anims(now):
+            active = False
+            for card in player_hand + dealer_hand:
+                t = (now - card["anim_start"]) / float(card["anim_dur"])
+                if t < 1.0:
+                    active = True
+                    card["pos"][0] = (
+                        card["start"][0] + (card["target"][0] - card["start"][0]) * t
+                    )
+                    card["pos"][1] = (
+                        card["start"][1] + (card["target"][1] - card["start"][1]) * t
+                    )
+                else:
+                    card["pos"][0] = card["target"][0]
+                    card["pos"][1] = card["target"][1]
+            return active
+
+        def make_outlined_surface(
+            text, font, color, outline_color=(0, 0, 0), thickness=2
+        ):
+            return self.render_text(
+                text,
+                font=font,
+                color=color,
+                outline=True,
+                outline_color=outline_color,
+                thickness=thickness,
+            )
+
+        def blit_outlined(text, font, color, pos, outline_color=(0, 0, 0)):
+            surf = self.render_text(
+                text, font=font, color=color, outline=True, outline_color=outline_color
+            )
+            state.surf.blit(surf, pos)
+
+        def draw_gold_box(pos=(10, 29)):
+            gold_box = pygame.transform.scale(self.bg, (170, 50))
+            state.surf.blit(gold_box, pos)
+            self.coinAnim.blit(state.surf, (pos[0] + 12, pos[1] + 16))
+            gold_txt = self.uitext2.render(
+                f"Gold:  {player_data.gold}", False, self.txtcolor
+            )
+            state.surf.blit(gold_txt, (pos[0] + 37, pos[1] + 17))
+
+        def draw_hands():
+            for card in dealer_hand:
+                img = card["face"] if card["face_up"] else card_back
+                state.surf.blit(img, (card["pos"][0], card["pos"][1]))
+            for card in player_hand:
+                img = card["face"] if card["face_up"] else card_back
+                state.surf.blit(img, (card["pos"][0], card["pos"][1]))
+
+        def start_blackjack_round():
+            nonlocal deck, player_hand, dealer_hand, deal_queue, bj_state, message
+            deck = create_deck()
+            player_hand = []
+            dealer_hand = []
+            deal_queue = []
+            enqueue_deal("player", True)
+            enqueue_deal("dealer", True)
+            enqueue_deal("player", True)
+            enqueue_deal("dealer", False)
+            message = ""
+            bj_state = "deal"
+
+        def resolve_blackjack():
+            nonlocal message, bj_state, last_payout
+            player_total = hand_value(player_hand)
+            dealer_total = hand_value(dealer_hand)
+            last_payout = 0
+            if player_total > 21:
+                message = "Bust! You lose."
+                player_data.gold -= bet_amount
+                last_payout = -bet_amount
+            elif dealer_total > 21:
+                message = "Dealer busts! You win!"
+                player_data.gold += bet_amount
+                last_payout = bet_amount
+            elif player_total > dealer_total:
+                message = "You win!"
+                player_data.gold += bet_amount
+                last_payout = bet_amount
+            elif player_total < dealer_total:
+                message = "Dealer wins."
+                player_data.gold -= bet_amount
+                last_payout = -bet_amount
+            else:
+                message = "Push. It's a tie."
+            bj_state = "resolve"
+
+        def reset_bj_state():
+            nonlocal bj_state, message, bet_amount, last_payout
+            bj_state = "bet"
+            bet_amount = 10
+            message = ""
+            last_payout = 0
+
+        casino_state = "main"
+        talk_dialogue = dialogues.get(
+            "casino_dealer_intro",
+            [
+                [
+                    "data/sprites/youngman.png",
+                    "Dealer",
+                    "Welcome! Place your bets or just enjoy the atmosphere.",
+                ]
+            ],
+        )
+        talk_active = False
+
+        game_select = False
+        select_pos = 0
+        bet_amount = 10
+        message = ""
+        last_payout = 0
+        deck = []
+        player_hand = []
+        dealer_hand = []
+        deal_queue = []
+        bj_state = "bet"
+        oe_state = "bet"
+        oe_choice = "odd"
+        oe_roll_timer = 0
+        oe_player = 0
+        oe_dealer = 0
+
         while not event_done:
+            state.curwidth, state.curheight = state.screen.get_size()
+            deck_pos = (150, 130)
+            dealer_base = (360, 160)
+            player_base = (360, 380)
+            card_spacing = int(65 * card_scale)
+
+            now = pygame.time.get_ticks()
+            animating = update_card_anims(now)
+            if deal_queue and not animating:
+                deal = deal_queue.pop(0)
+                deal_card(deal["target"], deal["face_up"])
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     event_done = True
                     state.done = True
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_DOWN:
-                        self.cursorpos += 1
-                    if event.key == pygame.K_UP:
-                        self.cursorpos -= 1
-                    if event.key == pygame.K_RETURN:
-                        if self.cursorpos == 0:
-                            pass
-                        elif self.cursorpos == 1:
-                            pass
-                        elif self.cursorpos == 2:
-                            self.casino_state = "casino"
-                            casino_ui = False
                 if event.type == pygame.constants.USEREVENT:
                     pygame.mixer.music.play()
+                if event.type == pygame.KEYDOWN:
+                    if casino_state == "main" and not talk_active and not game_select:
+                        if event.key == pygame.K_DOWN:
+                            self.cursorpos += 1
+                        if event.key == pygame.K_UP:
+                            self.cursorpos -= 1
+                        if event.key == pygame.K_RETURN:
+                            if self.cursorpos == 0:
+                                talk_active = True
+                            elif self.cursorpos == 1:
+                                game_select = True
+                            elif self.cursorpos == 2:
+                                event_done = True
+                        if event.key == pygame.K_RCTRL:
+                            event_done = True
+                    elif talk_active:
+                        if event.key == pygame.K_RCTRL:
+                            if self.text_box.progress_dialogue(talk_dialogue):
+                                talk_active = False
+                                self.text_box.reset()
+                    elif game_select:
+                        if event.key == pygame.K_UP:
+                            select_pos = (select_pos - 1) % 3
+                        if event.key == pygame.K_DOWN:
+                            select_pos = (select_pos + 1) % 3
+                        if event.key == pygame.K_RETURN:
+                            if select_pos == 0:
+                                casino_state = "blackjack"
+                                reset_bj_state()
+                                game_select = False
+                            elif select_pos == 1:
+                                casino_state = "odds_evens"
+                                oe_state = "bet"
+                                bet_amount = 10
+                                message = ""
+                                game_select = False
+                            else:
+                                game_select = False
+                        if event.key == pygame.K_RCTRL:
+                            game_select = False
+                    elif casino_state == "blackjack":
+                        if bj_state == "bet":
+                            if event.key == pygame.K_UP:
+                                bet_amount = min(player_data.gold, bet_amount + 10)
+                            if event.key == pygame.K_DOWN:
+                                bet_amount = max(10, bet_amount - 10)
+                            if event.key == pygame.K_RETURN:
+                                if player_data.gold >= bet_amount:
+                                    start_blackjack_round()
+                                else:
+                                    message = "Not enough gold."
+                            if event.key == pygame.K_RCTRL:
+                                casino_state = "main"
+                                message = ""
+                        elif bj_state == "player":
+                            if event.key == pygame.K_h:
+                                enqueue_deal("player", True)
+                            if event.key == pygame.K_s:
+                                bj_state = "dealer"
+                            if event.key == pygame.K_RCTRL:
+                                casino_state = "main"
+                                message = ""
+                        elif bj_state == "resolve":
+                            if (
+                                event.key == pygame.K_RETURN
+                                or event.key == pygame.K_RCTRL
+                            ):
+                                reset_bj_state()
+                                message = ""
+                    elif casino_state == "odds_evens":
+                        if oe_state == "bet":
+                            if (
+                                event.key == pygame.K_LEFT
+                                or event.key == pygame.K_RIGHT
+                            ):
+                                oe_choice = "even" if oe_choice == "odd" else "odd"
+                            if event.key == pygame.K_UP:
+                                bet_amount = min(player_data.gold, bet_amount + 10)
+                            if event.key == pygame.K_DOWN:
+                                bet_amount = max(10, bet_amount - 10)
+                            if event.key == pygame.K_RETURN:
+                                if player_data.gold >= bet_amount:
+                                    oe_state = "roll"
+                                    oe_roll_timer = now
+                                else:
+                                    message = "Not enough gold."
+                            if event.key == pygame.K_RCTRL:
+                                casino_state = "main"
+                                message = ""
+                        elif oe_state == "resolve":
+                            if (
+                                event.key == pygame.K_RETURN
+                                or event.key == pygame.K_RCTRL
+                            ):
+                                oe_state = "bet"
+                                message = ""
+                                last_payout = 0
+
+            if casino_state == "blackjack" and bj_state == "deal":
+                if not deal_queue and not animating:
+                    player_total = hand_value(player_hand)
+                    dealer_total = hand_value(dealer_hand)
+                    if player_total == 21 or dealer_total == 21:
+                        if len(dealer_hand) > 1:
+                            dealer_hand[1]["face_up"] = True
+                        resolve_blackjack()
+                    else:
+                        bj_state = "player"
+
+            if casino_state == "blackjack" and bj_state == "dealer":
+                if len(dealer_hand) > 1:
+                    dealer_hand[1]["face_up"] = True
+                if not deal_queue and not animating:
+                    if hand_value(dealer_hand) < 17:
+                        enqueue_deal("dealer", True)
+                    else:
+                        resolve_blackjack()
+
+            if casino_state == "blackjack" and bj_state == "player":
+                if not animating and not deal_queue:
+                    if hand_value(player_hand) > 21:
+                        if len(dealer_hand) > 1:
+                            dealer_hand[1]["face_up"] = True
+                        resolve_blackjack()
+
+            if casino_state == "odds_evens" and oe_state == "roll":
+                if now - oe_roll_timer > 600:
+                    oe_player = random.randrange(1, 7)
+                    oe_dealer = random.randrange(1, 7)
+                    total = oe_player + oe_dealer
+                    if (total % 2 == 0 and oe_choice == "even") or (
+                        total % 2 == 1 and oe_choice == "odd"
+                    ):
+                        message = "You win!"
+                        player_data.gold += bet_amount
+                        last_payout = bet_amount
+                    else:
+                        message = "You lose."
+                        player_data.gold -= bet_amount
+                        last_payout = -bet_amount
+                    oe_state = "resolve"
+
             state.surf.blit(self.inn_bg, (0, 0))
-            if casino_ui:
-                self.draw_casino(player_data)
-            if self.casino_state == "casino":
-                pass
+
+            if casino_state == "main":
+                talk_txt = self.render_text(
+                    "Talk", font=self.uitext, color=self.txtcolor
+                )
+                play_txt = self.render_text(
+                    "Play", font=self.uitext, color=self.txtcolor
+                )
+                leave_txt = self.render_text(
+                    "Leave", font=self.uitext, color=self.txtcolor
+                )
+                blank_txt = self.render_text("", font=self.uitext, color=self.txtcolor)
+                self.draw_casino(player_data, talk_txt, play_txt, leave_txt, blank_txt)
+                if self.cursorpos < 0:
+                    self.cursorpos = 2
+                if self.cursorpos > 2:
+                    self.cursorpos = 0
+                if talk_active:
+                    self.text_box.draw_textbox(talk_dialogue, state.surf, (0, 400))
+                if game_select:
+                    box = pygame.transform.scale(self.bg, (420, 260))
+                    state.surf.blit(box, (430, 200))
+                    blit_outlined("Choose Game", title_font, (200, 30, 30), (520, 220))
+                    opts = ["Blackjack", "Odds/Evens", "Back"]
+                    for i, opt in enumerate(opts):
+                        blit_outlined(
+                            opt, ui_font, (200, 200, 200), (520, 270 + i * 40)
+                        )
+                        if i == select_pos:
+                            state.surf.blit(self.cursor, (490, 270 + i * 40))
+
+            elif casino_state == "blackjack":
+                blit_outlined("Blackjack", title_font, (230, 200, 120), (520, 60))
+                draw_gold_box()
+                draw_hands()
+                player_total = hand_value(player_hand)
+                dealer_total = hand_value([c for c in dealer_hand if c["face_up"]])
+                blit_outlined(
+                    f"Player: {player_total}", ui_font, (220, 220, 220), (180, 520)
+                )
+                blit_outlined(
+                    f"Dealer: {dealer_total}", ui_font, (220, 220, 220), (180, 120)
+                )
+                if bj_state == "bet":
+                    blit_outlined(
+                        f"Bet: {bet_amount} (Up/Down to change)",
+                        ui_font,
+                        (240, 240, 200),
+                        (360, 520),
+                    )
+                    blit_outlined(
+                        "Enter to deal, RCTRL to cancel",
+                        small_font,
+                        (200, 200, 200),
+                        (360, 550),
+                    )
+                elif bj_state == "player":
+                    blit_outlined(
+                        "H: Hit  S: Stand  RCTRL: Quit",
+                        small_font,
+                        (200, 200, 200),
+                        (360, 520),
+                    )
+                elif bj_state == "resolve":
+                    blit_outlined(message, ui_font, (240, 220, 160), (360, 500))
+                    if last_payout != 0:
+                        blit_outlined(
+                            f"Payout: {last_payout:+d}",
+                            small_font,
+                            (240, 220, 160),
+                            (360, 528),
+                        )
+                    blit_outlined(
+                        "Enter: Play again  RCTRL: Menu",
+                        small_font,
+                        (200, 200, 200),
+                        (360, 556),
+                    )
+                if message and bj_state != "resolve":
+                    blit_outlined(message, ui_font, (240, 200, 120), (360, 580))
+
+            elif casino_state == "odds_evens":
+                blit_outlined("Odds / Evens", title_font, (230, 200, 120), (500, 60))
+                draw_gold_box()
+                if oe_state == "bet":
+                    blit_outlined(
+                        f"Bet: {bet_amount} (Up/Down)",
+                        ui_font,
+                        (240, 240, 200),
+                        (430, 250),
+                    )
+                    blit_outlined(
+                        f"Choice: {oe_choice.title()} (Left/Right)",
+                        ui_font,
+                        (220, 220, 220),
+                        (430, 285),
+                    )
+                    blit_outlined(
+                        "Enter to roll, RCTRL to cancel",
+                        small_font,
+                        (200, 200, 200),
+                        (430, 320),
+                    )
+                elif oe_state == "roll":
+                    blit_outlined("Rolling...", ui_font, (220, 220, 220), (520, 300))
+                elif oe_state == "resolve":
+                    blit_outlined(
+                        f"Player: {oe_player}  Dealer: {oe_dealer}",
+                        ui_font,
+                        (220, 220, 220),
+                        (430, 250),
+                    )
+                    blit_outlined(message, ui_font, (240, 220, 160), (430, 285))
+                    if last_payout != 0:
+                        blit_outlined(
+                            f"Payout: {last_payout:+d}",
+                            small_font,
+                            (240, 220, 160),
+                            (430, 315),
+                        )
+                    blit_outlined(
+                        "Enter: Play again  RCTRL: Menu",
+                        small_font,
+                        (200, 200, 200),
+                        (430, 345),
+                    )
+                if message and oe_state == "bet":
+                    blit_outlined(message, ui_font, (240, 200, 120), (430, 360))
+
             state.surf.blit(ab, (0, 0))
             state.screen.blit(state.surf, (0, 0))
             self.game_clock.pass_time(player_data, area_music)
@@ -1142,6 +1641,7 @@ class GameEvents(MainUi):
             fps = "FPS:%d" % state.clock.get_fps()
             pygame.display.set_caption(fps)
             pygame.display.flip()
+        pygame.key.set_repeat(*prev_repeat)
 
 
 class GameClock:

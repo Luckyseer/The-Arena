@@ -141,6 +141,33 @@ class MainUi:
         self.pbtalk = 0
         self.cur_dialogue = [[]]  # Current dialogue in talk
 
+    def render_text(
+        self,
+        text,
+        font=None,
+        color=None,
+        outline=False,
+        outline_color=(0, 0, 0),
+        thickness=2,
+    ):
+        """Render UI text with optional outline."""
+        use_font = font if font is not None else self.uitext
+        use_color = color if color is not None else self.txtcolor
+        if not outline:
+            return use_font.render(text, False, use_color)
+        base = use_font.render(text, True, use_color)
+        w = base.get_width() + thickness * 2
+        h = base.get_height() + thickness * 2
+        surf = pygame.Surface((w, h), pygame.SRCALPHA)
+        outline_surf = use_font.render(text, True, outline_color)
+        for dx in (-thickness, 0, thickness):
+            for dy in (-thickness, 0, thickness):
+                if dx == 0 and dy == 0:
+                    continue
+                surf.blit(outline_surf, (dx + thickness, dy + thickness))
+        surf.blit(base, (thickness, thickness))
+        return surf
+
     def arena(self, floor=1):  # Main ui in the arena
         state.surf.blit(
             pygame.transform.scale(self.bg, (int(state.curwidth / 1.5), 300)), (0, 430)
@@ -510,15 +537,20 @@ class MainUi:
                 state.surf.blit(hover_item_mag, (605, 580))
 
     def stat_point_alloc(self, player=Player()):
+        stats_y = 235
+        stats_step = 32
+        str_y = stats_y
+        def_y = stats_y + stats_step
+        mag_y = stats_y + stats_step * 2
         if self.stat_cursor_pos == 0:
-            state.surf.blit(self.cursor, (255, 250))
-            state.surf.blit(self.cursor_left, (135, 247))
+            state.surf.blit(self.cursor, (255, str_y + 3))
+            state.surf.blit(self.cursor_left, (135, str_y))
         elif self.stat_cursor_pos == 1:
-            state.surf.blit(self.cursor, (255, 290))
-            state.surf.blit(self.cursor_left, (135, 287))
+            state.surf.blit(self.cursor, (255, def_y + 3))
+            state.surf.blit(self.cursor_left, (135, def_y))
         elif self.stat_cursor_pos == 2:
-            state.surf.blit(self.cursor, (265, 330))
-            state.surf.blit(self.cursor_left, (135, 327))
+            state.surf.blit(self.cursor, (255, mag_y + 3))
+            state.surf.blit(self.cursor_left, (135, mag_y))
         if self.stat_cursor_pos > 2:
             self.stat_cursor_pos = 0
         elif self.stat_cursor_pos < 0:
@@ -923,7 +955,14 @@ class MainUi:
             self.cursorpos = 3
         self.clock(player.hours, player.minutes)
 
-    def draw_casino(self, player):  # Draws the casino UI
+    def draw_casino(
+        self,
+        player,
+        opt1=None,
+        opt2=None,
+        opt3=None,
+        opt4=None,
+    ):  # Draws the casino UI
         state.surf.blit(
             pygame.transform.scale(self.bg, (int(state.curwidth / 1.5), 300)), (0, 430)
         )  # Description box
@@ -933,10 +972,14 @@ class MainUi:
         state.surf.blit(
             pygame.transform.scale(self.bg, (300, 300)), (905, 430)
         )  # Actions box
-        state.surf.blit(self.talktxt, (946, 496))
-        state.surf.blit(self.sleeptxt, (946, 526))
-        state.surf.blit(self.casino_text, (946, 556))
-        state.surf.blit(self.backtxt, (946, 586))
+        label1 = opt1 if opt1 is not None else self.talktxt
+        label2 = opt2 if opt2 is not None else self.sleeptxt
+        label3 = opt3 if opt3 is not None else self.casino_text
+        label4 = opt4 if opt4 is not None else self.backtxt
+        state.surf.blit(label1, (946, 496))
+        state.surf.blit(label2, (946, 526))
+        state.surf.blit(label3, (946, 556))
+        state.surf.blit(label4, (946, 586))
         # Current gold with the player
         gold = self.uitext2.render("Gold:  %d" % player.gold, False, self.txtcolor)
         self.coinAnim.blit(state.surf, (22, 45))  # Gold icon
