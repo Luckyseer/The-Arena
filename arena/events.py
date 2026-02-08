@@ -1,4 +1,5 @@
 import random
+import math
 import pickle
 import pygame
 from data import gameui, pyganim, splashscreen
@@ -742,6 +743,16 @@ class GameEvents(MainUi):
         text_y = 100
         text = ""
         dialogue = "intro1"
+        base_w, base_h = 1280, 720
+        vignette = pygame.Surface((base_w, base_h), pygame.SRCALPHA)
+        for i in range(18):
+            alpha = int(10 + i * 5)
+            inset = i * 12
+            pygame.draw.rect(
+                vignette,
+                (0, 0, 0, alpha),
+                (inset, inset, base_w - inset * 2, base_h - inset * 2),
+            )
         while not event_done:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -761,6 +772,8 @@ class GameEvents(MainUi):
             if intro_level < 24:
                 state.surf.fill((0, 0, 0, 255))
             text_surf.fill((0, 0, 0, 0))
+            drift = math.sin(pygame.time.get_ticks() * 0.0008) * 6
+            zoom = 1.0 + math.sin(pygame.time.get_ticks() * 0.0007) * 0.008
             if intro_level == 0:
                 if self.timekeep.timing(1) > 3:
                     intro_level += 1
@@ -768,7 +781,7 @@ class GameEvents(MainUi):
             elif intro_level == 1:
                 text_x += 0.1
                 self.ui_text.fade_in(text_surf)
-                text = "I'm.. still alive?"
+                text = "I'm... still alive?"
                 if self.timekeep.timing(1) > 3:
                     intro_level += 1
                     self.timekeep.reset()
@@ -813,7 +826,7 @@ class GameEvents(MainUi):
             elif intro_level == 7:
                 text_x += 0.1
                 self.ui_text.fade_in(text_surf)
-                text = "I never wanted any of this.."
+                text = "I never wanted any of this..."
                 if self.timekeep.timing(1) > 4:
                     intro_level += 1
                     self.timekeep.reset()
@@ -828,7 +841,7 @@ class GameEvents(MainUi):
             elif intro_level == 9:
                 text_x += 0.1
                 self.ui_text.fade_in(text_surf)
-                text = "This.. This is all my fault.."
+                text = "This... this is all my fault."
                 if self.timekeep.timing(1) > 4:
                     intro_level += 1
                     self.timekeep.reset()
@@ -843,7 +856,7 @@ class GameEvents(MainUi):
             elif intro_level == 11:
                 text_x += 0.1
                 self.ui_text.fade_in(text_surf)
-                text = "Because of me.. The world will.."
+                text = "Because of me... the world will..."
                 if self.timekeep.timing(1) > 4:
                     intro_level += 1
                     self.timekeep.reset()
@@ -858,7 +871,7 @@ class GameEvents(MainUi):
             elif intro_level == 13:
                 text_x += 0.1
                 self.ui_text.fade_in(text_surf)
-                text = "No.. Not yet.. I can't give up now."
+                text = "No... not yet. I can't give up now."
                 if self.timekeep.timing(1) > 4:
                     intro_level += 1
                     self.timekeep.reset()
@@ -873,7 +886,7 @@ class GameEvents(MainUi):
             elif intro_level == 15:
                 text_x += 0.1
                 self.ui_text.fade_in(text_surf)
-                text = "There should still be time.. I've gotten this far.."
+                text = "There should still be time... I've come this far..."
                 if self.timekeep.timing(1) > 4:
                     intro_level += 1
                     self.timekeep.reset()
@@ -888,7 +901,7 @@ class GameEvents(MainUi):
             elif intro_level == 17:
                 text_x += 0.1
                 self.ui_text.fade_in(text_surf)
-                text = "If I don't stand now.. It will truly be the end.."
+                text = "If I don't stand now... it will truly be the end."
                 if self.timekeep.timing(1) > 4:
                     intro_level += 1
                     self.timekeep.reset()
@@ -903,7 +916,7 @@ class GameEvents(MainUi):
             elif intro_level == 19:
                 text_x += 0.1
                 self.ui_text.fade_in(text_surf)
-                text = "Mark my words... I will return.. "
+                text = "Mark my words... I will return."
                 if self.timekeep.timing(1) > 2:
                     intro_level += 1
                     self.timekeep.reset()
@@ -953,8 +966,42 @@ class GameEvents(MainUi):
                     draw_tb = True
             elif intro_level == 26:
                 event_done = True
+            if text:
+                text_w, text_h = self.ui_text.main_font.size(text)
+                glow_w = max(180, int(text_w * 1.25))
+                glow_h = max(70, int(text_h * 2.0))
+                glow_small = pygame.Surface(
+                    (max(1, glow_w // 4), max(1, glow_h // 4)),
+                    pygame.SRCALPHA,
+                )
+                pygame.draw.ellipse(
+                    glow_small, (40, 55, 90, 180), glow_small.get_rect()
+                )
+                glow = pygame.transform.smoothscale(glow_small, (glow_w, glow_h))
+                glow.set_alpha(90)
+                text_surf.blit(
+                    glow,
+                    (
+                        int(text_x - (glow_w - text_w) // 2),
+                        int(text_y - (glow_h - text_h) // 2),
+                    ),
+                )
             self.ui_text.draw_text((text_x, text_y), text, False, text_surf)
-            state.surf.blit(text_surf, (0, 0))
+            if zoom != 1.0:
+                scaled = pygame.transform.smoothscale(
+                    text_surf, (int(base_w * zoom), int(base_h * zoom))
+                )
+                offset_x = (base_w - scaled.get_width()) // 2
+                offset_y = (base_h - scaled.get_height()) // 2
+                state.surf.blit(scaled, (offset_x, offset_y + drift))
+            else:
+                state.surf.blit(text_surf, (0, drift))
+            if intro_level < 20:
+                vignette_alpha = 120
+            else:
+                vignette_alpha = 60
+            vignette.set_alpha(vignette_alpha)
+            state.surf.blit(vignette, (0, 0))
             if draw_tb:
                 self.text_box.draw_textbox(
                     intro_dialogue[dialogue], state.surf, (0, 400)
