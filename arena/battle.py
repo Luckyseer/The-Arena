@@ -1353,7 +1353,13 @@ class NewBattle:
         self.pending_action = None
         self.pending_skill_index = None
         self.pending_item_index = None
+        self.pending_target_mode = "single_enemy"
         self.last_enemy_targets = []
+        self.round_number = 1
+        self.round_order = []
+        self.round_index = 0
+        self.turn_order_slide = -80
+        self.target_name_alpha = 0
         self.party_positions = [(920, 300), (840, 340)]
         self.enemy_positions = [(240, 280), (140, 240), (140, 360), (240, 340)]
         #  Player Details
@@ -1514,7 +1520,7 @@ class NewBattle:
         #  Temp stuff remove later
         self.crit_text = self.dmg_font.render("Critical!", True, (225, 0, 100))
         self.weak_text = self.dmg_font.render("Weak!", True, (225, 0, 100))
-        self.strong_text = self.dmg_font.render("Strong!", True, (4, 19, 219))
+        self.strong_text = self.dmg_font.render("Resist!", True, (4, 19, 219))
         self.crit_chance = 1
         self.loaded_anim = pyganim.PygAnimation(
             [
@@ -1654,6 +1660,7 @@ class NewBattle:
                 "side": "player",
                 "player": pdata,
                 "name": pdata.name,
+                "display_name": pdata.name,
                 "class": pdata.pclass,
                 "level": pdata.level,
                 "max_hp": pdata.hp,
@@ -1679,6 +1686,7 @@ class NewBattle:
                 "burst_anim": burst_anim,
                 "ct": 0.0,
                 "hit_flash": 0,
+                "order_id": idx,
             }
             for item in combatant["item_equipped"]:
                 if item.get("attributes") != "null":
@@ -1722,9 +1730,16 @@ class NewBattle:
                     "pos", self.enemy_positions[min(idx, len(self.enemy_positions) - 1)]
                 )
             sprite = pygame.image.load(mon["sprites"]).convert_alpha()
+            portrait = None
+            if mon.get("portrait"):
+                try:
+                    portrait = pygame.image.load(mon["portrait"]).convert_alpha()
+                except pygame.error:
+                    portrait = None
             combatant = {
                 "side": "enemy",
                 "name": name,
+                "display_name": mon.get("name", name),
                 "max_hp": mon["health"],
                 "hp": mon["health"],
                 "virtual_hp": mon["health"],
@@ -1749,6 +1764,8 @@ class NewBattle:
                 "fade_active": False,
                 "fade_alpha": 255,
                 "death_sound_played": False,
+                "order_id": len(self.party) + idx,
+                "portrait": portrait,
             }
             self.enemies.append(combatant)
 
@@ -1758,6 +1775,10 @@ class NewBattle:
 
         if self.party:
             self.set_active(self.party[0])
+        self.round_number = 1
+        self.build_round_order()
+        if self.round_order:
+            self.set_active(self.round_order[0])
 
     def set_active(self, combatant):
         self.active = combatant
@@ -1772,25 +1793,45 @@ class NewBattle:
             self.turn = "enemy"
             self.announce_turn("enemy")
 
-    def select_next_turn(self):
+    def build_round_order(self):
         alive = [c for c in self.party + self.enemies if c["hp"] > 0]
         if not alive:
-            return None
-        # Advance CT by the minimum time to reach threshold
-        min_time = None
-        for c in alive:
-            speed = max(1, c.get("speed", 1))
-            time_needed = max(0.0, (self.ct_threshold - c["ct"]) / speed)
-            if min_time is None or time_needed < min_time:
-                min_time = time_needed
-        min_time = min_time if min_time is not None else 0.0
-        for c in alive:
-            speed = max(1, c.get("speed", 1))
-            c["ct"] += speed * min_time
-        active = max(alive, key=lambda c: c["ct"])
-        active["ct"] -= self.ct_threshold
-        self.set_active(active)
-        return active
+            self.round_order = []
+            return
+        self.round_order = sorted(
+            alive,
+            key=lambda c: (
+                -max(1, c.get("speed", 1)),
+                0 if c["side"] == "player" else 1,
+                c.get("order_id", 0),
+            ),
+        )
+        self.round_index = 0
+        self.turn_order_slide = -80
+
+    def ensure_active(self):
+        if not self.round_order:
+            self.build_round_order()
+            if self.round_order:
+                self.round_index = 0
+                self.set_active(self.round_order[self.round_index])
+            return
+        if not self.active or self.active["hp"] <= 0:
+            idx = self.round_index
+            while idx < len(self.round_order) and self.round_order[idx]["hp"] <= 0:
+                idx += 1
+            if idx >= len(self.round_order):
+                self.round_number += 1
+                self.tick_status_round()
+                self.build_round_order()
+                idx = 0
+            self.round_index = idx
+            if self.round_order:
+                self.set_active(self.round_order[self.round_index])
+
+    def select_next_turn(self):
+        self.ensure_active()
+        return self.active
 
     def set_target(self, side, index=0):
         if side == "enemy":
@@ -1909,11 +1950,19 @@ class NewBattle:
             self.player_dmg_flag = True
         self.sync_active_stats()
 
-    def start_targeting(self, side, action, skill_index=None, item_index=None):
+    def start_targeting(
+        self,
+        side,
+        action,
+        skill_index=None,
+        item_index=None,
+        target_mode="single_enemy",
+    ):
         self.targeting = True
         self.pending_action = action
         self.pending_skill_index = skill_index
         self.pending_item_index = item_index
+        self.pending_target_mode = target_mode
         if side == "enemy":
             self.target_side = "enemy"
             self.set_target("enemy", self.target_index)
@@ -1936,8 +1985,8 @@ class NewBattle:
     def get_skill_target_mode(self, skill_name, caster_side):
         entry = self.get_skill_entry(skill_name, caster_side)
         if not entry:
-            return "single"
-        return entry.get("target", "single")
+            return "single_enemy"
+        return entry.get("target", "single_enemy")
 
     def is_aoe_skill(self, skill_name, caster_side=None):
         side = caster_side if caster_side else self.turn
@@ -1972,18 +2021,16 @@ class NewBattle:
     def all_players_dead(self):
         return all(p["hp"] <= 0 for p in self.party)
 
-    def tick_status_turn(self, member):
-        if not member:
-            return
-        for status in list(member["status"]):
-            status[1] -= 1
-            if status[1] <= 0:
-                member["status"].remove(status)
+    def tick_status_round(self):
+        for member in self.party + self.enemies:
+            for status in list(member["status"]):
+                if len(status) >= 3 and status[2] == self.round_number:
+                    continue
+                status[1] -= 1
+                if status[1] <= 0:
+                    member["status"].remove(status)
 
     def advance_turn(self):
-        prev_active = self.active
-        if prev_active:
-            self.tick_status_turn(prev_active)
         if self.all_enemies_dead():
             self.game_state = "enemy_death"
             self.global_timer.reset()
@@ -1993,7 +2040,31 @@ class NewBattle:
             self.global_timer.reset()
             return
         self.turn_count += 1
-        self.select_next_turn()
+        if not self.round_order:
+            self.build_round_order()
+        self.round_index += 1
+        if self.round_index >= len(self.round_order):
+            self.round_number += 1
+            self.tick_status_round()
+            self.build_round_order()
+            self.round_index = 0
+
+        # Skip dead combatants in the round
+        while (
+            self.round_index < len(self.round_order)
+            and self.round_order[self.round_index]["hp"] <= 0
+        ):
+            self.round_index += 1
+        if self.round_index >= len(self.round_order):
+            self.round_number += 1
+            self.tick_status_round()
+            self.build_round_order()
+            self.round_index = 0
+        if self.round_order:
+            self.set_active(self.round_order[self.round_index])
+        else:
+            self.active = None
+            return
         self.sync_active_stats()
         if self.active and self.active["side"] == "player":
             self.draw_menu = True
@@ -2039,7 +2110,13 @@ class NewBattle:
                         pygame.K_UP,
                         pygame.K_DOWN,
                     ):
-                        if self.target_side == "enemy":
+                        if self.pending_target_mode in (
+                            "all_enemies",
+                            "all_allies",
+                            "self",
+                        ):
+                            pass
+                        elif self.target_side == "enemy":
                             alive = [c for c in self.enemies if c["hp"] > 0]
                             if alive:
                                 delta = (
@@ -2086,12 +2163,14 @@ class NewBattle:
                         self.pending_action = None
                         self.pending_skill_index = None
                         self.pending_item_index = None
+                        self.pending_target_mode = "single_enemy"
                     if event.key == pygame.K_RCTRL:
                         self.targeting = False
                         self.pending_action = None
                         self.pending_skill_index = None
                         self.pending_item_index = None
                         self.target_side = "enemy"
+                        self.pending_target_mode = "single_enemy"
                     continue
                 if self.draw_menu:
                     if event.key == pygame.K_UP:
@@ -2169,35 +2248,37 @@ class NewBattle:
                                     target_mode = self.get_skill_target_mode(
                                         skill_name, "player"
                                     )
-                                    if target_mode == "all_enemies":
-                                        self.pending_action = "skill"
-                                        self.pending_skill_index = skill_index
-                                        self.pending_item_index = None
-                                        self.targeting = False
-                                        self.target_side = "enemy"
-                                        self.consume_skill_cost(skill_index)
-                                        self.game_state = "player_skill"
-                                        self.global_timer.reset()
-                                        self.draw_menu = False
-                                        continue
-                                    if target_mode == "all_allies":
-                                        self.pending_action = "skill"
-                                        self.pending_skill_index = skill_index
-                                        self.pending_item_index = None
-                                        self.targeting = False
-                                        self.target_side = "player"
-                                        self.consume_skill_cost(skill_index)
-                                        self.game_state = "player_skill"
-                                        self.global_timer.reset()
-                                        self.draw_menu = False
-                                        continue
-                                    if skill_type == "buff":
+                                    if target_mode in ("all_enemies", "single_enemy"):
                                         self.start_targeting(
-                                            "player", "skill", skill_index=skill_index
+                                            "enemy",
+                                            "skill",
+                                            skill_index=skill_index,
+                                            target_mode=target_mode,
+                                        )
+                                    elif target_mode in (
+                                        "all_allies",
+                                        "single_ally",
+                                        "self",
+                                    ):
+                                        self.start_targeting(
+                                            "player",
+                                            "skill",
+                                            skill_index=skill_index,
+                                            target_mode=target_mode,
+                                        )
+                                    elif skill_type == "buff":
+                                        self.start_targeting(
+                                            "player",
+                                            "skill",
+                                            skill_index=skill_index,
+                                            target_mode="self",
                                         )
                                     else:
                                         self.start_targeting(
-                                            "enemy", "skill", skill_index=skill_index
+                                            "enemy",
+                                            "skill",
+                                            skill_index=skill_index,
+                                            target_mode="single_enemy",
                                         )
                                 else:
                                     self.buzzer_sound.play()
@@ -2276,42 +2357,6 @@ class NewBattle:
                 enemy["hit_flash"] -= 1
 
         self.loaded_anim.blit(state.surf, self.anim_pos)
-        if self.targeting and not self.target:
-            if self.target_side == "enemy":
-                alive = [c for c in self.enemies if c["hp"] > 0]
-                if alive:
-                    self.target_index = max(0, min(self.target_index, len(alive) - 1))
-                    self.target = alive[self.target_index]
-            else:
-                alive = [c for c in self.party if c["hp"] > 0]
-                if alive:
-                    self.ally_target_index = max(
-                        0, min(self.ally_target_index, len(alive) - 1)
-                    )
-                    self.target = alive[self.ally_target_index]
-            if self.target:
-                self.sync_active_stats()
-
-        if self.targeting and self.target:
-            tx, ty = self.target["pos"][0], self.target["pos"][1]
-            if self.target["side"] == "enemy":
-                height = self.target["sprite"].get_height()
-            else:
-                player_burst = any("burst" in s[0] for s in self.target["status"])
-                if player_burst:
-                    frame = self.target["burst_anim"].getCurrentFrame()
-                else:
-                    frame = self.target["anim"].getCurrentFrame()
-                height = frame.get_height()
-            bob = int(4 * math.sin(pygame.time.get_ticks() * 0.008))
-            cursor_x = tx + 10
-            cursor_y = ty - height - 20 + bob
-            if cursor_y < 5:
-                cursor_y = 5
-            state.surf.blit(
-                self.cursor_target,
-                (cursor_x, cursor_y),
-            )
 
     def play_sound(self, sound):
         self.sound_effect = pygame.mixer.Sound(self.sound_data[sound])
@@ -2319,7 +2364,47 @@ class NewBattle:
         self.sound_effect.play()
 
     def blit_target_cursor(self):
-        if self.targeting and not self.target:
+        if not self.targeting:
+            self.target_name_alpha = max(0, self.target_name_alpha - 25)
+            return
+
+        mode = self.pending_target_mode or "single_enemy"
+        if mode in ("all_enemies", "all_allies"):
+            if mode == "all_enemies":
+                targets = [c for c in self.enemies if c["hp"] > 0]
+            else:
+                targets = [c for c in self.party if c["hp"] > 0]
+            if not targets:
+                self.target_name_alpha = max(0, self.target_name_alpha - 25)
+                return
+            bob = int(4 * math.sin(pygame.time.get_ticks() * 0.008))
+            for idx, tgt in enumerate(targets):
+                if tgt.get("side") == "enemy":
+                    tgt["hit_flash"] = max(tgt.get("hit_flash", 0), 2)
+                tx, ty = tgt["pos"][0], tgt["pos"][1]
+                if tgt["side"] == "enemy":
+                    height = tgt["sprite"].get_height()
+                else:
+                    player_burst = any("burst" in s[0] for s in tgt["status"])
+                    if player_burst:
+                        frame = tgt["burst_anim"].getCurrentFrame()
+                    else:
+                        frame = tgt["anim"].getCurrentFrame()
+                    height = frame.get_height()
+                extra = int(2 * math.sin(pygame.time.get_ticks() * 0.01 + idx))
+                cursor_x = tx + 10
+                cursor_y = ty - height - 20 + bob + extra
+                if cursor_y < 5:
+                    cursor_y = ty + 5 + bob + extra
+                state.surf.blit(self.cursor_target, (cursor_x, cursor_y))
+            self.target_name_alpha = max(0, self.target_name_alpha - 25)
+            return
+
+        if mode == "self" and self.active:
+            self.target = self.active
+            self.target_side = self.active["side"]
+
+        if not self.target:
             if self.target_side == "enemy":
                 alive = [c for c in self.enemies if c["hp"] > 0]
                 if alive:
@@ -2335,7 +2420,9 @@ class NewBattle:
             if self.target:
                 self.sync_active_stats()
 
-        if self.targeting and self.target:
+        if self.target:
+            if self.target.get("side") == "enemy":
+                self.target["hit_flash"] = max(self.target.get("hit_flash", 0), 2)
             tx, ty = self.target["pos"][0], self.target["pos"][1]
             if self.target["side"] == "enemy":
                 height = self.target["sprite"].get_height()
@@ -2351,7 +2438,37 @@ class NewBattle:
             cursor_y = ty - height - 20 + bob
             if cursor_y < 5:
                 cursor_y = ty + 5 + bob
+            self.target_name_alpha = min(220, self.target_name_alpha + 18)
+            if self.target["side"] == "enemy":
+                display_name = self.target.get("display_name", self.target["name"])
+                name_txt = self.ui_font.render(display_name, True, (235, 230, 210))
+                pad_x = 10
+                pad_y = 4
+                w = name_txt.get_width() + pad_x * 2
+                h = name_txt.get_height() + pad_y * 2
+                name_x = tx + 10
+                name_y = cursor_y - h - 6
+                if name_y < 5:
+                    name_y = ty + 5 + bob
+                box = pygame.Surface((w, h), pygame.SRCALPHA)
+                pygame.draw.rect(
+                    box,
+                    (18, 16, 18, self.target_name_alpha),
+                    (0, 0, w, h),
+                    border_radius=8,
+                )
+                pygame.draw.rect(
+                    box,
+                    (120, 100, 50, self.target_name_alpha),
+                    (0, 0, w, h),
+                    2,
+                    border_radius=8,
+                )
+                box.blit(name_txt, (pad_x, pad_y))
+                state.surf.blit(box, (name_x, name_y))
             state.surf.blit(self.cursor_target, (cursor_x, cursor_y))
+        else:
+            self.target_name_alpha = max(0, self.target_name_alpha - 25)
 
     def play_animation(self, animation, pos=(920, 270), scale=1.0, flip=False):
         self.loaded_anim = pyganim.PygAnimation(self.animation_data[animation], False)
@@ -2423,7 +2540,7 @@ class NewBattle:
                 )
             elif self.element in self.m_strengths:
                 self.spawn_floating_text(
-                    "Strong!",
+                    "Resist!",
                     (4, 19, 219),
                     (pos[0], pos[1] - 45),
                     scale=1.1,
@@ -2524,7 +2641,7 @@ class NewBattle:
         w = text_surf.get_width() + pad_x * 2
         h = text_surf.get_height() + pad_y * 2
         x = (state.curwidth - w) // 2
-        y = 12
+        y = 90
         box = pygame.Surface((w, h), pygame.SRCALPHA)
         pygame.draw.rect(box, (24, 20, 24, alpha), (0, 0, w, h), border_radius=8)
         pygame.draw.rect(box, (122, 98, 36, alpha), (0, 0, w, h), 2, border_radius=8)
@@ -2569,7 +2686,7 @@ class NewBattle:
     def check_state(self, player):
         """Keeps track of the game state and updates it accordingly"""
         if not self.active or self.active["hp"] <= 0:
-            self.select_next_turn()
+            self.ensure_active()
         if self.active:
             if self.target_side == "enemy":
                 self.set_target("enemy", self.target_index)
@@ -2914,9 +3031,13 @@ class NewBattle:
                                 elif action[1] == "defend":
                                     duration = 2
                                 if self.turn == "player":
-                                    self.p_status.append([action[1], duration])
+                                    self.p_status.append(
+                                        [action[1], duration, self.round_number + 1]
+                                    )
                                 elif self.turn == "enemy":
-                                    self.m_status.append([action[1], duration])
+                                    self.m_status.append(
+                                        [action[1], duration, self.round_number + 1]
+                                    )
                         elif action[0] == "add_status_target":  # Debuff
                             status_in = False
                             duration = 0
@@ -2940,9 +3061,13 @@ class NewBattle:
                                 elif action[1] == "mag_down":
                                     duration = 2
                                 if self.turn == "player":
-                                    self.m_status.append([action[1], duration])
+                                    self.m_status.append(
+                                        [action[1], duration, self.round_number + 1]
+                                    )
                                 elif self.turn == "enemy":
-                                    self.p_status.append([action[1], duration])
+                                    self.p_status.append(
+                                        [action[1], duration, self.round_number + 1]
+                                    )
                         elif action[0] == "deal_damage":
                             if self.is_aoe_skill(action[1]):
                                 targets = self.get_alive_targets(
@@ -3157,12 +3282,21 @@ class NewBattle:
     def draw_healthbar(self, cur_health):  # Enemy health bar
         targets = []
         if self.last_enemy_targets:
-            targets = [t for t in self.last_enemy_targets if t["side"] == "enemy"]
+            targets = [
+                t
+                for t in self.last_enemy_targets
+                if t["side"] == "enemy" and t["hp"] > 0
+            ]
         elif self.last_enemy_target and self.last_enemy_target["side"] == "enemy":
-            targets = [self.last_enemy_target]
+            if self.last_enemy_target["hp"] > 0:
+                targets = [self.last_enemy_target]
         elif self.target and self.target["side"] == "enemy":
-            targets = [self.target]
+            if self.target["hp"] > 0:
+                targets = [self.target]
         if not targets:
+            self.healthbar_flag = False
+            self.last_enemy_targets = []
+            self.last_enemy_target = None
             return
 
         for target in targets:
@@ -3201,6 +3335,58 @@ class NewBattle:
                 ),
                 (x + 7, y + 1),
             )
+
+    def get_portrait_surface(self, combatant):
+        if combatant.get("portrait"):
+            return combatant["portrait"]
+        if combatant["side"] == "player":
+            anim = combatant.get("anim")
+            if anim:
+                return anim.getCurrentFrame()
+        return combatant.get("sprite")
+
+    def draw_turn_order(self):
+        if not self.round_order:
+            return
+        curwidth = state.curwidth or state.screen.get_width()
+        banner_h = 64
+        icon_size = 42
+        icon_gap = 8
+        pad_x = 12
+        count = len(self.round_order)
+        banner_w = (icon_size * count) + (icon_gap * max(0, count - 1)) + pad_x * 2
+        x = (curwidth - banner_w) // 2
+        y = 12 + int(self.turn_order_slide)
+        if self.turn_order_slide < 0:
+            self.turn_order_slide = min(0, self.turn_order_slide + 6)
+
+        banner = pygame.Surface((banner_w, banner_h), pygame.SRCALPHA)
+        banner.fill((20, 20, 28, 180))
+        state.surf.blit(banner, (x, y))
+
+        turn_txt = self.ui_font.render(
+            f"Turn {self.round_number}", True, (240, 235, 220)
+        )
+        state.surf.blit(turn_txt, (x - turn_txt.get_width() - 12, y + 18))
+
+        for i, c in enumerate(self.round_order):
+            icon_x = x + pad_x + i * (icon_size + icon_gap)
+            icon_y = y + (banner_h - icon_size) // 2
+            portrait = self.get_portrait_surface(c)
+            if not portrait:
+                continue
+            icon = pygame.transform.scale(portrait, (icon_size, icon_size))
+            if i != self.round_index:
+                icon.set_alpha(120)
+            else:
+                icon.set_alpha(255)
+                pygame.draw.rect(
+                    state.surf,
+                    (255, 220, 80),
+                    (icon_x - 2, icon_y - 2, icon_size + 4, icon_size + 4),
+                    2,
+                )
+            state.surf.blit(icon, (icon_x, icon_y))
 
     def draw_alertbox(self):
         """The alert box or the skill box that gets drawn when a skill is used."""
@@ -3450,11 +3636,28 @@ class NewBattle:
                 if self.initial_window_pos < 300:
                     self.initial_window_pos += 30
                 if self.initial_window_pos == 300:
+                    skill_info = self.skill_data[self.p_class][
+                        self.skill_min + self.cursor_pos
+                    ]
+                    target_mode = skill_info.get("target", "single_enemy")
+                    target_labels = {
+                        "single_enemy": "Target: Single Enemy",
+                        "all_enemies": "Target: All Enemies",
+                        "single_ally": "Target: Single Ally",
+                        "all_allies": "Target: All Allies",
+                        "self": "Target: Self",
+                    }
+                    target_text = self.ui_font.render(
+                        target_labels.get(target_mode, "Target: Single Enemy"),
+                        True,
+                        (200, 200, 200),
+                    )
                     state.surf.blit(self.skill_desc, (340, 480))
                     title_text2 = self.title_font.render(
                         self.ui_text[6], True, (200, 30, 30)
                     )
                     state.surf.blit(title_text2, (520, 413))
+                    state.surf.blit(target_text, (340, 510))
                     mp_cost_txt = self.ui_font.render(
                         "Mp Cost: %d" % cur_mp_cost, True, (200, 60, 130)
                     )
@@ -3483,7 +3686,7 @@ class NewBattle:
                             self.ui_font.render(
                                 "Insufficient MP!", True, (49, 61, 224)
                             ),
-                            (340, 510),
+                            (340, 570),
                         )
             elif self.ui_state == "item":
                 self.current_title = 3
@@ -3973,6 +4176,7 @@ class NewBattle:
             if self.healthbar_flag:
                 self.draw_healthbar(self.m_cur_health)
             self.blit_target_cursor()
+            self.draw_turn_order()
             self.update_status_effects()
             self.play_sequence(self.sequence_to_play, self.sequence_target)
             self.check_state(player_data)  # To check the current game state
