@@ -3,7 +3,7 @@ import math
 import pygame
 from data import pyganim
 
-from arena.data_loader import monster_data
+from arena.data_loader import battles, monster_data
 from arena.player import Player
 from arena.utils import Timer, fadein, fadeout, posfinder
 import arena.state as state
@@ -1338,6 +1338,24 @@ class NewBattle:
         self.skill_data = skilldata
         self.warrior_skills = skilldata["warrior"]
         self.sequences = sequence_data
+        self.battles = battles
+        #  Combatants (multi-battle)
+        self.party = []
+        self.enemies = []
+        self.active = None
+        self.target = None
+        self.ct_threshold = 100.0
+        self.turn_queue = []
+        self.targeting = False
+        self.target_side = "enemy"
+        self.target_index = 0
+        self.ally_target_index = 0
+        self.pending_action = None
+        self.pending_skill_index = None
+        self.pending_item_index = None
+        self.last_enemy_targets = []
+        self.party_positions = [(920, 300), (840, 340)]
+        self.enemy_positions = [(240, 280), (140, 240), (140, 360), (240, 340)]
         #  Player Details
         self.p_name = "Zen"
         self.p_level = 5
@@ -1349,6 +1367,7 @@ class NewBattle:
         self.p_def = 10
         self.p_mag = 20
         self.p_luck = 2
+        self.p_speed = 10
         self.p_class = "warrior"
         self.p_status = []
         self.p_inventory = []
@@ -1362,6 +1381,7 @@ class NewBattle:
         self.m_def = 1
         self.m_mag = 1
         self.m_luck = 1
+        self.m_speed = 10
         self.m_sprite = ""
         self.m_gold = 1
         self.m_exp = 1
@@ -1419,6 +1439,7 @@ class NewBattle:
         self.cursor = pygame.image.load("data/sprites/Cursor.png")
         self.cursor_down = pygame.transform.rotate(self.cursor, -90)
         self.cursor_up = pygame.transform.rotate(self.cursor, 90)
+        self.cursor_target = pygame.transform.rotate(self.cursor, -90)
         self.vic_img = pygame.image.load("data/sprites/victory.png").convert_alpha()
         self.def_font = pygame.font.Font("data/fonts/Daisy_Roots.otf", 70)
         self.current_title = 0
@@ -1489,6 +1510,7 @@ class NewBattle:
         self.turn_banner_timer = 0
         self.turn_banner_text = ""
         self.turn_banner_duration = 30
+        self.last_enemy_target = None
         #  Temp stuff remove later
         self.crit_text = self.dmg_font.render("Critical!", True, (225, 0, 100))
         self.weak_text = self.dmg_font.render("Weak!", True, (225, 0, 100))
@@ -1584,6 +1606,404 @@ class NewBattle:
         self.focus = False
         self.shake = False
 
+    def build_combatants(self, battle_id_or_monster, player_data):
+        self.party = []
+        self.enemies = []
+        self.turn_queue = []
+        self.active = None
+        self.target = None
+        self.targeting = False
+        self.target_side = "enemy"
+        self.target_index = 0
+        self.ally_target_index = 0
+
+        if isinstance(player_data, (list, tuple)):
+            party_data = list(player_data)
+        else:
+            party_data = [player_data]
+
+        for idx, pdata in enumerate(party_data[:2]):
+            pdata.update_stats()
+            base_pos = self.party_positions[min(idx, len(self.party_positions) - 1)]
+            if pdata.pclass == "warrior":
+                anim = pyganim.PygAnimation(
+                    [
+                        ("data/sprites/idle1.png", 0.2),
+                        ("data/sprites/idle2.png", 0.2),
+                        ("data/sprites/idle3.png", 0.2),
+                    ]
+                )
+            else:
+                anim = pyganim.PygAnimation(
+                    [
+                        ("data/sprites/midle1.png", 0.3),
+                        ("data/sprites/midle2.png", 0.3),
+                        ("data/sprites/midle3.png", 0.3),
+                    ]
+                )
+            anim.play()
+            burst_anim = pyganim.PygAnimation(
+                [
+                    ("data/sprites/burst1.png", 0.2),
+                    ("data/sprites/burst2.png", 0.2),
+                    ("data/sprites/burst3.png", 0.2),
+                ]
+            )
+            burst_anim.play()
+            combatant = {
+                "side": "player",
+                "player": pdata,
+                "name": pdata.name,
+                "class": pdata.pclass,
+                "level": pdata.level,
+                "max_hp": pdata.hp,
+                "hp": pdata.curhp,
+                "max_mp": pdata.mp,
+                "mp": pdata.curmp,
+                "str": pdata.stre + pdata.add_stre,
+                "def": pdata.defe + pdata.add_defe,
+                "mag": pdata.mag + pdata.add_mag,
+                "luck": pdata.luck,
+                "speed": getattr(pdata, "speed", 10) + getattr(pdata, "add_speed", 0),
+                "status": [],
+                "inventory": pdata.inventory,
+                "item_effects": [],
+                "item_equipped": [
+                    self.weapon_data[pdata.cur_weapon],
+                    self.armour_data[pdata.cur_armour],
+                    self.acc_data[pdata.cur_accessory],
+                ],
+                "pos": [base_pos[0], base_pos[1]],
+                "base_pos": [base_pos[0], base_pos[1]],
+                "anim": anim,
+                "burst_anim": burst_anim,
+                "ct": 0.0,
+                "hit_flash": 0,
+            }
+            for item in combatant["item_equipped"]:
+                if item.get("attributes") != "null":
+                    combatant["item_effects"].append(item.get("attributes"))
+            self.party.append(combatant)
+
+        enemy_list = []
+        if (
+            isinstance(battle_id_or_monster, str)
+            and battle_id_or_monster in self.battles
+        ):
+            for enemy in self.battles[battle_id_or_monster].get("enemies", []):
+                enemy_list.append(enemy)
+        else:
+            if isinstance(battle_id_or_monster, (list, tuple)):
+                for name in battle_id_or_monster:
+                    enemy_list.append({"name": name})
+            else:
+                enemy_list.append({"name": battle_id_or_monster})
+
+        for idx, enemy_cfg in enumerate(enemy_list[:4]):
+            name = enemy_cfg["name"]
+            mon = self.monster_data[name]
+            base_pos = None
+            slot = enemy_cfg.get("slot")
+            pos_key = enemy_cfg.get("pos")
+            if isinstance(slot, int):
+                slot_index = max(0, min(3, slot - 1))
+                base_pos = self.enemy_positions[slot_index]
+            elif isinstance(pos_key, str) and pos_key.startswith("pos"):
+                try:
+                    slot_index = max(0, min(3, int(pos_key[3:]) - 1))
+                    base_pos = self.enemy_positions[slot_index]
+                except ValueError:
+                    base_pos = None
+            elif isinstance(pos_key, int):
+                slot_index = max(0, min(3, pos_key - 1))
+                base_pos = self.enemy_positions[slot_index]
+            if base_pos is None:
+                base_pos = enemy_cfg.get(
+                    "pos", self.enemy_positions[min(idx, len(self.enemy_positions) - 1)]
+                )
+            sprite = pygame.image.load(mon["sprites"]).convert_alpha()
+            combatant = {
+                "side": "enemy",
+                "name": name,
+                "max_hp": mon["health"],
+                "hp": mon["health"],
+                "virtual_hp": mon["health"],
+                "max_mp": mon.get("mana", 0),
+                "mp": mon.get("mana", 0),
+                "str": mon["str"],
+                "def": mon["def"],
+                "mag": mon["mag"],
+                "luck": mon["luck"],
+                "speed": mon.get("speed", 10),
+                "status": [],
+                "move_list": mon["move_list"],
+                "weakness": mon["weakness"],
+                "strengths": mon["strengths"],
+                "gold": mon["gold"],
+                "exp": mon["exp"],
+                "sprite": sprite,
+                "pos": [base_pos[0], base_pos[1]],
+                "base_pos": [base_pos[0], base_pos[1]],
+                "ct": 0.0,
+                "hit_flash": 0,
+                "fade_active": False,
+                "fade_alpha": 255,
+                "death_sound_played": False,
+            }
+            self.enemies.append(combatant)
+
+        if self.enemies:
+            self.m_gold = sum(e["gold"] for e in self.enemies)
+            self.m_exp = sum(e["exp"] for e in self.enemies)
+
+        if self.party:
+            self.set_active(self.party[0])
+
+    def set_active(self, combatant):
+        self.active = combatant
+        if combatant["side"] == "player":
+            self.turn = "player"
+            self.announce_turn("player")
+            self.display_hp = combatant["hp"]
+            self.display_mp = combatant["mp"]
+            self.last_hp = combatant["hp"]
+            self.last_mp = combatant["mp"]
+        else:
+            self.turn = "enemy"
+            self.announce_turn("enemy")
+
+    def select_next_turn(self):
+        alive = [c for c in self.party + self.enemies if c["hp"] > 0]
+        if not alive:
+            return None
+        # Advance CT by the minimum time to reach threshold
+        min_time = None
+        for c in alive:
+            speed = max(1, c.get("speed", 1))
+            time_needed = max(0.0, (self.ct_threshold - c["ct"]) / speed)
+            if min_time is None or time_needed < min_time:
+                min_time = time_needed
+        min_time = min_time if min_time is not None else 0.0
+        for c in alive:
+            speed = max(1, c.get("speed", 1))
+            c["ct"] += speed * min_time
+        active = max(alive, key=lambda c: c["ct"])
+        active["ct"] -= self.ct_threshold
+        self.set_active(active)
+        return active
+
+    def set_target(self, side, index=0):
+        if side == "enemy":
+            alive = [c for c in self.enemies if c["hp"] > 0]
+            if not alive:
+                self.target = None
+                return
+            index = max(0, min(index, len(alive) - 1))
+            self.target_side = "enemy"
+            self.target_index = index
+            self.target = alive[index]
+            self.virtualMonsterHealth = self.target.get("virtual_hp", self.target["hp"])
+        else:
+            alive = [c for c in self.party if c["hp"] > 0]
+            if not alive:
+                self.target = None
+                return
+            index = max(0, min(index, len(alive) - 1))
+            self.target_side = "player"
+            self.ally_target_index = index
+            self.target = alive[index]
+
+    def get_melee_position(self, attacker, target):
+        offset = 140
+        base_x, base_y = attacker["base_pos"][0], attacker["base_pos"][1]
+        if attacker["side"] == "player":
+            return (base_x - offset, base_y)
+        return (base_x + offset, base_y)
+
+    def sync_active_stats(self):
+        if not self.active:
+            return
+        if self.active["side"] == "player":
+            self.p_name = self.active["name"]
+            self.p_level = self.active["level"]
+            self.p_max_health = self.active["max_hp"]
+            self.p_health = self.active["hp"]
+            self.p_max_mana = self.active["max_mp"]
+            self.p_mana = self.active["mp"]
+            self.p_str = self.active["str"]
+            self.p_def = self.active["def"]
+            self.p_mag = self.active["mag"]
+            self.p_luck = self.active["luck"]
+            self.p_speed = self.active["speed"]
+            self.p_class = self.active["class"]
+            self.p_status = self.active["status"]
+            self.p_inventory = self.active["inventory"]
+            self.p_item_effects = self.active["item_effects"]
+            self.player_pos = self.active["pos"][0]
+            self.player_y = self.active["pos"][1]
+        else:
+            self.m_name = self.active["name"]
+            self.m_max_health = self.active["max_hp"]
+            self.m_cur_health = self.active["hp"]
+            self.m_def = self.active["def"]
+            self.m_mag = self.active["mag"]
+            self.m_str = self.active["str"]
+            self.m_luck = self.active["luck"]
+            self.m_speed = self.active["speed"]
+            self.m_status = self.active["status"]
+            self.m_weakness = self.active["weakness"]
+            self.m_strengths = self.active["strengths"]
+            self.m_move_list = self.active["move_list"]
+
+        if self.target:
+            if self.target["side"] == "enemy":
+                self.m_name = self.target["name"]
+                self.m_max_health = self.target["max_hp"]
+                self.m_cur_health = self.target["hp"]
+                self.m_def = self.target["def"]
+                self.m_mag = self.target["mag"]
+                self.m_str = self.target["str"]
+                self.m_luck = self.target["luck"]
+                self.m_speed = self.target["speed"]
+                self.m_status = self.target["status"]
+                self.m_weakness = self.target["weakness"]
+                self.m_strengths = self.target["strengths"]
+                self.m_move_list = self.target["move_list"]
+                self.m_sprite = self.target["sprite"]
+                self.monster_pos = self.target["pos"][0]
+                self.monster_y = self.target["pos"][1]
+            else:
+                self.p_name = self.target["name"]
+                self.p_level = self.target["level"]
+                self.p_max_health = self.target["max_hp"]
+                self.p_health = self.target["hp"]
+                self.p_max_mana = self.target["max_mp"]
+                self.p_mana = self.target["mp"]
+                self.p_str = self.target["str"]
+                self.p_def = self.target["def"]
+                self.p_mag = self.target["mag"]
+                self.p_luck = self.target["luck"]
+                self.p_speed = self.target["speed"]
+                self.p_class = self.target["class"]
+                self.p_status = self.target["status"]
+                self.p_inventory = self.target["inventory"]
+                self.p_item_effects = self.target["item_effects"]
+                self.player_pos = self.target["pos"][0]
+                self.player_y = self.target["pos"][1]
+
+    def apply_damage(self, target, dmg, is_player_hit=False):
+        if not target:
+            return
+        target["hp"] = max(0, target["hp"] - dmg)
+        target["hit_flash"] = 6
+        if target["side"] == "enemy":
+            self.last_enemy_target = target
+        if target["side"] == "enemy" and target["hp"] <= 0:
+            if not target["death_sound_played"]:
+                self.play_sound("enemy_dead")
+                target["death_sound_played"] = True
+            target["fade_active"] = True
+            target["fade_alpha"] = 255
+            target["virtual_hp"] = target["hp"]
+        if target["side"] == "player":
+            self.player_dmg_flag = True
+        self.sync_active_stats()
+
+    def start_targeting(self, side, action, skill_index=None, item_index=None):
+        self.targeting = True
+        self.pending_action = action
+        self.pending_skill_index = skill_index
+        self.pending_item_index = item_index
+        if side == "enemy":
+            self.target_side = "enemy"
+            self.set_target("enemy", self.target_index)
+        else:
+            self.target_side = "player"
+            self.set_target("player", self.ally_target_index)
+
+    def get_skill_entry(self, skill_name, caster_side):
+        pool = (
+            self.skill_data.get("monster", [])
+            if caster_side == "enemy"
+            else self.skill_data.get(self.p_class, [])
+        )
+        skill_lower = skill_name.lower()
+        for skill in pool:
+            if skill["name"].lower() == skill_lower:
+                return skill
+        return None
+
+    def get_skill_target_mode(self, skill_name, caster_side):
+        entry = self.get_skill_entry(skill_name, caster_side)
+        if not entry:
+            return "single"
+        return entry.get("target", "single")
+
+    def is_aoe_skill(self, skill_name, caster_side=None):
+        side = caster_side if caster_side else self.turn
+        mode = self.get_skill_target_mode(skill_name, side)
+        return mode in ("all_enemies", "all_allies")
+
+    def get_alive_targets(self, side):
+        if side == "enemy":
+            return [c for c in self.enemies if c["hp"] > 0]
+        return [c for c in self.party if c["hp"] > 0]
+
+    def consume_skill_cost(self, skill_index):
+        if skill_index is None:
+            return
+        cost = self.skill_data[self.p_class][skill_index]["mp_cost"]
+        self.p_mana -= cost
+        if self.active and self.active["side"] == "player":
+            self.active["mp"] = self.p_mana
+
+    def apply_heal(self, target, hp_heal=0, mp_heal=0):
+        if not target:
+            return
+        if hp_heal:
+            target["hp"] = min(target["max_hp"], target["hp"] + hp_heal)
+        if mp_heal:
+            target["mp"] = min(target["max_mp"], target["mp"] + mp_heal)
+        self.sync_active_stats()
+
+    def all_enemies_dead(self):
+        return all(e["hp"] <= 0 for e in self.enemies)
+
+    def all_players_dead(self):
+        return all(p["hp"] <= 0 for p in self.party)
+
+    def tick_status_turn(self, member):
+        if not member:
+            return
+        for status in list(member["status"]):
+            status[1] -= 1
+            if status[1] <= 0:
+                member["status"].remove(status)
+
+    def advance_turn(self):
+        prev_active = self.active
+        if prev_active:
+            self.tick_status_turn(prev_active)
+        if self.all_enemies_dead():
+            self.game_state = "enemy_death"
+            self.global_timer.reset()
+            return
+        if self.all_players_dead():
+            self.game_state = "defeat"
+            self.global_timer.reset()
+            return
+        self.turn_count += 1
+        self.select_next_turn()
+        self.sync_active_stats()
+        if self.active and self.active["side"] == "player":
+            self.draw_menu = True
+            self.ui_state = "main"
+            self.game_state = ""
+        else:
+            self.draw_menu = False
+            self.game_state = "enemy_turn"
+            self.global_timer.reset()
+
     def check_inputs(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -1595,6 +2015,84 @@ class NewBattle:
                 pygame.mixer_music.set_volume(state.vol)
                 pygame.mixer_music.play()
             if event.type == pygame.KEYDOWN:
+                if self.game_state in ("victory", "defeat_done"):
+                    if event.key == pygame.K_RETURN or event.key == pygame.K_RCTRL:
+                        if self.game_state == "victory":
+                            if self.f_exp != self.m_exp or self.f_gold != self.m_gold:
+                                self.f_exp = self.m_exp
+                                self.f_gold = self.m_gold
+                                self.check_level = True
+                            elif self.f_exp == self.m_exp and not self.check_level:
+                                self.battling = False
+                                self.victory_flag = True
+                        else:
+                            self.battling = False
+                            fadeout(state.surf, 0.001)
+                            self.victory_flag = False
+                    continue
+                if self.active and self.active.get("side") != "player":
+                    continue
+                if self.targeting:
+                    if event.key in (
+                        pygame.K_LEFT,
+                        pygame.K_RIGHT,
+                        pygame.K_UP,
+                        pygame.K_DOWN,
+                    ):
+                        if self.target_side == "enemy":
+                            alive = [c for c in self.enemies if c["hp"] > 0]
+                            if alive:
+                                delta = (
+                                    -1
+                                    if event.key in (pygame.K_LEFT, pygame.K_UP)
+                                    else 1
+                                )
+                                self.target_index = (self.target_index + delta) % len(
+                                    alive
+                                )
+                                self.set_target("enemy", self.target_index)
+                        else:
+                            alive = [c for c in self.party if c["hp"] > 0]
+                            if alive:
+                                delta = (
+                                    -1
+                                    if event.key in (pygame.K_LEFT, pygame.K_UP)
+                                    else 1
+                                )
+                                self.ally_target_index = (
+                                    self.ally_target_index + delta
+                                ) % len(alive)
+                                self.set_target("player", self.ally_target_index)
+                    if event.key == pygame.K_RETURN:
+                        if self.pending_action == "attack":
+                            self.game_state = "player_attack"
+                            self.global_timer.reset()
+                            self.draw_menu = False
+                        elif self.pending_action == "skill":
+                            if self.pending_skill_index is not None:
+                                self.consume_skill_cost(self.pending_skill_index)
+                            self.game_state = "player_skill"
+                            self.global_timer.reset()
+                            self.draw_menu = False
+                        elif self.pending_action == "item":
+                            self.game_state = "player_item"
+                            self.global_timer.reset()
+                            if self.pending_item_index is not None:
+                                self.p_inventory[self.pending_item_index]["amount"] -= 1
+                            if self.active and self.active["side"] == "player":
+                                self.active["inventory"] = self.p_inventory
+                            self.draw_menu = False
+                        self.targeting = False
+                        self.pending_action = None
+                        self.pending_skill_index = None
+                        self.pending_item_index = None
+                    if event.key == pygame.K_RCTRL:
+                        self.targeting = False
+                        self.pending_action = None
+                        self.pending_skill_index = None
+                        self.pending_item_index = None
+                        self.target_side = "enemy"
+                    continue
                 if self.draw_menu:
                     if event.key == pygame.K_UP:
                         self.cursor_pos -= 1
@@ -1639,9 +2137,7 @@ class NewBattle:
                     if event.key == pygame.K_RETURN:
                         if self.ui_state == "main":
                             if self.cursor_pos == 0:
-                                self.game_state = "player_attack"
-                                self.global_timer.reset()
-                                self.draw_menu = False
+                                self.start_targeting("enemy", "attack")
                             if self.cursor_pos == 1:
                                 self.ui_state = "skill"
                                 self.initial_window_pos = 0
@@ -1663,24 +2159,56 @@ class NewBattle:
                                         self.skill_min + self.cursor_pos
                                     ]["mp_cost"]
                                 ):
-                                    self.game_state = "player_skill"
-                                    self.global_timer.reset()
-                                    self.p_mana -= self.skill_data[self.p_class][
+                                    skill_type = self.skill_data[self.p_class][
                                         self.skill_min + self.cursor_pos
-                                    ]["mp_cost"]
-                                    self.draw_menu = False
+                                    ]["type"]
+                                    skill_index = self.skill_min + self.cursor_pos
+                                    skill_name = self.skill_data[self.p_class][
+                                        self.skill_min + self.cursor_pos
+                                    ]["name"].lower()
+                                    target_mode = self.get_skill_target_mode(
+                                        skill_name, "player"
+                                    )
+                                    if target_mode == "all_enemies":
+                                        self.pending_action = "skill"
+                                        self.pending_skill_index = skill_index
+                                        self.pending_item_index = None
+                                        self.targeting = False
+                                        self.target_side = "enemy"
+                                        self.consume_skill_cost(skill_index)
+                                        self.game_state = "player_skill"
+                                        self.global_timer.reset()
+                                        self.draw_menu = False
+                                        continue
+                                    if target_mode == "all_allies":
+                                        self.pending_action = "skill"
+                                        self.pending_skill_index = skill_index
+                                        self.pending_item_index = None
+                                        self.targeting = False
+                                        self.target_side = "player"
+                                        self.consume_skill_cost(skill_index)
+                                        self.game_state = "player_skill"
+                                        self.global_timer.reset()
+                                        self.draw_menu = False
+                                        continue
+                                    if skill_type == "buff":
+                                        self.start_targeting(
+                                            "player", "skill", skill_index=skill_index
+                                        )
+                                    else:
+                                        self.start_targeting(
+                                            "enemy", "skill", skill_index=skill_index
+                                        )
                                 else:
                                     self.buzzer_sound.play()
                             else:
                                 self.buzzer_sound.play()
                         elif self.ui_state == "item":
                             if len(self.p_inventory) > 0:
-                                self.game_state = "player_item"
-                                self.global_timer.reset()
-                                self.p_inventory[self.item_min + self.cursor_pos][
-                                    "amount"
-                                ] -= 1
-                                self.draw_menu = False
+                                item_index = self.item_min + self.cursor_pos
+                                self.start_targeting(
+                                    "player", "item", item_index=item_index
+                                )
                             else:
                                 self.buzzer_sound.play()
                     if event.key == pygame.K_RCTRL:
@@ -1691,48 +2219,40 @@ class NewBattle:
                             self.ui_state = "main"
                             self.cursor_pos = 0
 
-                if self.game_state == "victory" or self.game_state == "defeat_done":
-                    if event.key == pygame.K_RETURN or event.key == pygame.K_RCTRL:
-                        if self.game_state == "victory":
-                            if self.f_exp != self.m_exp or self.f_gold != self.m_gold:
-                                self.f_exp = self.m_exp
-                                self.f_gold = self.m_gold
-                                self.check_level = True
-                            elif self.f_exp == self.m_exp and not self.check_level:
-                                self.battling = False
-                                self.victory_flag = True
-
-                        else:
-                            self.battling = False
-                            fadeout(state.surf, 0.001)
-                            self.victory_flag = False
-
     def draw_sprites(self):
         state.surf.blit(self.background, (0, 0))
-        if self.player_flag:
-            self.player_sprites.blit(state.surf, (self.player_pos, 300))
-            if self.player_pos > 950:
-                self.player_pos -= 50
-        player_burst = False
-        for status in self.p_status:
-            if "burst" in status[0]:
-                self.player_sprites_burst.blit(state.surf, (self.player_pos, 300))
-                self.player_flag = False
-                player_burst = True
-        else:
-            self.player_flag = True
-        if self.player_hit_flash > 0:
+
+        for member in self.party:
+            if member["hp"] <= 0:
+                state.surf.blit(self.death_sprite, (member["pos"][0], member["pos"][1]))
+                continue
+            if member["pos"][0] > member["base_pos"][0]:
+                member["pos"][0] -= 50
+            player_burst = any("burst" in s[0] for s in member["status"])
             if player_burst:
-                player_frame = self.player_sprites_burst.getCurrentFrame()
+                member["burst_anim"].blit(
+                    state.surf, (member["pos"][0], member["pos"][1])
+                )
             else:
-                player_frame = self.player_sprites.getCurrentFrame()
-            flash = player_frame.copy()
-            flash.fill((255, 60, 60, 255), special_flags=pygame.BLEND_RGBA_MULT)
-            flash.set_alpha(180)
-            state.surf.blit(flash, (self.player_pos, 300))
-            self.player_hit_flash -= 1
-        if self.monster_flag:
-            if self.enemy_fade_active:
+                member["anim"].blit(state.surf, (member["pos"][0], member["pos"][1]))
+            if member["hit_flash"] > 0:
+                if player_burst:
+                    frame = member["burst_anim"].getCurrentFrame()
+                else:
+                    frame = member["anim"].getCurrentFrame()
+                flash = frame.copy()
+                flash.fill((255, 60, 60, 255), special_flags=pygame.BLEND_RGBA_MULT)
+                flash.set_alpha(180)
+                state.surf.blit(flash, (member["pos"][0], member["pos"][1]))
+                member["hit_flash"] -= 1
+
+        for enemy in self.enemies:
+            if enemy["hp"] <= 0 and not enemy["fade_active"]:
+                continue
+            if enemy["pos"][0] < enemy["base_pos"][0]:
+                enemy["pos"][0] += 50
+            sprite = enemy["sprite"]
+            if enemy["fade_active"]:
                 elapsed = self.global_timer.timing(1)
                 if elapsed < self.enemy_fade_delay:
                     alpha = 255
@@ -1742,42 +2262,110 @@ class NewBattle:
                         (elapsed - self.enemy_fade_delay) / self.enemy_fade_duration,
                     )
                     alpha = max(0, int(255 * (1.0 - t)))
-                sprite = self.m_sprite.copy()
+                enemy["fade_alpha"] = alpha
+                sprite = sprite.copy()
                 sprite.set_alpha(alpha)
-                state.surf.blit(
-                    sprite,
-                    (self.monster_pos, self.monster_y + self.monster_y_offset),
-                )
                 if alpha <= 0:
-                    self.monster_flag = False
-                    self.enemy_fade_active = False
-            else:
-                state.surf.blit(
-                    self.m_sprite,
-                    (self.monster_pos, self.monster_y + self.monster_y_offset),
-                )
-            if self.enemy_hit_flash > 0 and self.monster_flag:
-                flash = self.m_sprite.copy()
+                    enemy["fade_active"] = False
+            state.surf.blit(sprite, (enemy["pos"][0], enemy["pos"][1]))
+            if enemy["hit_flash"] > 0:
+                flash = enemy["sprite"].copy()
                 flash.fill((255, 60, 60, 255), special_flags=pygame.BLEND_RGBA_MULT)
                 flash.set_alpha(180)
-                state.surf.blit(
-                    flash,
-                    (self.monster_pos, self.monster_y + self.monster_y_offset),
-                )
-                self.enemy_hit_flash -= 1
-            self.loaded_anim.blit(state.surf, self.anim_pos)  # Loaded animation
-            if self.monster_pos < 200:
-                self.monster_pos += 50
+                state.surf.blit(flash, (enemy["pos"][0], enemy["pos"][1]))
+                enemy["hit_flash"] -= 1
+
+        self.loaded_anim.blit(state.surf, self.anim_pos)
+        if self.targeting and not self.target:
+            if self.target_side == "enemy":
+                alive = [c for c in self.enemies if c["hp"] > 0]
+                if alive:
+                    self.target_index = max(0, min(self.target_index, len(alive) - 1))
+                    self.target = alive[self.target_index]
+            else:
+                alive = [c for c in self.party if c["hp"] > 0]
+                if alive:
+                    self.ally_target_index = max(
+                        0, min(self.ally_target_index, len(alive) - 1)
+                    )
+                    self.target = alive[self.ally_target_index]
+            if self.target:
+                self.sync_active_stats()
+
+        if self.targeting and self.target:
+            tx, ty = self.target["pos"][0], self.target["pos"][1]
+            if self.target["side"] == "enemy":
+                height = self.target["sprite"].get_height()
+            else:
+                player_burst = any("burst" in s[0] for s in self.target["status"])
+                if player_burst:
+                    frame = self.target["burst_anim"].getCurrentFrame()
+                else:
+                    frame = self.target["anim"].getCurrentFrame()
+                height = frame.get_height()
+            bob = int(4 * math.sin(pygame.time.get_ticks() * 0.008))
+            cursor_x = tx + 10
+            cursor_y = ty - height - 20 + bob
+            if cursor_y < 5:
+                cursor_y = 5
+            state.surf.blit(
+                self.cursor_target,
+                (cursor_x, cursor_y),
+            )
 
     def play_sound(self, sound):
         self.sound_effect = pygame.mixer.Sound(self.sound_data[sound])
         self.sound_effect.set_volume(state.vol)
         self.sound_effect.play()
 
-    def play_animation(self, animation, pos=(920, 270)):
+    def blit_target_cursor(self):
+        if self.targeting and not self.target:
+            if self.target_side == "enemy":
+                alive = [c for c in self.enemies if c["hp"] > 0]
+                if alive:
+                    self.target_index = max(0, min(self.target_index, len(alive) - 1))
+                    self.target = alive[self.target_index]
+            else:
+                alive = [c for c in self.party if c["hp"] > 0]
+                if alive:
+                    self.ally_target_index = max(
+                        0, min(self.ally_target_index, len(alive) - 1)
+                    )
+                    self.target = alive[self.ally_target_index]
+            if self.target:
+                self.sync_active_stats()
+
+        if self.targeting and self.target:
+            tx, ty = self.target["pos"][0], self.target["pos"][1]
+            if self.target["side"] == "enemy":
+                height = self.target["sprite"].get_height()
+            else:
+                player_burst = any("burst" in s[0] for s in self.target["status"])
+                if player_burst:
+                    frame = self.target["burst_anim"].getCurrentFrame()
+                else:
+                    frame = self.target["anim"].getCurrentFrame()
+                height = frame.get_height()
+            bob = int(4 * math.sin(pygame.time.get_ticks() * 0.008))
+            cursor_x = tx + 10
+            cursor_y = ty - height - 20 + bob
+            if cursor_y < 5:
+                cursor_y = ty + 5 + bob
+            state.surf.blit(self.cursor_target, (cursor_x, cursor_y))
+
+    def play_animation(self, animation, pos=(920, 270), scale=1.0, flip=False):
         self.loaded_anim = pyganim.PygAnimation(self.animation_data[animation], False)
         self.anim_pos = pos
-        if pos == (
+        if scale and scale != 1.0:
+            rect = self.loaded_anim.getRect()
+            new_w = max(1, int(rect.width * scale))
+            new_h = max(1, int(rect.height * scale))
+            self.loaded_anim.scale([new_w, new_h])
+            self.anim_pos = (
+                pos[0] - (new_w - rect.width) // 2,
+                pos[1] - (new_h - rect.height) // 2,
+            )
+        if flip or pos == (
             920,
             270,
         ):  # If animation on player(aka enemy using skill) we flip it (bad solution)
@@ -1918,7 +2506,7 @@ class NewBattle:
             state.surf.blit(spark, (f["x"] - radius, f["y"] - radius))
 
     def announce_turn(self, turn):
-        if self.game_state == "victory" or self.m_cur_health <= 0:
+        if self.game_state == "victory" or self.all_enemies_dead():
             return
         if turn == "player":
             self.turn_banner_text = "Player Turn"
@@ -1943,8 +2531,22 @@ class NewBattle:
         box.blit(text_surf, (pad_x, pad_y))
         state.surf.blit(box, (x, y))
 
-    def move_to(self, target="player", pos=(0, 0)):
-        """Moves the player or monster to a specific position"""
+    def move_to(self, target=None, pos=None):
+        """Moves a combatant to a specific position"""
+        if target is None:
+            target = self.move_target
+        if pos is None:
+            pos = self.target_pos
+        if isinstance(target, dict):
+            if target["pos"][0] > pos[0]:
+                target["pos"][0] -= 5
+            elif target["pos"][0] < pos[0]:
+                target["pos"][0] += 5
+            if target["pos"][1] > pos[1]:
+                target["pos"][1] -= 5
+            elif target["pos"][1] < pos[1]:
+                target["pos"][1] += 5
+            return
         if target == "player":
             if self.player_pos > pos[0]:
                 self.player_pos -= 5
@@ -1966,60 +2568,91 @@ class NewBattle:
 
     def check_state(self, player):
         """Keeps track of the game state and updates it accordingly"""
+        if not self.active or self.active["hp"] <= 0:
+            self.select_next_turn()
+        if self.active:
+            if self.target_side == "enemy":
+                self.set_target("enemy", self.target_index)
+            else:
+                self.set_target("player", self.ally_target_index)
+        self.sync_active_stats()
         if self.game_state == "player_attack":  # Player regular attack
             player_attacking = False
-            if self.player_pos > 900:
-                self.player_pos -= 5
-                self.global_timer.reset()
+            attacker = self.active
+            target = self.target
+            if not attacker or not target:
+                return
+            approach = self.get_melee_position(attacker, target)
+            self.move_to(attacker, approach)
             if self.global_timer.timing(1) >= 0.25 and not player_attacking:
-                self.play_animation("slash", (self.monster_pos, 300))
+                self.play_animation("slash", (target["pos"][0], target["pos"][1]))
                 self.play_sound("slash")
                 dmg = self.calc_damage("attack")
-                self.spawn_damage_text(dmg, (self.monster_pos, self.monster_y - 40))
-                self.enemy_hit_flash = 6
+                self.spawn_damage_text(dmg, (target["pos"][0], target["pos"][1] - 40))
                 self.trigger_impact(
-                    (self.monster_pos, self.monster_y),
+                    (target["pos"][0], target["pos"][1]),
                     dmg,
-                    self.m_max_health,
+                    target["max_hp"],
                     crit=(self.crit_chance == 10),
                 )
-                self.m_cur_health -= dmg
+                self.apply_damage(target, dmg)
                 player_attacking = True
                 self.game_state = "player_attack_done"
                 self.global_timer.reset()
         if self.game_state == "player_attack_done":  # Player regular attack is done
             self.healthbar_flag = True
-            if self.player_pos < 950:
-                self.player_pos += 5
-                self.global_timer.reset()
+            if self.active:
+                self.move_to(self.active, self.active["base_pos"])
             if (
                 self.global_timer.timing(1) >= 1.0
                 and self.virtualMonsterHealth == self.m_cur_health
             ):
-                self.turn = "enemy"
-                self.announce_turn("enemy")
                 self.healthbar_flag = False
-                self.game_state = "enemy_turn"
-                self.global_timer.reset()
+                self.advance_turn()
         if self.game_state == "player_skill":
             if self.sequence_done:
                 self.sequence_done = False
                 self.global_timer.reset()
+                self.pending_skill_index = None
+                self.pending_action = None
                 self.game_state = "player_skill_done"
             else:
                 self.sequence_flag = True
-                self.sequence_to_play = self.skill_data[self.p_class][
-                    self.skill_min + self.cursor_pos
-                ]["name"].lower()
-                if (
-                    self.skill_data[self.p_class][self.skill_min + self.cursor_pos][
-                        "type"
-                    ]
-                    != "buff"
-                ):
-                    self.sequence_target = (self.monster_pos, self.monster_y)
+                skill_index = (
+                    self.pending_skill_index
+                    if self.pending_skill_index is not None
+                    else self.skill_min + self.cursor_pos
+                )
+                self.sequence_to_play = self.skill_data[self.p_class][skill_index][
+                    "name"
+                ].lower()
+                if self.skill_data[self.p_class][skill_index]["type"] != "buff":
+                    if self.is_aoe_skill(self.sequence_to_play):
+                        target_side = "enemy" if self.turn == "player" else "player"
+                        alive = self.get_alive_targets(target_side)
+                        if alive:
+                            self.sequence_target = (
+                                alive[0]["pos"][0],
+                                alive[0]["pos"][1],
+                            )
+                        else:
+                            self.sequence_target = (self.monster_pos, self.monster_y)
+                    else:
+                        if self.target:
+                            self.sequence_target = (
+                                self.target["pos"][0],
+                                self.target["pos"][1],
+                            )
+                        else:
+                            self.sequence_target = (self.monster_pos, self.monster_y)
                 else:
-                    self.sequence_target = (900, 270)
+                    if self.active:
+                        self.sequence_target = (
+                            self.active["pos"][0],
+                            self.active["pos"][1],
+                        )
+                    else:
+                        self.sequence_target = (900, 270)
                 self.global_timer.reset()
         if self.game_state == "player_item":
             if self.sequence_done:
@@ -2030,7 +2663,13 @@ class NewBattle:
                 self.sequence_flag = True
                 self.crit_chance = 0
                 self.sequence_to_play = "use_item"
-                self.sequence_target = (900, 270)
+                if self.target:
+                    self.sequence_target = (
+                        self.target["pos"][0],
+                        self.target["pos"][1],
+                    )
+                else:
+                    self.sequence_target = (900, 270)
                 self.global_timer.reset()
         if (
             self.game_state == "player_skill_done"
@@ -2038,18 +2677,23 @@ class NewBattle:
         ):
             if self.global_timer.timing(1) >= 1.0:
                 self.update_player_inventory()
-                self.turn = "enemy"
-                self.announce_turn("enemy")
-                self.game_state = "enemy_turn"
-                self.global_timer.reset()
+                self.advance_turn()
         if self.game_state == "player_skill_invalid":
             if self.global_timer.timing(1) >= 2.5:
                 self.sequence_done = False
-                self.turn = "enemy"
-                self.game_state = "enemy_turn"
+                self.advance_turn()
         if (
-            self.game_state == "enemy_turn" and self.m_cur_health > 0
+            self.game_state == "enemy_turn"
+            and self.active
+            and self.active["side"] == "enemy"
+            and self.active["hp"] > 0
         ):  # Enemy turn begins
+            alive_players = [c for c in self.party if c["hp"] > 0]
+            if alive_players:
+                target = random.choice(alive_players)
+                self.target_side = "player"
+                self.ally_target_index = alive_players.index(target)
+                self.set_target("player", self.ally_target_index)
             if not self.wait_flag_enemy:
                 choose_move = random.randrange(0, len(self.m_move_list))
                 enemy_action = self.m_move_list[choose_move]
@@ -2078,53 +2722,79 @@ class NewBattle:
                 for skill in self.skill_data["monster"]:
                     if skill["name"].lower() == self.sequence_to_play:
                         if skill["type"] == "buff":
-                            self.sequence_target = (self.monster_pos, self.monster_y)
+                            if self.active:
+                                self.sequence_target = (
+                                    self.active["pos"][0],
+                                    self.active["pos"][1],
+                                )
+                            else:
+                                self.sequence_target = (
+                                    self.monster_pos,
+                                    self.monster_y,
+                                )
                         else:
-                            self.sequence_target = (920, 270)
+                            if self.is_aoe_skill(self.sequence_to_play):
+                                alive = self.get_alive_targets("player")
+                                if alive:
+                                    self.sequence_target = (
+                                        alive[0]["pos"][0],
+                                        alive[0]["pos"][1],
+                                    )
+                                else:
+                                    self.sequence_target = (920, 270)
+                            else:
+                                if self.target:
+                                    self.sequence_target = (
+                                        self.target["pos"][0],
+                                        self.target["pos"][1],
+                                    )
+                                else:
+                                    self.sequence_target = (920, 270)
                         break
                     else:
                         self.sequence_target = (920, 270)
                 self.global_timer.reset()
         if self.game_state == "enemy_skill_done":
             if self.global_timer.timing(1) >= 1.0:
-                self.turn = "player"
-                self.announce_turn("player")
-                self.game_state = "check_player_wait"
-                self.global_timer.reset()
-                self.turn_count += 1
-                self.ui_state = "main"
+                self.advance_turn()
         if self.game_state == "enemy_attack":  # Enemy regular attack
             enemy_attacking = False
-            if self.monster_pos < 250:
-                self.monster_pos += 5
-                self.global_timer.reset()
+            attacker = self.active
+            target = self.target
+            if not attacker or not target:
+                return
+            approach = self.get_melee_position(attacker, target)
+            self.move_to(attacker, approach)
             if self.global_timer.timing(1) >= 0.25 and not enemy_attacking:
-                self.play_animation("claw", (self.player_pos, 300))
+                self.play_animation(
+                    "claw",
+                    (target["pos"][0], target["pos"][1]),
+                    flip=(target["side"] == "player"),
+                )
                 self.play_sound("slash2")
                 dmg = self.calc_damage("attack")
-                self.spawn_damage_text(dmg, (self.player_pos, 270), is_player_hit=True)
-                self.player_hit_flash = 6
-                self.trigger_hp_hit_effect(dmg)
-                self.trigger_impact(
-                    (self.player_pos, 300),
-                    dmg,
-                    self.p_max_health,
-                    crit=(self.crit_chance == 10),
+                self.spawn_damage_text(
+                    dmg, (target["pos"][0], target["pos"][1] - 30), is_player_hit=True
                 )
-                self.p_health -= dmg
+                if target["side"] == "player":
+                    self.trigger_hp_hit_effect(dmg)
+                    self.trigger_impact(
+                        (target["pos"][0], target["pos"][1]),
+                        dmg,
+                        target["max_hp"],
+                        crit=(self.crit_chance == 10),
+                    )
+                self.apply_damage(target, dmg, is_player_hit=True)
                 enemy_attacking = True
                 self.game_state = "enemy_attack_done"
                 self.global_timer.reset()
         if self.game_state == "enemy_attack_done":  # Enemy regular attack done
             self.player_dmg_flag = True
-            if self.monster_pos > 200:
-                self.monster_pos -= 5
+            if self.active:
+                self.move_to(self.active, self.active["base_pos"])
             if self.global_timer.timing(1) >= 1.0:
                 self.player_dmg_flag = False
-                self.turn_count += 1
-                self.turn = "player"
-                self.announce_turn("player")
-                self.game_state = "check_player_wait"
+                self.advance_turn()
         if self.game_state == "check_player_wait":
             if not self.wait_flag_player:
                 self.draw_menu = True
@@ -2137,59 +2807,33 @@ class NewBattle:
                     self.wait_flag_player = False
                 else:
                     self.game_state = "player_skill_done"
-                    # Enemy dies
+        # Enemy dies
         if self.game_state == "enemy_death" and self.global_timer.timing(1) >= 1.0:
-            if self.enemy_fade_active:
-                self.monster_flag = False
-                self.enemy_fade_active = False
             self.game_state = "victory"
             self.global_timer.reset()
-            # Victory state
+        # Victory state
         if self.game_state == "victory" and self.global_timer.timing(1) >= 0.8:
             self.victory(player)
         if self.game_state == "defeat_done":
-            state.surf.blit(self.death_sprite, (self.player_x + 20, self.player_y + 20))
             if self.global_timer.timing(1) >= 0.8:
                 self.player_dmg_flag = False
                 self.defeat()
-        if self.p_health <= 0 and (
+        if self.all_players_dead() and (
             self.game_state != "defeat_done" and self.game_state != "defeat"
         ):
             self.game_state = "defeat"
             self.global_timer.reset()
         if self.game_state == "defeat":
             if self.global_timer.timing(1) >= 1.0:
-                self.player_sprites.stop()
-                self.player_sprites_burst.stop()
-                state.surf.blit(
-                    self.death_sprite, (self.player_x + 20, self.player_y + 20)
-                )
                 self.game_state = "defeat_done"
-                print("dead")
                 self.global_timer.reset()
-        if (
-            0 >= self.m_cur_health == self.virtualMonsterHealth
-            and self.game_state != "victory"
+        if self.all_enemies_dead() and self.game_state not in (
+            "victory",
+            "enemy_death",
         ):
             if self.global_timer.timing(1) >= 1.0:
                 self.game_state = "enemy_death"
-                if not self.enemy_death_sound_played:
-                    self.play_sound("enemy_dead")
-                    self.enemy_death_sound_played = True
-                self.enemy_fade_active = True
                 self.global_timer.reset()
-        if self.m_cur_health > self.m_max_health:
-            self.m_cur_health = self.m_max_health
-        if self.m_cur_health < 0:
-            self.m_cur_health = 0
-        if self.p_health > self.p_max_health:
-            self.p_health = self.p_max_health
-        if self.p_health < 0:
-            self.p_health = 0
-        if self.p_mana > self.p_max_mana:
-            self.p_mana = self.p_max_mana
-        if self.p_mana < 0:
-            self.p_mana = 0
 
     def play_sequence(self, sequence, target=(920, 270)):
         """A sequence is a set of actions/things that should happen in a row i.e. something like a skill
@@ -2214,21 +2858,39 @@ class NewBattle:
                             self.alert_box_flag = True
                             self.alert_text = action[1]
                             if action[1] == "item_name":
-                                self.alert_text = self.p_inventory[
-                                    self.item_min + self.cursor_pos
-                                ]["name"]
+                                item_index = (
+                                    self.pending_item_index
+                                    if self.pending_item_index is not None
+                                    else self.item_min + self.cursor_pos
+                                )
+                                self.alert_text = self.p_inventory[item_index]["name"]
                         elif action[0] == "animation":
                             if action[1] != "cast":
-                                self.play_animation(action[1], target)
+                                anim_scale = 1.0
+                                if (
+                                    self.is_aoe_skill(self.sequence_to_play)
+                                    and action[1] == "tsunami"
+                                ):
+                                    anim_scale = 1.3
+                                flip = (
+                                    self.turn == "enemy"
+                                    and self.target
+                                    and self.target.get("side") == "player"
+                                )
+                                self.play_animation(
+                                    action[1], target, scale=anim_scale, flip=flip
+                                )
                             else:
-                                if self.turn == "player":
-                                    # Mage cast animation
-                                    self.play_animation(action[1], (880, 230))
-                                else:
+                                if self.active:
                                     self.play_animation(
                                         action[1],
-                                        (self.monster_pos - 50, self.monster_y),
+                                        (
+                                            self.active["pos"][0] - 40,
+                                            self.active["pos"][1] - 40,
+                                        ),
                                     )
+                                else:
+                                    self.play_animation(action[1], (880, 230))
                         elif action[0] == "sound":
                             self.play_sound(action[1])
                         elif action[0] == "add_status":  # Buff
@@ -2248,11 +2910,9 @@ class NewBattle:
                                         )
                             if not status_in:
                                 if action[1] == "burst":
-                                    duration = (
-                                        self.turn_count + 1
-                                    )  # the amount of time the effect lasts
+                                    duration = 2
                                 elif action[1] == "defend":
-                                    duration = self.turn_count + 2
+                                    duration = 2
                                 if self.turn == "player":
                                     self.p_status.append([action[1], duration])
                                 elif self.turn == "enemy":
@@ -2274,100 +2934,157 @@ class NewBattle:
                                         )
                             if not status_in:
                                 if action[1] == "atk_down":
-                                    duration = (
-                                        self.turn_count + 2
-                                    )  # the amount of time the effect lasts
+                                    duration = 2
                                 elif action[1] == "def_down":
-                                    duration = self.turn_count + 2
+                                    duration = 2
                                 elif action[1] == "mag_down":
-                                    duration = self.turn_count + 2
+                                    duration = 2
                                 if self.turn == "player":
                                     self.m_status.append([action[1], duration])
                                 elif self.turn == "enemy":
                                     self.p_status.append([action[1], duration])
                         elif action[0] == "deal_damage":
-                            dmg = self.calc_damage(action[1])
-                            if self.turn == "player":
-                                self.m_cur_health -= dmg
-                                self.spawn_damage_text(
-                                    dmg, (self.monster_pos, self.monster_y - 40)
+                            if self.is_aoe_skill(action[1]):
+                                targets = self.get_alive_targets(
+                                    "enemy" if self.turn == "player" else "player"
                                 )
-                                self.enemy_hit_flash = 6
-                                self.trigger_impact(
-                                    (self.monster_pos, self.monster_y),
-                                    dmg,
-                                    self.m_max_health,
-                                    crit=(self.crit_chance == 10),
+                                prev_target = self.target
+                                self.last_enemy_targets = (
+                                    list(targets) if self.turn == "player" else []
                                 )
-                                self.healthbar_flag = True
+                                if self.last_enemy_targets:
+                                    self.last_enemy_target = self.last_enemy_targets[0]
+                                    self.healthbar_flag = True
+                                for target in targets:
+                                    self.target = target
+                                    self.sync_active_stats()
+                                    dmg = self.calc_damage(action[1])
+                                    self.spawn_damage_text(
+                                        dmg,
+                                        (target["pos"][0], target["pos"][1] - 40),
+                                        is_player_hit=(target["side"] == "player"),
+                                    )
+                                    if target["side"] == "player":
+                                        self.trigger_hp_hit_effect(dmg)
+                                        self.trigger_impact(
+                                            (target["pos"][0], target["pos"][1]),
+                                            dmg,
+                                            target["max_hp"],
+                                            crit=(self.crit_chance == 10),
+                                        )
+                                    else:
+                                        self.trigger_impact(
+                                            (target["pos"][0], target["pos"][1]),
+                                            dmg,
+                                            target["max_hp"],
+                                            crit=(self.crit_chance == 10),
+                                        )
+                                    self.apply_damage(
+                                        target,
+                                        dmg,
+                                        is_player_hit=(target["side"] == "player"),
+                                    )
+                                self.target = prev_target
+                                self.sync_active_stats()
                             else:
-                                self.player_dmg_flag = True
-                                self.p_health -= dmg
-                                self.spawn_damage_text(
-                                    dmg, (self.player_pos, 270), is_player_hit=True
-                                )
-                                self.player_hit_flash = 6
-                                self.trigger_hp_hit_effect(dmg)
-                                self.trigger_impact(
-                                    (self.player_pos, 300),
-                                    dmg,
-                                    self.p_max_health,
-                                    crit=(self.crit_chance == 10),
-                                )
+                                dmg = self.calc_damage(action[1])
+                                if self.target:
+                                    self.spawn_damage_text(
+                                        dmg,
+                                        (
+                                            self.target["pos"][0],
+                                            self.target["pos"][1] - 40,
+                                        ),
+                                        is_player_hit=(self.target["side"] == "player"),
+                                    )
+                                    if self.target["side"] == "player":
+                                        self.trigger_hp_hit_effect(dmg)
+                                        self.trigger_impact(
+                                            (
+                                                self.target["pos"][0],
+                                                self.target["pos"][1],
+                                            ),
+                                            dmg,
+                                            self.target["max_hp"],
+                                            crit=(self.crit_chance == 10),
+                                        )
+                                    else:
+                                        self.trigger_impact(
+                                            (
+                                                self.target["pos"][0],
+                                                self.target["pos"][1],
+                                            ),
+                                            dmg,
+                                            self.target["max_hp"],
+                                            crit=(self.crit_chance == 10),
+                                        )
+                                        self.healthbar_flag = True
+                                        self.last_enemy_targets = [self.target]
+                                        self.last_enemy_target = self.target
+                                    self.apply_damage(self.target, dmg)
                         elif action[0] == "heal_hp":
                             if self.turn == "player":
                                 if action[1] == "item":
-                                    if self.turn == "player":
-                                        item = self.p_inventory[
-                                            self.item_min + self.cursor_pos
-                                        ]["name"]
-                                        for items in self.consumable_data:
-                                            if items["name"] == item:
-                                                hp_heal = items["hp"]
-                                    if hp_heal != 0:
+                                    item_index = (
+                                        self.pending_item_index
+                                        if self.pending_item_index is not None
+                                        else self.item_min + self.cursor_pos
+                                    )
+                                    item = self.p_inventory[item_index]["name"]
+                                    for items in self.consumable_data:
+                                        if items["name"] == item:
+                                            hp_heal = items["hp"]
+                                    if hp_heal != 0 and self.target:
                                         self.spawn_floating_text(
                                             f"+{hp_heal}",
                                             (3, 102, 16),
-                                            (self.player_pos, 260),
+                                            (
+                                                self.target["pos"][0],
+                                                self.target["pos"][1] - 30,
+                                            ),
                                             scale=1.0,
                                             life=55,
                                         )
-                                        self.p_health += hp_heal
-                                        self.player_dmg_flag = True
+                                        self.apply_heal(self.target, hp_heal=hp_heal)
                         elif action[0] == "heal_mp":
                             if self.turn == "player":
                                 if action[1] == "item":
-                                    if self.turn == "player":
-                                        item = self.p_inventory[
-                                            self.item_min + self.cursor_pos
-                                        ]["name"]
-                                        for items in self.consumable_data:
-                                            if items["name"] == item:
-                                                mp_heal = items["mp"]
-                                    if mp_heal != 0:
+                                    item_index = (
+                                        self.pending_item_index
+                                        if self.pending_item_index is not None
+                                        else self.item_min + self.cursor_pos
+                                    )
+                                    item = self.p_inventory[item_index]["name"]
+                                    for items in self.consumable_data:
+                                        if items["name"] == item:
+                                            mp_heal = items["mp"]
+                                    if mp_heal != 0 and self.target:
                                         self.spawn_floating_text(
                                             f"+{mp_heal}",
                                             (40, 43, 158),
-                                            (self.player_pos, 260),
+                                            (
+                                                self.target["pos"][0],
+                                                self.target["pos"][1] - 30,
+                                            ),
                                             scale=1.0,
                                             life=55,
                                         )
-                                        self.p_mana += mp_heal
-                                        self.player_dmg_flag = True
+                                        self.apply_heal(self.target, mp_heal=mp_heal)
                                         # sequence syntax: ["move_to", "target", x, y, 0]
                         elif action[0] == "move_to":
                             self.move_flag = True
                             # will move who is currently on the turn
                             if action[1] == "cur_target":
                                 # Only to be used for moving during skill/attack anims
-                                self.move_target = self.turn
-                                if (
-                                    self.move_target == "player"
-                                ):  # Bad solution, but it works
-                                    self.target_pos[0] = 900
-                                    self.target_pos[1] = 300
+                                self.move_target = self.active
+                                if self.active and self.target:
+                                    pos = self.get_melee_position(
+                                        self.active, self.target
+                                    )
+                                    self.target_pos[0] = pos[0]
+                                    self.target_pos[1] = pos[1]
                                 else:
-                                    self.target_pos[0] = 250
+                                    self.target_pos[0] = 900
                                     self.target_pos[1] = 300
                             else:
                                 self.move_target = action[1]
@@ -2384,14 +3101,10 @@ class NewBattle:
                                 self.target_pos[0] = 200
                                 self.target_pos[1] = 300
                             elif action[1] == "cur_target":
-                                if self.turn == "player":
-                                    self.move_target = "player"
-                                    self.target_pos[0] = 950
-                                    self.target_pos[1] = 300
-                                else:
-                                    self.move_target = "enemy"
-                                    self.target_pos[0] = 200
-                                    self.target_pos[1] = 300
+                                self.move_target = self.active
+                                if self.active:
+                                    self.target_pos[0] = self.active["base_pos"][0]
+                                    self.target_pos[1] = self.active["base_pos"][1]
                         elif action[0] == "toggle_screen_shake":
                             if not self.shake:
                                 self.shake = True
@@ -2436,65 +3149,58 @@ class NewBattle:
 
     def update_status_effects(self):
         """Updating and removing status effects according to duration"""
-        if self.turn == "enemy":  # At end of enemies turn update player's effects
-            for status in self.p_status:
-                if status[1] <= self.turn_count:
-                    self.p_status.remove(status)
-        elif self.turn == "player":  # At end of player's turn update enemy's effects
-            for status in self.m_status:
-                if status[1] <= self.turn_count:
-                    self.m_status.remove(status)
+        for member in self.party + self.enemies:
+            for status in list(member["status"]):
+                if status[1] <= 0:
+                    member["status"].remove(status)
 
     def draw_healthbar(self, cur_health):  # Enemy health bar
-        if cur_health > self.virtualMonsterHealth:
-            if (
-                self.virtualMonsterHealth % 100 == 0
-                and not self.virtualMonsterHealth + 100 > cur_health
-            ):
-                self.virtualMonsterHealth += 100
-            elif (
-                self.virtualMonsterHealth % 50 == 0
-                and not self.virtualMonsterHealth + 50 > cur_health
-            ):
-                self.virtualMonsterHealth += 50
-            elif (
-                self.virtualMonsterHealth % 5 == 0
-                and not self.virtualMonsterHealth + 5 > cur_health
-            ):
-                self.virtualMonsterHealth += 5
-            else:
-                self.virtualMonsterHealth += 1
-        elif cur_health < self.virtualMonsterHealth:
-            if (
-                self.virtualMonsterHealth % 100 == 0
-                and not self.virtualMonsterHealth - 100 < cur_health
-            ):
-                self.virtualMonsterHealth -= 100
-            elif (
-                self.virtualMonsterHealth % 50 == 0
-                and not self.virtualMonsterHealth - 50 < cur_health
-            ):
-                self.virtualMonsterHealth -= 50
-            elif (
-                self.virtualMonsterHealth % 5 == 0
-                and not self.virtualMonsterHealth - 5 < cur_health
-            ):
-                self.virtualMonsterHealth -= 5
-            else:
-                self.virtualMonsterHealth -= 1
-        health_percent = (self.virtualMonsterHealth / self.m_max_health) * 100
-        if health_percent <= 0:
-            health_percent = 0.1
-        state.surf.blit(
-            pygame.transform.scale(self.hp_bar_Empty, (260, 18)),
-            (self.monster_pos, self.monster_y),
-        )
-        state.surf.blit(
-            pygame.transform.scale(
-                self.hp_bar_Full, (int(246 * (health_percent / 100)), 18)
-            ),
-            (self.monster_pos + 7, self.monster_y + 1),
-        )
+        targets = []
+        if self.last_enemy_targets:
+            targets = [t for t in self.last_enemy_targets if t["side"] == "enemy"]
+        elif self.last_enemy_target and self.last_enemy_target["side"] == "enemy":
+            targets = [self.last_enemy_target]
+        elif self.target and self.target["side"] == "enemy":
+            targets = [self.target]
+        if not targets:
+            return
+
+        for target in targets:
+            cur_health = target["hp"]
+            virtual_hp = target.get("virtual_hp", target["hp"])
+            if cur_health > virtual_hp:
+                if virtual_hp % 100 == 0 and not virtual_hp + 100 > cur_health:
+                    virtual_hp += 100
+                elif virtual_hp % 50 == 0 and not virtual_hp + 50 > cur_health:
+                    virtual_hp += 50
+                elif virtual_hp % 5 == 0 and not virtual_hp + 5 > cur_health:
+                    virtual_hp += 5
+                else:
+                    virtual_hp += 1
+            elif cur_health < virtual_hp:
+                if virtual_hp % 100 == 0 and not virtual_hp - 100 < cur_health:
+                    virtual_hp -= 100
+                elif virtual_hp % 50 == 0 and not virtual_hp - 50 < cur_health:
+                    virtual_hp -= 50
+                elif virtual_hp % 5 == 0 and not virtual_hp - 5 < cur_health:
+                    virtual_hp -= 5
+                else:
+                    virtual_hp -= 1
+            target["virtual_hp"] = virtual_hp
+            health_percent = (virtual_hp / target["max_hp"]) * 100
+            if health_percent <= 0:
+                health_percent = 0.1
+            x, y = target["pos"][0], target["pos"][1]
+            state.surf.blit(
+                pygame.transform.scale(self.hp_bar_Empty, (260, 18)),
+                (x, y),
+            )
+            state.surf.blit(
+                pygame.transform.scale(
+                    self.hp_bar_Full, (int(246 * (health_percent / 100)), 18)
+                ),
+                (x + 7, y + 1),
+            )
 
     def draw_alertbox(self):
         """The alert box or the skill box that gets drawn when a skill is used."""
@@ -2655,7 +3361,7 @@ class NewBattle:
                 state.surf.blit(
                     pygame.transform.scale(icon, (icon_size, icon_size)), (ix, iy)
                 )
-                remaining = max(0, self.p_status[idx][1] - self.turn_count)
+                remaining = max(0, self.p_status[idx][1])
                 if remaining > 0:
                     text = str(remaining)
                     num = self.status_font.render(text, True, (255, 240, 200))
@@ -2862,6 +3568,7 @@ class NewBattle:
         self.m_def = monster_data[monster_name]["def"]
         self.m_mag = monster_data[monster_name]["mag"]
         self.m_luck = monster_data[monster_name]["luck"]
+        self.m_speed = monster_data[monster_name].get("speed", 10)
         self.m_sprite = pygame.image.load(monster_data[monster_name]["sprites"])
         self.m_move_list = monster_data[monster_name]["move_list"]
         self.m_gold = monster_data[monster_name]["gold"]
@@ -2887,6 +3594,7 @@ class NewBattle:
         self.p_max_mana = player_data.mp
         self.p_class = player_data.pclass
         self.p_luck = player_data.luck
+        self.p_speed = player_data.speed + getattr(player_data, "add_speed", 0)
         self.p_level = player_data.level
         self.p_mag = player_data.mag + player_data.add_mag
         self.p_str = player_data.stre + player_data.add_stre
@@ -2912,11 +3620,17 @@ class NewBattle:
     def update_player_details(self, player_data=Player()):
         """I don't remember the original reason that I didn't just directly update the player object.
         Well, this works  for now lol."""
-        player_data.curhp = self.p_health
-        player_data.curmp = self.p_mana
+        if self.party:
+            main_player = self.party[0]
+            player_data.curhp = main_player["hp"]
+            player_data.curmp = main_player["mp"]
+            player_data.inventory = main_player["inventory"]
+        else:
+            player_data.curhp = self.p_health
+            player_data.curmp = self.p_mana
+            player_data.inventory = self.p_inventory
         player_data.gold += self.m_gold
         player_data.exp += self.m_exp
-        player_data.inventory = self.p_inventory
         while player_data.check_levelup():
             print(player_data.level)
             player_data.level += 1
@@ -2934,6 +3648,7 @@ class NewBattle:
     def calc_damage(self, atk_type):
         self.crit_chance = 0
         self.element = "none"
+
         if self.turn == "player":
             strength = self.p_str
             defence = self.m_def  # Monster's defence
@@ -2941,6 +3656,7 @@ class NewBattle:
             luck = self.p_luck
             status = self.p_status
             e_status = self.m_status  # Monster's status
+            level = self.p_level
         else:
             strength = self.m_str
             defence = self.p_def  # Player's defence
@@ -2948,100 +3664,79 @@ class NewBattle:
             luck = self.m_luck
             status = self.m_status
             e_status = self.p_status  # Player's status
-        for effect in status:
+            level = max(1, self.active.get("level", 1)) if self.active else 1
+
+        for effect in list(status):
             if effect[0] == "burst":
                 strength += strength + (strength * 0.5)  # increase strength by 50%
-                if self.turn == "player":
-                    self.p_status.remove(effect)
-                else:
-                    self.m_status.remove(effect)
+                status.remove(effect)  # burst is consumed on use
             elif effect[0] == "atk_down":
                 strength = strength * 0.5  # Reduce strength by 50%
             elif effect[0] == "mag_down":
                 magic = magic * 0.5  # Reduce magic by 50%
             elif effect[0] == "def_down":
                 defence = defence * 0.5  # decreases defence by Half
+
         for effect in e_status:
             if effect[0] == "defend":
                 defence = defence + (defence * 2.0)  # increase defence by 200%
             elif effect[0] == "def_down":
                 defence = defence * 0.5  # decreases defence by Half
-        if atk_type == "attack":  # Regular attack
+
+        power_map = {
+            "attack": 2.0,
+            "fire slash": 2.2,
+            "quake": 2.5,
+            "fire": 2.0,
+            "ice": 2.2,
+            "thunder": 2.4,
+            "tsunami": 3.0,
+            "meteor": 3.3,
+        }
+
+        if atk_type == "fire slash":
+            self.element = "fire"
+            base_stat = (strength * 0.6) + (magic * 0.6)
+        elif atk_type in ("fire", "ice", "thunder", "tsunami", "meteor", "quake"):
+            self.element = {
+                "fire": "fire",
+                "ice": "water",
+                "thunder": "light",
+                "tsunami": "water",
+                "meteor": "fire",
+                "quake": "earth",
+            }[atk_type]
+            base_stat = magic
+        else:
             self.element = "none"
-            # Will take a range of their current strength
-            dmg_range = strength + random.randrange(-3, 3)
-            if dmg_range <= 0:
-                dmg_range = 1
-            if luck >= 10:
-                luck = 10
-                # will always crit with 10 luck.
-            self.crit_chance = random.randrange(luck, 11)
-            if self.crit_chance == 10:
-                damage = (dmg_range * strength / (strength + defence)) * 4
-            else:
-                damage = (dmg_range * strength / (strength + defence)) * 2
-            if self.turn == "player":
-                for attribute in self.p_item_effects:
-                    if attribute == "AtkDmg 2x":
-                        damage *= 2  # Doubles damage
-        elif atk_type == "fire slash":
-            self.element = "fire"
-            dmg_range = (strength * 0.5) + (magic * 0.5) + random.randrange(-3, 3)
-            if dmg_range <= 0:
-                dmg_range = 1
-            damage = (dmg_range * strength / (strength + defence)) * 2
-        elif atk_type == "quake":
-            self.element = "earth"
-            dmg_range = magic + random.randrange(-3, 3)
-            if dmg_range <= 0:
-                dmg_range = 1
-            damage = (dmg_range * magic / (magic + defence)) * 2.5
-        elif atk_type == "fire":
-            self.element = "fire"
-            dmg_range = magic + random.randrange(-3, 3)
-            if dmg_range <= 0:
-                dmg_range = 1
-            damage = (dmg_range * magic / (magic + defence)) * 2
-        elif atk_type == "ice":
-            self.element = "water"
-            dmg_range = magic + random.randrange(-3, 3)
-            if dmg_range <= 0:
-                dmg_range = 1
-            damage = (dmg_range * magic / (magic + defence)) * 2.5
-        elif atk_type == "thunder":
-            self.element = "light"
-            dmg_range = magic + random.randrange(-3, 3)
-            if dmg_range <= 0:
-                dmg_range = 1
-            damage = (dmg_range * magic / (magic + defence)) * 2.7
-        elif atk_type == "tsunami":
-            self.element = "water"
-            dmg_range = magic + random.randrange(-3, 3)
-            if dmg_range <= 0:
-                dmg_range = 1
-            damage = (dmg_range * magic / (magic + defence)) * 3.5
-        elif atk_type == "meteor":
-            self.element = "fire"
-            dmg_range = magic + random.randrange(-3, 3)
-            if dmg_range <= 0:
-                dmg_range = 1
-            damage = (dmg_range * magic / (magic + defence)) * 3.7
+            base_stat = strength
+
+        power = power_map.get(atk_type, 2.0)
+        base = (base_stat * power) + (level * 2)
+        scaled = base * (100 / (100 + defence))
+        damage = max(1, int(scaled * random.uniform(0.9, 1.1)))
+
+        crit_chance = min(0.25, 0.05 + (luck * 0.015))
+        if random.random() < crit_chance:
+            damage = int(damage * 1.5)
+            self.crit_chance = 10
+
         if self.turn == "player":
             if self.element in self.m_weakness:
-                damage *= 2  # Damage doubles if enemy is weak against that element
+                damage = int(damage * 2)
             elif self.element in self.m_strengths:
-                damage *= 0.5  # Damage halves if enemy is strong against that element
+                damage = int(damage * 0.5)
             for effect in self.p_item_effects:
                 if effect == "AtkDmg 2x" and atk_type == "attack":
                     damage *= 2
                 elif effect == "FireDmg Up":
                     if self.element == "fire":
-                        damage += damage * 0.5
+                        damage += int(damage * 0.5)
                 elif effect == "WaterDmg Up":
                     if self.element == "water":
-                        damage += damage * 0.5
+                        damage += int(damage * 0.5)
 
-        return int(damage)
+        return max(1, int(damage))
 
     def shake_screen(self):
         strength = self.impact_shake_strength if self.impact_shake_timer > 0 else 5
@@ -3144,15 +3839,11 @@ class NewBattle:
         state.surf.blit(defeat, (state.curwidth / 3, state.curheight / 5))
         state.surf.blit(cont, (state.curwidth / 3, state.curheight / 5 + 100))
 
-    def set_instance(self, player_data=Player()):
+    def set_instance(self):
         """Resets/sets the instance"""
         self.reset_cam()
         self.game_state = ""
         self.ui_state = "main"
-        self.turn = "player"
-        self.announce_turn("player")
-        self.get_player_details(player_data)
-        self.p_status = []
         self.sequence_flag = False
         self.sequence_done = False
         self.player_dmg_flag = False
@@ -3165,34 +3856,34 @@ class NewBattle:
         self.impact_flashes = []
         self.impact_shake_timer = 0
         self.impact_shake_strength = 0
-        self.display_hp = self.p_health
-        self.display_mp = self.p_mana
-        self.last_hp = self.p_health
-        self.last_mp = self.p_mana
         self.hud_pulse_hp = 0
         self.hud_pulse_mp = 0
+        self.hud_hit_flash = 0
+        self.hud_hit_level = 0
         self.element = "none"
-        self.player_sprites_burst.play()
         self.turn_count = 0
         self.healthbar_flag = False
         self.victory_flag = False
-        if player_data.pclass == "warrior":
-            self.player_sprites = pyganim.PygAnimation(
-                [
-                    ("data/sprites/idle1.png", 0.2),
-                    ("data/sprites/idle2.png", 0.2),
-                    ("data/sprites/idle3.png", 0.2),
-                ]
-            )
-        elif player_data.pclass == "mage":
-            self.player_sprites = pyganim.PygAnimation(
-                [
-                    ("data/sprites/midle1.png", 0.3),
-                    ("data/sprites/midle2.png", 0.3),
-                    ("data/sprites/midle3.png", 0.3),
-                ]
-            )
-        self.player_sprites.play()
+        self.draw_menu = True
+
+        for member in self.party:
+            member["status"] = []
+            member["ct"] = 0.0
+            member["pos"] = list(member["base_pos"])
+            member["hit_flash"] = 0
+            if member.get("anim"):
+                member["anim"].play()
+            if member.get("burst_anim"):
+                member["burst_anim"].play()
+
+        for enemy in self.enemies:
+            enemy["status"] = []
+            enemy["ct"] = 0.0
+            enemy["pos"] = list(enemy["base_pos"])
+            enemy["hit_flash"] = 0
+            enemy["fade_active"] = False
+            enemy["fade_alpha"] = 255
+            enemy["death_sound_played"] = False
 
     def check_victory(self):
         """Checks if player won the battle or not"""
@@ -3210,10 +3901,23 @@ class NewBattle:
         self.monster_flag = True
         self.draw_menu = True
         self.add_flag = False
-        self.get_monster_details(monster_name)
-        self.get_player_details(player_data)
+        self.build_combatants(monster_name, player_data)
+        if not self.enemies or not self.party:
+            return
+        bg_mon = self.enemies[0]["name"]
+        self.background = pygame.transform.scale(
+            pygame.image.load(self.monster_data[bg_mon]["bg"]).convert_alpha(),
+            (1280, 720),
+        )
         self.play_sound("encounter")
-        self.set_instance(player_data)
+        self.set_instance()
+        self.select_next_turn()
+        self.set_target("enemy", 0)
+        self.sync_active_stats()
+        self.display_hp = self.p_health
+        self.display_mp = self.p_mana
+        self.last_hp = self.p_health
+        self.last_mp = self.p_mana
         fadein(255)
         if set_music == 0:
             pygame.mixer_music.load("data/sounds&music/03_Endless_Battle.ogg")
@@ -3268,6 +3972,7 @@ class NewBattle:
                 self.turn_banner_timer -= 1
             if self.healthbar_flag:
                 self.draw_healthbar(self.m_cur_health)
+            self.blit_target_cursor()
             self.update_status_effects()
             self.play_sequence(self.sequence_to_play, self.sequence_target)
             self.check_state(player_data)  # To check the current game state

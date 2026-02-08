@@ -18,6 +18,7 @@ class Player:
         magic=20,
         defence=10,
         luck=2,
+        speed=10,
     ):
         self.name = name
         self.hp = health
@@ -31,6 +32,7 @@ class Player:
         self.defe = defence
         self.mag = magic
         self.luck = luck
+        self.speed = speed
         self.stat_points = 0
         self.expreq = 0
         # Player's stats from equipment
@@ -48,6 +50,11 @@ class Player:
             item_data["weapons"][self.cur_weapon]["mag"]
             + item_data["armours"][self.cur_armour]["mag"]
             + item_data["accessories"][self.cur_accessory]["mag"]
+        )
+        self.add_speed = (
+            item_data["weapons"][self.cur_weapon].get("spd", 0)
+            + item_data["armours"][self.cur_armour].get("spd", 0)
+            + item_data["accessories"][self.cur_accessory].get("spd", 0)
         )
         self.add_luck = luck
         self.progress = 1  # progress in game
@@ -97,6 +104,11 @@ class Player:
             + item_data["armours"][self.cur_armour]["mag"]
             + item_data["accessories"][self.cur_accessory]["mag"]
         )
+        self.add_speed = (
+            item_data["weapons"][self.cur_weapon].get("spd", 0)
+            + item_data["armours"][self.cur_armour].get("spd", 0)
+            + item_data["accessories"][self.cur_accessory].get("spd", 0)
+        )
 
     def set_player_stats(self, **kwargs):
         """For debug purposes"""
@@ -109,6 +121,8 @@ class Player:
                 self.mag = value
             elif stat == "luck" or stat == "luk":
                 self.luck = value
+            elif stat == "speed" or stat == "spd":
+                self.speed = value
             elif stat == "health":
                 self.hp = self.curhp = value
             elif stat == "mana":

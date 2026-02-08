@@ -269,7 +269,14 @@ class MainUi:
     def status(self, player, item_data=item_data):
         state.surf.blit(self.status_bg, (53, 30))
         nametxt = self.uitext.render("Name: " + player.name, False, self.txtcolor)
-        state.surf.blit(nametxt, (169, 207))
+        state.surf.blit(nametxt, (169, 200))
+        stats_y = 235
+        stats_step = 32
+        str_y = stats_y
+        def_y = stats_y + stats_step
+        mag_y = stats_y + stats_step * 2
+        spd_y = stats_y + stats_step * 3
+        luck_y = stats_y + stats_step * 4
         strtxt = self.uitext.render("STR: %d" % player.stre, False, self.txtcolor)
         if player.add_stre > 0:
             strtxt2 = self.uitext.render("(+%d)" % player.add_stre, False, (0, 200, 0))
@@ -282,9 +289,9 @@ class MainUi:
         stat_points = self.uitext.render(
             "Stat points: %d" % player.stat_points, False, (46, 69, 184)
         )
-        state.surf.blit(stat_points, (430, 247))
-        state.surf.blit(strtxt, (169, 247))
-        state.surf.blit(strtxt2, (299, 247))
+        state.surf.blit(stat_points, (430, str_y))
+        state.surf.blit(strtxt, (169, str_y))
+        state.surf.blit(strtxt2, (299, str_y))
         deftxt = self.uitext.render("DEF: %d" % player.defe, False, self.txtcolor)
         if player.add_defe > 0:
             deftxt2 = self.uitext.render("(+%d)" % player.add_defe, False, (0, 200, 0))
@@ -294,10 +301,10 @@ class MainUi:
             )
         else:
             deftxt2 = self.uitext.render("(%d)" % player.add_defe, False, (200, 0, 0))
-        state.surf.blit(deftxt, (169, 287))
-        state.surf.blit(deftxt2, (299, 287))
+        state.surf.blit(deftxt, (169, def_y))
+        state.surf.blit(deftxt2, (299, def_y))
         lucktxt = self.uitext.render("LUCK: %d" % player.luck, False, self.txtcolor)
-        state.surf.blit(lucktxt, (169, 367))
+        state.surf.blit(lucktxt, (169, luck_y))
         magtxt = self.uitext.render("MAG: %d" % player.mag, False, self.txtcolor)
         if player.add_mag > 0:
             magtxt2 = self.uitext.render("(+%d)" % player.add_mag, False, (0, 200, 0))
@@ -307,8 +314,19 @@ class MainUi:
             )
         else:
             magtxt2 = self.uitext.render("(%d)" % player.add_mag, False, (200, 0, 0))
-        state.surf.blit(magtxt, (169, 327))
-        state.surf.blit(magtxt2, (299, 327))
+        state.surf.blit(magtxt, (169, mag_y))
+        state.surf.blit(magtxt2, (299, mag_y))
+        spdtxt = self.uitext.render("SPD: %d" % player.speed, False, self.txtcolor)
+        if player.add_speed > 0:
+            spdtxt2 = self.uitext.render("(+%d)" % player.add_speed, False, (0, 200, 0))
+        elif player.add_speed == 0:
+            spdtxt2 = self.uitext.render(
+                "(+%d)" % player.add_speed, False, (95, 100, 100)
+            )
+        else:
+            spdtxt2 = self.uitext.render("(%d)" % player.add_speed, False, (200, 0, 0))
+        state.surf.blit(spdtxt, (169, spd_y))
+        state.surf.blit(spdtxt2, (299, spd_y))
         lvltxt = self.uitext.render("Level: %d" % player.level, False, self.txtcolor2)
         state.surf.blit(lvltxt, (607, 396))
         xp_txt = self.uitext2.render(
@@ -338,12 +356,13 @@ class MainUi:
             False,
             self.txtcolor2,
         )
-        state.surf.blit(self.wepicon, (169, 407))
-        state.surf.blit(weptxt, (209, 407))
-        state.surf.blit(self.armicon, (169, 447))
-        state.surf.blit(armtxt, (209, 447))
-        state.surf.blit(self.accicon, (169, 487))
-        state.surf.blit(acctxt, (209, 487))
+        equip_y = luck_y + 40
+        state.surf.blit(self.wepicon, (169, equip_y))
+        state.surf.blit(weptxt, (209, equip_y))
+        state.surf.blit(self.armicon, (169, equip_y + 40))
+        state.surf.blit(armtxt, (209, equip_y + 40))
+        state.surf.blit(self.accicon, (169, equip_y + 80))
+        state.surf.blit(acctxt, (209, equip_y + 80))
         floorktxt = self.uitext.render(
             "Enemies killed on this floor: %d" % player.fkills, False, self.txtcolor3
         )
@@ -1114,6 +1133,7 @@ class Shop(MainUi):
         self.pdef = self.player_data.defe + self.player_data.add_defe
         self.pmag = self.player_data.mag + self.player_data.add_mag
         self.pluck = self.player_data.luck
+        self.pspeed = self.player_data.speed + self.player_data.add_speed
 
     def status_window(self, item, player_data):
         self.get_player_stats(player_data)
@@ -1144,6 +1164,9 @@ class Shop(MainUi):
                 mag_txt = self.uitext.render(
                     "MAG: " + str(self.pmag), False, self.txtcolor3
                 )
+                spd_txt = self.uitext.render(
+                    "SPD: " + str(self.pspeed), False, self.txtcolor3
+                )
                 luk_txt = self.uitext.render(
                     "LUCK: " + str(self.pluck), False, self.txtcolor3
                 )
@@ -1172,6 +1195,11 @@ class Shop(MainUi):
                     self.pmag
                     + item["mag"]
                     - (self.pmag + self.current_list[player_item]["mag"])
+                )
+                spd_dif = (
+                    self.pspeed
+                    + item["spd"]
+                    - (self.pspeed + self.current_list[player_item]["spd"])
                 )
                 if str_dif >= 0:
                     str_diftxt = self.uitext.render(
@@ -1203,6 +1231,16 @@ class Shop(MainUi):
                         "(" + str(mag_dif) + ")", False, self.red_rgb
                     )
                     state.surf.blit(mag_diftxt, (1120, 440))
+                if spd_dif >= 0:
+                    spd_diftxt = self.uitext.render(
+                        "(+" + str(spd_dif) + ")", False, self.green_rgb
+                    )
+                    state.surf.blit(spd_diftxt, (1120, 510))
+                else:
+                    spd_diftxt = self.uitext.render(
+                        "(" + str(spd_dif) + ")", False, self.red_rgb
+                    )
+                    state.surf.blit(spd_diftxt, (1120, 510))
                 if self.min_pos + 5 != self.max_pos:
                     # Downward facing arrow to show that more items are available
                     state.surf.blit(self.cursor_down, (212, 623))
@@ -1212,7 +1250,8 @@ class Shop(MainUi):
                 state.surf.blit(str_txt, (1000, 300))
                 state.surf.blit(def_txt, (1000, 370))
                 state.surf.blit(mag_txt, (1000, 440))
-                state.surf.blit(luk_txt, (1000, 510))
+                state.surf.blit(spd_txt, (1000, 510))
+                state.surf.blit(luk_txt, (1000, 580))
 
     def buy_item(self, item_id):
         if self.player_data.gold < self.current_list[item_id]["cost"]:

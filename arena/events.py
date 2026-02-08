@@ -2019,7 +2019,7 @@ def run_game():
                 pygame.mixer_music.play()
             if shh == ["t", "e", "t"] and state.scene == "menu":
                 player.set_player_stats(level=20, health=1000, mana=1000)
-                battler.battle("rat", player)
+                battler.battle("arena_wave_2", player)
                 shh = []
             if shh == ["t", "o", "t"] and state.scene == "menu":
                 player.town_first_flag = True
@@ -2067,32 +2067,34 @@ def run_game():
             warrior.blit(state.surf, (778, 429))
             mage.blit(state.surf, (300, 435))
             if cursorpos == 0:
+                player.stre = 10
+                player.mag = 25
+                player.defe = 15
+                player.speed = 14
                 statstxt = seltext.render(
-                    "STR:%d MAG:%d DEF:%d LUCK:%d"
-                    % (player.stre, player.mag, player.defe, player.luck),
+                    "STR:%d MAG:%d DEF:%d LUCK:%d SPD:%d"
+                    % (player.stre, player.mag, player.defe, player.luck, player.speed),
                     False,
                     (10, 33, 147),
                 )
                 state.surf.blit(cursor, (260, 375))
                 state.surf.blit(MageDesc, (260, 45))
                 state.surf.blit(statstxt, (260, 95))
-                player.stre = 10
-                player.mag = 25
-                player.defe = 15
 
             elif cursorpos == 1:
+                player.stre = 20
+                player.mag = 10
+                player.defe = 20
+                player.speed = 10
                 statstxt = seltext.render(
-                    "STR:%d MAG:%d DEF:%d LUCK:%d"
-                    % (player.stre, player.mag, player.defe, player.luck),
+                    "STR:%d MAG:%d DEF:%d LUCK:%d SPD:%d"
+                    % (player.stre, player.mag, player.defe, player.luck, player.speed),
                     False,
                     (10, 33, 147),
                 )
                 state.surf.blit(cursor, (738, 375))
                 state.surf.blit(WarDesc, (260, 45))
                 state.surf.blit(statstxt, (260, 95))
-                player.stre = 20
-                player.mag = 10
-                player.defe = 20
             if cursorpos < 0:
                 cursorpos = 1
             elif cursorpos > 1:

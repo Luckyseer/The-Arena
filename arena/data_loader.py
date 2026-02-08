@@ -22,6 +22,11 @@ try:
         sequences = json.load(sequences)
     with open("data/dialogue.json", "r") as dialogue:
         dialogues = json.load(dialogue)
+    try:
+        with open("data/battles.json", "r") as battles_file:
+            battles = json.load(battles_file)
+    except FileNotFoundError:
+        battles = {}
 except EOFError or IOError:
     print(
         "Could not load item/monster/sound data, Make sure they are in the folder with the game"
@@ -39,4 +44,5 @@ __all__ = [
     "skills",
     "sequences",
     "dialogues",
+    "battles",
 ]
