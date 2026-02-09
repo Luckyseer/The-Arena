@@ -1513,6 +1513,7 @@ class NewBattle:
         self.impact_flashes = []
         self.impact_shake_timer = 0
         self.impact_shake_strength = 0
+        self.hit_stop_frames = 0
         self.turn_banner_timer = 0
         self.turn_banner_text = ""
         self.turn_banner_duration = 30
@@ -1792,6 +1793,7 @@ class NewBattle:
         else:
             self.turn = "enemy"
             self.announce_turn("enemy")
+        self.turn_order_burst = 10
 
     def build_round_order(self):
         alive = [c for c in self.party + self.enemies if c["hp"] > 0]
@@ -1808,6 +1810,7 @@ class NewBattle:
         )
         self.round_index = 0
         self.turn_order_slide = -80
+        self.turn_order_burst = 0
 
     def ensure_active(self):
         if not self.round_order:
@@ -2597,12 +2600,15 @@ class NewBattle:
         if crit:
             self.impact_shake_timer = 10
             self.impact_shake_strength = 7
+            self.hit_stop_frames = max(self.hit_stop_frames, 4)
         elif heavy:
             self.impact_shake_timer = 7
             self.impact_shake_strength = 5
+            self.hit_stop_frames = max(self.hit_stop_frames, 3)
         else:
             self.impact_shake_timer = 4
             self.impact_shake_strength = 3
+            self.hit_stop_frames = max(self.hit_stop_frames, 2)
 
     def update_impact_flashes(self):
         alive = []
@@ -3369,24 +3375,36 @@ class NewBattle:
         )
         state.surf.blit(turn_txt, (x - turn_txt.get_width() - 12, y + 18))
 
+        if self.turn_order_burst > 0:
+            self.turn_order_burst -= 1
         for i, c in enumerate(self.round_order):
             icon_x = x + pad_x + i * (icon_size + icon_gap)
             icon_y = y + (banner_h - icon_size) // 2
             portrait = self.get_portrait_surface(c)
             if not portrait:
                 continue
-            icon = pygame.transform.scale(portrait, (icon_size, icon_size))
-            if i != self.round_index:
+            is_active = i == self.round_index
+            scale = 1.0
+            if is_active and self.turn_order_burst > 0:
+                scale = 1.05 + 0.02 * math.sin(self.turn_order_burst * 0.6)
+            icon_w = int(icon_size * scale)
+            icon_h = int(icon_size * scale)
+            icon = pygame.transform.scale(portrait, (icon_w, icon_h))
+            draw_x = icon_x - (icon_w - icon_size) // 2
+            draw_y = icon_y - (icon_h - icon_size) // 2
+            if not is_active:
+                icon = icon.copy()
+                icon.fill((120, 120, 120), special_flags=pygame.BLEND_RGB_MULT)
                 icon.set_alpha(120)
             else:
                 icon.set_alpha(255)
                 pygame.draw.rect(
                     state.surf,
                     (255, 220, 80),
-                    (icon_x - 2, icon_y - 2, icon_size + 4, icon_size + 4),
+                    (draw_x - 2, draw_y - 2, icon_w + 4, icon_h + 4),
                     2,
                 )
-            state.surf.blit(icon, (icon_x, icon_y))
+            state.surf.blit(icon, (draw_x, draw_y))
 
     def draw_alertbox(self):
         """The alert box or the skill box that gets drawn when a skill is used."""
@@ -3467,7 +3485,9 @@ class NewBattle:
         icon_gap = 6
         icons_per_row = max(1, (bar_w // (icon_size + icon_gap)))
         status_icons = [
-            self.status_icons[s[0]] for s in self.p_status if s[0] in self.status_icons
+            (s, self.status_icons[s[0]])
+            for s in self.p_status
+            if s[0] in self.status_icons
         ]
         rows = (len(status_icons) + icons_per_row - 1) // icons_per_row
         status_block_h = rows * icon_size + max(0, rows - 1) * icon_gap
@@ -3539,7 +3559,7 @@ class NewBattle:
         if rows > 0:
             start_x = hp_bar.x
             start_y = mp_bar.y + mp_bar.h + 10
-            for idx, icon in enumerate(status_icons):
+            for idx, (status, icon) in enumerate(status_icons):
                 row = idx // icons_per_row
                 col = idx % icons_per_row
                 ix = start_x + col * (icon_size + icon_gap)
@@ -3547,7 +3567,7 @@ class NewBattle:
                 state.surf.blit(
                     pygame.transform.scale(icon, (icon_size, icon_size)), (ix, iy)
                 )
-                remaining = max(0, self.p_status[idx][1])
+                remaining = max(0, status[1])
                 if remaining > 0:
                     text = str(remaining)
                     num = self.status_font.render(text, True, (255, 240, 200))
@@ -4177,10 +4197,20 @@ class NewBattle:
                 self.draw_healthbar(self.m_cur_health)
             self.blit_target_cursor()
             self.draw_turn_order()
-            self.update_status_effects()
-            self.play_sequence(self.sequence_to_play, self.sequence_target)
-            self.check_state(player_data)  # To check the current game state
-            self.check_inputs()
+            if self.hit_stop_frames > 0:
+                self.hit_stop_frames -= 1
+                # Still handle quit/music events while hit-stop is active.
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.battling = False
+                        state.done = True
+                    if event.type == pygame.constants.USEREVENT:
+                        pygame.mixer_music.play()
+            else:
+                self.update_status_effects()
+                self.play_sequence(self.sequence_to_play, self.sequence_target)
+                self.check_state(player_data)  # To check the current game state
+                self.check_inputs()
             state.surf.blit(alpha, (0, 0))
             state.screen.blit(state.surf, (self.camera_x, self.camera_y))
             pygame.display.update()
