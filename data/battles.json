@@ -1,0 +1,30 @@
+{
+  "arena_wave_1": {
+    "enemies": [
+      {
+        "name": "rat",
+        "slot": 1
+      },
+      {
+        "name": "rat",
+        "slot": 3
+      }
+    ]
+  },
+  "arena_wave_2": {
+    "enemies": [
+      {
+        "name": "snake",
+        "slot": 1
+      },
+      {
+        "name": "rat",
+        "slot": 2
+      },
+      {
+        "name": "rat",
+        "slot": 4
+      }
+    ]
+  }
+}

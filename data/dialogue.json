@@ -1,96 +1,126 @@
 {
+  "template" : [
+    ["Path to image of face goes here", "Name/Title goes here", "Dialogue goes here."]
+  ],
   "intro1": [
-    ["", "", "You make your way into a fancy looking office. The room is well furnished and in the back of the room stands a big metal gate. In the room you see a man looking over some documents. "],
+    ["", "", "You make your way into a fancy-looking office. The room is well furnished, and at the back stands a massive metal gate. A man is poring over documents."],
     ["data/sprites/host_face.png", "???", "Oh? Can I help you?"],
-    ["", "", "The man gets up to greet you."],
-    ["", "", "You exchange pleasantries and state your reason for coming here."],
+    ["", "", "The man stands to greet you."],
+    ["", "", "You exchange pleasantries and explain why you're here."],
     ["data/sprites/host_face.png", "???", "Ah, I see. So you want to challenge the Arena?"],
-    ["data/sprites/host_face.png", "???", "You seem quite young. Have you any experience in combat?"],
-    ["data/sprites/host_face.png", "???", "That reminds me. I still haven't introduced myself have I?"],
+    ["data/sprites/host_face.png", "???", "You seem quite young. Do you have any experience in combat?"],
+    ["data/sprites/host_face.png", "???", "That reminds me. I still haven't introduced myself, have I?"],
     ["data/sprites/host_face.png", "Chance", "I am the one they call the director of the Arena. But you can call me Chance."],
-    ["data/sprites/host_face.png", "Chance", "Well if you want to register I'm not going to stop you."],
-    ["data/sprites/host_face.png", "Chance", "But a fair warning, the Arena is extremely dangerous.\nMany Adventurers, some more experienced than you have lost their lives here."],
-    ["data/sprites/host_face.png", "Chance", "Once you join, you are contractually obligated to participate in the fights. You will be rewarded for each fight you win of course, but once you're in a battle there's no turning back."],
-    ["data/sprites/host_face.png", "Chance", "While many have challenged the Arena and lived, only one warrior has managed to get to the final floor and emerge victorious. That was 2 years ago."],
-    ["data/sprites/host_face.png", "Chance", "I will not think less of you if you decide to turn back this instant and go back to where you came from."],
-    ["data/sprites/host_face.png", "Chance", "So decide. Will you really fight in the arena?"],
+    ["data/sprites/host_face.png", "Chance", "Well, if you want to register, I'm not going to stop you."],
+    ["data/sprites/host_face.png", "Chance", "But a fair warning: the Arena is extremely dangerous.\nMany adventurers, some more experienced than you, have lost their lives here."],
+    ["data/sprites/host_face.png", "Chance", "Once you join, you're contractually obligated to participate in the fights. You'll be rewarded for each victory, of course, but once you're in a battle, there's no turning back."],
+    ["data/sprites/host_face.png", "Chance", "While many have challenged the Arena and lived, only one warrior has managed to reach the final floor and emerge victorious. That was two years ago."],
+    ["data/sprites/host_face.png", "Chance", "I won't think less of you if you decide to turn back now and return to where you came from."],
+    ["data/sprites/host_face.png", "Chance", "So decide. Will you really fight in the Arena?"],
     ["", "", "Chance holds out a paper and hands you a quill and some ink."],
-    ["", "", "You sign the contract with no hesitation."],
+    ["", "", "You sign the contract without hesitation."],
     ["data/sprites/host_face.png", "Chance", "..."],
     ["data/sprites/host_face.png", "Chance", "You are truly an interesting person."],
-    ["data/sprites/host_face.png", "Chance", "Very well, You may step forward..."],
-    ["data/sprites/host_face.png", "Chance", "...And enter the Arena!"]
+    ["data/sprites/host_face.png", "Chance", "Very well. You may step forward..."],
+    ["data/sprites/host_face.png", "Chance", "...and enter the Arena!"]
   ],
   "intro2": [
     ["data/sprites/host_face.png", "Chance", "Welcome to the Arena!"],
-    ["data/sprites/host_face.png", "Chance", "Before you get started, you need to know a few things."],
-    ["data/sprites/host_face.png", "Chance", "The Arena has 5 floors, In each floor you fight monsters and after you've defeated 5 monsters you can challenge the floor boss."],
-    ["data/sprites/host_face.png", "Chance", "After you've defeated the floor boss, you can progress onto the next floor. If you think you're not ready to face the floor boss yet, you can continue fighting the monsters on the floor that you're on until you're strong enough."],
-    ["data/sprites/host_face.png", "Chance", "As you progress through the floors, the monsters get stronger and stronger. In order to keep up, you will have to buy new equipment through the Arena shop."],
-    ["data/sprites/host_face.png", "Chance", "You can buy the equipment using the gold rewards obtained after beating a monster."],
-    ["data/sprites/host_face.png", "Chance", "If you get hurt after a battle, you can sleep at the Inn for a small fee or you can buy healing items from the shop."],
-    ["data/sprites/host_face.png", "Chance", "Also, you can find some interesting people around the Arena, so make sure to talk to them. They may have some useful info for you!"],
-    ["data/sprites/host_face.png", "Chance", "Well that's about it.. I have high hopes for you."],
-    ["data/sprites/host_face.png", "Chance", "Good luck friend... Lord knows you need it!"]
+    ["data/sprites/host_face.png", "Chance", "Before you get started, there are a few things you need to know."],
+    ["data/sprites/host_face.png", "Chance", "The Arena has five floors. On each floor you fight monsters, and after you've defeated five, you can challenge the floor boss."],
+    ["data/sprites/host_face.png", "Chance", "After you defeat the floor boss, you can advance to the next floor. If you're not ready, you can keep fighting the monsters on your current floor until you are."],
+    ["data/sprites/host_face.png", "Chance", "As you progress, the monsters get stronger. To keep up, you'll need to buy new equipment at the Arena shop."],
+    ["data/sprites/host_face.png", "Chance", "You can buy equipment using the gold you earn after defeating a monster."],
+    ["data/sprites/host_face.png", "Chance", "If you get hurt after a battle, you can sleep at the Inn for a small fee, or buy healing items from the shop."],
+    ["data/sprites/host_face.png", "Chance", "Also, you can meet interesting people around the Arena, so be sure to talk to them. They might have useful information."],
+    ["data/sprites/host_face.png", "Chance", "Well, that's about it. I have high hopes for you."],
+    ["data/sprites/host_face.png", "Chance", "Good luck, friend... Lord knows you'll need it!"]
   ],
   "first_floor_victory1": [
-    ["data/sprites/host_face.png", "Chance", "Ladies and gentlemen... He's done it!"],
+    ["data/sprites/host_face.png", "Chance", "Ladies and gentlemen... he's done it!"],
     ["data/sprites/host_face.png", "Chance", "What a thrilling match! Against all odds, he has emerged victorious!"],
-    ["data/sprites/host_face.png", "Chance", "Could we finally have a new Champion after 2 years?"],
+    ["data/sprites/host_face.png", "Chance", "Could we finally have a new Champion after two years?"],
     ["data/sprites/host_face.png", "Chance", "Only time will tell."],
-    ["data/sprites/host_face.png", "Chance", "For now let us cheer once again for this wonderful display of skill by the challenger!"]
+    ["data/sprites/host_face.png", "Chance", "For now, let us cheer once more for this wonderful display of skill from our challenger!"]
 
   ],
   "first_floor_victory2": [
-    ["data/sprites/host_face.png", "Chance", "Hey, let me congratulate you personally. To be honest, while I saw potential in you I didn't think you would beat Tho'k that easily!"],
+    ["data/sprites/host_face.png", "Chance", "Hey, let me congratulate you personally."],
+    ["data/sprites/host_face.png", "Chance", "To be honest, while I saw potential in you, I didn't think you'd beat Tho'k that easily!"],
     ["data/sprites/host_face.png", "Chance", "What I said about him being \"The Gatekeeper\" wasn't an exaggeration. Most challengers don't get past this point."],
-    ["data/sprites/host_face.png", "Chance", "But that means from this point onwards it's going to get much harder. The next floor boss isn't one to take lightly."],
-    ["data/sprites/host_face.png", "Chance", "Let me make a suggestion. Make your way to the town. You'll find some useful info there as well as some equipment that you may not find in the Arena. It doesn't hurt to be prepared."],
-    ["data/sprites/host_face.png", "Chance", "With this victory, you have successfully advanced to the next floor. Take the rest of the day off, we need some time to prepare things on our side. Besides, taking breaks is part of the job!"],
-    ["data/sprites/host_face.png", "Chance", "Remember, when you wake up, try visiting the town. You might find something or rather someone interesting there."],
-    ["data/sprites/host_face.png", "Chance", "Good luck friend! I'm rooting for you!"]
+    ["data/sprites/host_face.png", "Chance", "But that means from here on, it only gets harder. The next floor boss isn't one to take lightly."],
+    ["data/sprites/host_face.png", "Chance", "Let me make a suggestion. Head to the town. You'll find useful info there, and equipment you might not see in the Arena. It never hurts to be prepared."],
+    ["data/sprites/host_face.png", "Chance", "With this victory, you've advanced to the next floor. Take the rest of the day off. We need time to prepare things on our side, and besides, taking breaks is part of the job!"],
+    ["data/sprites/host_face.png", "Chance", "Remember, when you wake up, try visiting the town. You might find something... or someone... interesting there."],
+    ["data/sprites/host_face.png", "Chance", "Good luck, friend! I'm rooting for you!"]
   ],
   "first_floor_victory3": [
-    ["data/sprites/rogue.png", "???", "So.. what did you think of the challengers this time around?"],
+    ["data/sprites/rogue.png", "???", "So... what did you think of the challengers this time around?"],
     ["data/sprites/rogue.png", "???", "Personally, I've been extremely disappointed so far."],
-    ["data/sprites/mysteryman.png", "Stranger", "Hmm.. there was one person in particular that piqued my interest.. The one that defeated the Gatekeeper."],
-    ["data/sprites/rogue.png", "???", "What? Why him? Sure, he might be better than most of the weaklings that come through this place but I didn't think he was that strong."],
-    ["data/sprites/rogue.png", "???", "He seemed like an amateur to me at first. I admit he was stronger than what I initially thought of him, he did manage to beat that weakling Tho'k after all."],
-    ["data/sprites/rogue.png", "???", "But nowhere during his fight did he strike me as someone with potential."],
-    ["data/sprites/mysteryman.png", "Stranger", "Heh.. You might be right.. But call it.. my intuition."],
-    ["data/sprites/rogue.png", "???", "Intuition? Ha! I think my battle experience is a bit more reliable than your \"Intuition\"!"],
-    ["data/sprites/mysteryman.png", "Stranger", "You may be surprised. Who knows.. I suggest you keep an eye on him. He may be just what we need."],
+    ["data/sprites/mysteryman.png", "Stranger", "Hmm... there was one person in particular who piqued my interest. The one who defeated the Gatekeeper."],
+    ["data/sprites/rogue.png", "???", "What? Why him? Sure, he might be better than most of the weaklings who come through this place, but I didn't think he was that strong."],
+    ["data/sprites/rogue.png", "???", "He seemed like an amateur at first. I'll admit he was stronger than I thought, but he only managed to beat that weakling Tho'k."],
+    ["data/sprites/rogue.png", "???", "Nowhere during his fight did he strike me as someone with potential."],
+    ["data/sprites/mysteryman.png", "Stranger", "Heh... you might be right... but call it... my intuition."],
+    ["data/sprites/rogue.png", "???", "Intuition? Ha! I think my battle experience is a bit more reliable than your \"intuition\"!"],
+    ["data/sprites/mysteryman.png", "Stranger", "You may be surprised. Who knows? I suggest you keep an eye on him. He may be just what we need."],
     ["data/sprites/rogue.png", "???", "Hmph, if you say so. Either way, we don't have much time left."],
-    ["data/sprites/rogue.png", "???", "Anyways, I would stay here and chat but I've got my own matters to attend to."],
-    ["data/sprites/mysteryman.png", "Stranger", "Oh? Could it be.. you've found a lead on.."],
-    ["data/sprites/rogue.png", "???", "We're not sure yet. But the intel this time is solid. If we can get our hands on him we can speed this process up by a lot. Still, what kind of a person is he to be able to stay hidden for so long?"],
-    ["data/sprites/mysteryman.png", "Stranger", "To put it plain and simple.. He was a monster. If it wasn't for him we would have been ready 2 years ago."],
-    ["data/sprites/mysteryman.png", "Stranger", "While he foiled our plans, he took a mortal wound himself. We were sure he was dead. Until people started talking about him again.."],
-    ["data/sprites/rogue.png", "???", "The \"Champion of the Arena\", huh? I wonder If I could get a fight with him?"],
-    ["data/sprites/mysteryman.png", "Stranger", "Don't be stupid. If you see him, capture him and bring him here. He should be nowhere as strong as he once was. There is also a chance that this could be an impostor.."],
-    ["data/sprites/mysteryman.png", "Stranger", "Now go.. Preparations have to be made soon."],
+    ["data/sprites/rogue.png", "???", "Anyway, I'd stay and chat, but I've got my own matters to attend to."],
+    ["data/sprites/mysteryman.png", "Stranger", "Oh? Could it be... you've found a lead on..."],
+    ["data/sprites/rogue.png", "???", "We're not sure yet, but the intel this time is solid. If we can get our hands on him, we can speed this process up by a lot. Still, what kind of person stays hidden for so long?"],
+    ["data/sprites/mysteryman.png", "Stranger", "To put it plainly... he was a monster. If it wasn't for him, we'd have been ready two years ago."],
+    ["data/sprites/mysteryman.png", "Stranger", "While he foiled our plans, he took a mortal wound himself. We were sure he was dead... until people started talking about him again."],
+    ["data/sprites/rogue.png", "???", "The \"Champion of the Arena\", huh? I wonder if I could get a fight with him."],
+    ["data/sprites/mysteryman.png", "Stranger", "Don't be stupid. If you see him, capture him and bring him here. He should be nowhere near as strong as he once was. There's also a chance this could be an impostor..."],
+    ["data/sprites/mysteryman.png", "Stranger", "Now go. Preparations have to be made soon."],
     ["data/sprites/rogue.png", "???", "Heh. I'm looking forward to it."]
   ],
   "floor2_oldman" : [
-    ["data/sprites/oldman.png", "Old Man", "Oho! So you've beat the first floor! Now the real challenge begins!"],
-    ["data/sprites/oldman.png", "Old Man", "Monsters have different elements that they are weak to. Exploit those weaknesses to come out on top!"]
+    ["data/sprites/oldman.png", "Old Man", "Ho! So you've beaten the first floor! Now the real challenge begins!"],
+    ["data/sprites/oldman.png", "Old Man", "Monsters have elements they're weak to. Exploit those weaknesses to come out on top!"]
   ],
   "floor2_boy" : [
-    ["data/sprites/boy.png", "Boy", "Mister, I saw you fight! It was sooooo COOL!"],
-    ["data/sprites/boy.png", "Boy", "I'm gonna be watching all your fights from now. I'm your biggest fan!"]
+    ["data/sprites/boy.png", "Boy", "Mister, I saw you fight! It was sooo cool!"],
+    ["data/sprites/boy.png", "Boy", "I'm gonna watch all your fights from now on. I'm your biggest fan!"]
   ],
   "floor2_youngman_m" : [
     ["data/sprites/youngman.png", "Young Man", "You remind me of him, you know."],
-    ["data/sprites/youngman.png", "Young Man", "The legendary hero. I was there when he won the final challenge. Something about the way you move resembles him."],
-    ["data/sprites/youngman.png", "Young Man", "Are you perhaps, his student? No- never mind. He was too young to have a student and besides, he was a warrior, not a mage."]
+    ["data/sprites/youngman.png", "Young Man", "The legendary hero. I was there when he won the final challenge. Something about the way you move reminds me of him."],
+    ["data/sprites/youngman.png", "Young Man", "Are you his student? No--never mind. He was too young to have a student, and besides, he was a warrior, not a mage."]
   ],
   "floor2_youngman_w" : [
     ["data/sprites/youngman.png", "Young Man", "You remind me of him, you know."],
-    ["data/sprites/youngman.png", "Young Man", "The legendary hero. I was there when he won the final challenge. Something about the way you move resembles him."],
-    ["data/sprites/youngman.png", "Young Man", "Are you perhaps, his student? No- never mind. He was too young to have a student and besides, he was a mage, not a warrior."]
+    ["data/sprites/youngman.png", "Young Man", "The legendary hero. I was there when he won the final challenge. Something about the way you move reminds me of him."],
+    ["data/sprites/youngman.png", "Young Man", "Are you his student? No--never mind. He was too young to have a student, and besides, he was a mage, not a warrior."]
   ],
   "floor2_noble" : [
-    ["", "", "Hmph! I lost a lot of money there thanks to you!"],
-    ["", "", "I was sure that Tho'k would claim another victim! No matter, I have more opportunities to make money by betting against you."]
-    ]
+    ["data/sprites/noble.png", "Noble", "Hmph! I lost a lot of money there, thanks to you!"],
+    ["data/sprites/noble.png", "Noble", "I was sure that Tho'k would claim another victim. No matter, I have more opportunities to make money by betting against you."]
+    ],
+  "town1_citizen" : [
+    ["data/sprites/citizen.png", "Citizen", "Ever since the Arena came to this town, business has been thriving!"],
+    ["data/sprites/citizen.png", "Citizen", "The town quickly began to expand, attracting merchants and people looking to settle."],
+    ["data/sprites/citizen.png", "Citizen", "However, the town's growth hasn't been all smooth sailing. The population of the slums has been growing at an alarming rate."],
+    ["data/sprites/citizen.png", "Citizen", "There have been reports of more crime, and the guards just can't keep up!"],
+    ["data/sprites/citizen.png", "Citizen", "People are getting mugged by low-life thieves and brigands. Hopefully the guards can get things under control soon."]
+  ],
+  "town1_richlady" : [
+    ["data/sprites/richlady.png", "Rich Lady", "I've been seeing shady figures lurking in and out of the slums. How terrifying!"]
+    ],
+  "town1_drunkman" : [
+    ["data/sprites/youngman.png", "Young Man", "*Hic* I ended up losing all my money at the casino! *Hic* My wife is going to kill me..."]
+    ],
+  "casino_dealer_intro": [
+    ["data/sprites/youngman.png", "Dealer", "Welcome to the Casino! Care for a hand of blackjack or a roll of the dice?"],
+    ["data/sprites/youngman.png", "Dealer", "Bet responsibly, and may luck be on your side."]
+  ],
+  "casino_dealer_win": [
+    ["data/sprites/youngman.png", "Dealer", "Nice play. Fortune smiles on you today!"]
+  ],
+  "casino_dealer_lose": [
+    ["data/sprites/youngman.png", "Dealer", "House wins this time. Care to try again?"]
+  ],
+  "casino_dealer_push": [
+    ["data/sprites/youngman.png", "Dealer", "A push. No winners, no losers."]
+  ]
 }
