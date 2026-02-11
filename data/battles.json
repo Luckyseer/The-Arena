@@ -26,5 +26,68 @@
         "slot": 4
       }
     ]
+  },
+  "arena_wave_3": {
+    "enemies": [
+      {
+        "name": "skeleton",
+        "slot": 1
+      },
+      {
+        "name": "slime",
+        "slot": 3
+      }
+    ]
+  },
+  "arena_wave_4": {
+    "enemies": [
+      {
+        "name": "zombie",
+        "slot": 1
+      },
+      {
+        "name": "scorpion",
+        "slot": 2
+      },
+      {
+        "name": "slime",
+        "slot": 4
+      }
+    ]
+  },
+  "floor_plans": {
+    "1": {
+      "planned": [
+        "arena_wave_1",
+        "rat",
+        "arena_wave_2",
+        "snake",
+        "imp"
+      ],
+      "random_pool": [
+        "arena_wave_1",
+        "arena_wave_2",
+        "rat",
+        "snake",
+        "imp"
+      ],
+      "boss": "floor_boss1"
+    },
+    "2": {
+      "planned": [
+        "skeleton",
+        "arena_wave_3",
+        "zombie",
+        "arena_wave_4",
+        "scorpion"
+      ],
+      "random_pool": [
+        "skeleton",
+        "arena_wave_3",
+        "zombie",
+        "arena_wave_4",
+        "scorpion"
+      ]
+    }
   }
 }
