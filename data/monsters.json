@@ -19,7 +19,7 @@
     "strengths": [
       "water"
     ],
-    "speed": 10
+    "speed": 14
   },
   "snake": {
     "name": "Snake",
