@@ -10,6 +10,7 @@ from arena.data_loader import (
     dialogues,
     item_data,
     item_data_shop,
+    battles,
     monster_data,
     sequences,
     skills,
@@ -20,7 +21,60 @@ from arena.ui import MainUi, SelectOptions, Shop
 from arena.utils import Timer, fadein, fadeout, posfinder
 import arena.state as state
 
-alphatext = "Alpha v4.2 - Story and the Town"
+alphatext = "Alpha v5.0 - Overhauled Battle and Casino"
+
+
+def get_floor_plan(progress):
+    plans = battles.get("floor_plans", {})
+    return plans.get(str(progress), {})
+
+
+def build_encounter_info(encounter_id_or_monster):
+    enemies = []
+    total_gold = 0
+    total_exp = 0
+    if isinstance(encounter_id_or_monster, str) and encounter_id_or_monster in battles:
+        for entry in battles[encounter_id_or_monster].get("enemies", []):
+            name = entry.get("name")
+            if name not in monster_data:
+                continue
+            mdata = monster_data[name]
+            display_name = mdata.get("name", name)
+            sprite = pygame.image.load(mdata["sprites"]).convert_alpha()
+            enemies.append(
+                {
+                    "name": name,
+                    "display_name": display_name,
+                    "sprite": sprite,
+                    "gold": mdata.get("gold", 0),
+                    "exp": mdata.get("exp", 0),
+                }
+            )
+            total_gold += mdata.get("gold", 0)
+            total_exp += mdata.get("exp", 0)
+    else:
+        name = encounter_id_or_monster
+        if name in monster_data:
+            mdata = monster_data[name]
+            display_name = mdata.get("name", name)
+            sprite = pygame.image.load(mdata["sprites"]).convert_alpha()
+            enemies.append(
+                {
+                    "name": name,
+                    "display_name": display_name,
+                    "sprite": sprite,
+                    "gold": mdata.get("gold", 0),
+                    "exp": mdata.get("exp", 0),
+                }
+            )
+            total_gold += mdata.get("gold", 0)
+            total_exp += mdata.get("exp", 0)
+    return {
+        "encounter_id": encounter_id_or_monster,
+        "enemies": enemies,
+        "total_gold": total_gold,
+        "total_exp": total_exp,
+    }
 
 
 class GameEvents(MainUi):
@@ -1853,6 +1907,15 @@ def run_game():
     shop = False
     system = False
     talking = False
+    prebattle_active = False
+    prebattle_random_prompt = False
+    prebattle_talk = False
+    prebattle_talk_next = ""
+    prebattle_dialogue = [[]]
+    prebattle_selection = 0
+    prebattle_random_selection = 0
+    prebattle_encounter = None
+    prebattle_is_boss = False
     state.battle_choice = False
     state.post_battle = False  # After battle shenanigans
     state.controlui = True  # Flag to check if player can control ui
@@ -1964,6 +2027,129 @@ def run_game():
             elif event.type == pygame.MOUSEBUTTONDOWN:  # All the required controls
                 posfinder()
             elif event.type == pygame.KEYDOWN:
+                if prebattle_talk:
+                    if event.key in (pygame.K_RCTRL, pygame.K_RETURN):
+                        if ui.txtbox.progress_dialogue([[]]):
+                            prebattle_talk = False
+                            if prebattle_talk_next == "preview":
+                                prebattle_active = True
+                            elif prebattle_talk_next == "random_prompt":
+                                prebattle_random_prompt = True
+                    continue
+                if prebattle_random_prompt:
+                    if event.key == pygame.K_DOWN or event.key == pygame.K_UP:
+                        ui.cursorsound.play()
+                        prebattle_random_selection = 1 - prebattle_random_selection
+                    if event.key == pygame.K_RETURN:
+                        if prebattle_random_selection == 0:
+                            floor_plan = get_floor_plan(player.progress)
+                            random_pool = floor_plan.get(
+                                "random_pool", floor_plan.get("planned", [])
+                            )
+                            if not random_pool:
+                                prebattle_random_prompt = False
+                                state.drawui = False
+                                state.controlui = False
+                                state.battle_choice = True
+                            else:
+                                prebattle_encounter = random.choice(random_pool)
+                                prebattle_random_prompt = False
+                                prebattle_active = True
+                                prebattle_selection = 0
+                        else:
+                            prebattle_random_prompt = False
+                            state.drawui = False
+                            state.controlui = False
+                            state.battle_choice = True
+                    if event.key == pygame.K_RCTRL:
+                        prebattle_random_prompt = False
+                        state.drawui = False
+                        state.controlui = False
+                        state.battle_choice = True
+                    continue
+                if prebattle_active:
+                    if event.key == pygame.K_DOWN or event.key == pygame.K_UP:
+                        ui.cursorsound.play()
+                        prebattle_selection = 1 - prebattle_selection
+                    if event.key == pygame.K_RETURN:
+                        if prebattle_selection == 0 and prebattle_encounter:
+                            if prebattle_is_boss and player.progress == 1:
+                                fadein(255)
+                                eventManager.firstfloor_boss(player.name)
+                                battler.battle(prebattle_encounter, player, set_music=1)
+                                if battler.check_victory():
+                                    eventManager.first_floor_victory(dialogues)
+                                    player.progress += 1
+                                    player.fkills = 0
+                                    state.battle_choice = False
+                                    state.post_battle = False
+                                    state.drawui = True
+                                    state.controlui = True
+                                    ui.pb_dialogue = False
+                                    state.scene = "arena"
+                                    player.hours = 6
+                                    player.minutes = 0
+                                    pygame.mixer.music.load(
+                                        "data/sounds&music/Infinite_Arena.mp3"
+                                    )
+                                    pygame.mixer.music.play()
+                                else:
+                                    state.scene = "menu"
+                                    pygame.mixer_music.load(
+                                        "data/sounds&music/Theme2.ogg"
+                                    )
+                                    pygame.mixer_music.set_volume(0.1)
+                                    pygame.mixer_music.play()
+                                    state.battle_choice = False
+                                    state.post_battle = False
+                                    state.drawui = True
+                                    state.controlui = True
+                                    ui.pb_dialogue = False
+                            else:
+                                battler.battle(prebattle_encounter, player_data=player)
+                                fight = battler.check_victory()
+                                if fight:
+                                    player.fkills += 1
+                                    player.tkills += 1
+                                    state.battle_choice = False
+                                    state.post_battle = True
+                                    pygame.mixer.music.load(
+                                        "data/sounds&music/Infinite_Arena.mp3"
+                                    )
+                                    pygame.mixer.music.play()
+                                else:
+                                    state.scene = "menu"
+                                    pygame.mixer_music.load(
+                                        "data/sounds&music/Theme2.ogg"
+                                    )
+                                    pygame.mixer_music.set_volume(0.1)
+                                    pygame.mixer_music.play()
+                                    state.battle_choice = False
+                                    state.post_battle = False
+                                    state.drawui = True
+                                    state.controlui = True
+                                    ui.pb_dialogue = False
+                            prebattle_active = False
+                            prebattle_is_boss = False
+                            prebattle_encounter = None
+                            prebattle_selection = 0
+                        else:
+                            prebattle_active = False
+                            prebattle_is_boss = False
+                            prebattle_encounter = None
+                            prebattle_selection = 0
+                            state.drawui = False
+                            state.controlui = False
+                            state.battle_choice = True
+                    if event.key == pygame.K_RCTRL:
+                        prebattle_active = False
+                        prebattle_is_boss = False
+                        prebattle_encounter = None
+                        prebattle_selection = 0
+                        state.drawui = False
+                        state.controlui = False
+                        state.battle_choice = True
+                    continue
                 if event.key == pygame.K_b and state.scene == "menu":
                     shh.append("b")
 
@@ -2445,65 +2631,85 @@ def run_game():
                 if (
                     event.key == pygame.K_RETURN and ui.batcursorpos == 0
                 ) and state.battle_choice:
-                    if player.progress == 1:
-                        monster_list = ["rat", "snake", "hornet", "imp"]
-                    elif player.progress == 2:
-                        monster_list = ["skeleton", "zombie", "slime", "scorpion"]
-                    randbattle = random.randrange(len(monster_list))
-                    rand_mon = monster_list[randbattle]
-
-                    battler.battle(rand_mon, player_data=player)
-                    fight = battler.check_victory()
-                    if fight:
-                        player.fkills += 1
-                        player.tkills += 1
+                    floor_plan = get_floor_plan(player.progress)
+                    planned = floor_plan.get("planned", [])
+                    if not planned:
+                        if player.progress == 1:
+                            monster_list = ["rat", "snake", "hornet", "imp"]
+                        elif player.progress == 2:
+                            monster_list = ["skeleton", "zombie", "slime", "scorpion"]
+                        else:
+                            monster_list = ["rat"]
+                        prebattle_encounter = random.choice(monster_list)
+                        prebattle_is_boss = False
+                        prebattle_selection = 0
+                        prebattle_talk = True
+                        prebattle_talk_next = "preview"
+                        prebattle_dialogue = [
+                            [
+                                "data/sprites/host_face.png",
+                                "Chance",
+                                "Here's your next challenge.",
+                            ]
+                        ]
+                        ui.txtbox.draw_textbox(prebattle_dialogue, state.surf, (0, 400))
+                        state.drawui = False
+                        state.controlui = False
                         state.battle_choice = False
-                        state.post_battle = True
-                        pygame.mixer.music.load("data/sounds&music/Infinite_Arena.mp3")
-                        pygame.mixer.music.play()
+                    elif player.fkills < len(planned):
+                        prebattle_encounter = planned[player.fkills]
+                        prebattle_is_boss = False
+                        prebattle_selection = 0
+                        prebattle_talk = True
+                        prebattle_talk_next = "preview"
+                        prebattle_dialogue = [
+                            [
+                                "data/sprites/host_face.png",
+                                "Chance",
+                                "Here's your next challenge.",
+                            ]
+                        ]
+                        ui.txtbox.draw_textbox(prebattle_dialogue, state.surf, (0, 400))
+                        state.drawui = False
+                        state.controlui = False
+                        state.battle_choice = False
                     else:
-                        state.scene = "menu"
-                        pygame.mixer_music.load("data/sounds&music/Theme2.ogg")
-                        pygame.mixer_music.set_volume(0.1)
-                        pygame.mixer_music.play()
+                        prebattle_random_selection = 0
+                        prebattle_talk = True
+                        prebattle_talk_next = "random_prompt"
+                        prebattle_dialogue = [
+                            [
+                                "data/sprites/host_face.png",
+                                "Chance",
+                                "Want to face a random enemy you've already beaten?",
+                            ]
+                        ]
+                        ui.txtbox.draw_textbox(prebattle_dialogue, state.surf, (0, 400))
+                        state.drawui = False
+                        state.controlui = False
                         state.battle_choice = False
-                        state.post_battle = False
-                        state.drawui = True
-                        state.controlui = True
-                        ui.pb_dialogue = False
                 if (
                     event.key == pygame.K_RETURN and ui.batcursorpos == 1
                 ) and state.battle_choice:
                     if player.fkills >= 5 and player.progress == 1:
-                        fadein(255)
-                        eventManager.firstfloor_boss(player.name)
-                        battler.battle("floor_boss1", player, set_music=1)
-                        if battler.check_victory():
-                            eventManager.first_floor_victory(dialogues)
-                            player.progress += 1
-                            player.fkills = 0
-                            state.battle_choice = False
-                            state.post_battle = False
-                            state.drawui = True
-                            state.controlui = True
-                            ui.pb_dialogue = False
-                            state.scene = "arena"
-                            player.hours = 6
-                            player.minutes = 0
-                            pygame.mixer.music.load(
-                                "data/sounds&music/Infinite_Arena.mp3"
-                            )
-                            pygame.mixer.music.play()
-                        else:
-                            state.scene = "menu"
-                            pygame.mixer_music.load("data/sounds&music/Theme2.ogg")
-                            pygame.mixer_music.set_volume(0.1)
-                            pygame.mixer_music.play()
-                            state.battle_choice = False
-                            state.post_battle = False
-                            state.drawui = True
-                            state.controlui = True
-                            ui.pb_dialogue = False
+                        floor_plan = get_floor_plan(player.progress)
+                        boss_id = floor_plan.get("boss", "floor_boss1")
+                        prebattle_encounter = boss_id
+                        prebattle_is_boss = True
+                        prebattle_selection = 0
+                        prebattle_talk = True
+                        prebattle_talk_next = "preview"
+                        prebattle_dialogue = [
+                            [
+                                "data/sprites/host_face.png",
+                                "Chance",
+                                "The floor boss awaits. Ready to begin?",
+                            ]
+                        ]
+                        ui.txtbox.draw_textbox(prebattle_dialogue, state.surf, (0, 400))
+                        state.drawui = False
+                        state.controlui = False
+                        state.battle_choice = False
                     else:
                         secretbattle.buzzer.play()
                 if (
@@ -2674,31 +2880,49 @@ def run_game():
                     ),
                     (0, 0),
                 )  # Night bg
+            prebattle_blocking = (
+                prebattle_talk or prebattle_random_prompt or prebattle_active
+            )
 
-            if state.drawui:
+            if state.drawui and not prebattle_blocking:
                 ui.clock(player.hours, player.minutes)
                 ui.arena(player.progress)
                 if ui.cursorpos > 5:
                     ui.cursorpos = 0
                 if ui.cursorpos < 0:
                     ui.cursorpos = 5
-            if talking:
-                ui.talk(talkval, player)
-            if options:
-                if player.progress == 1:
-                    floor_talk.drawUi(4, "Old Man", "Boy", "Villager", "Stranger")
-                elif player.progress == 2:
-                    floor_talk.drawUi(4, "Old Man", "Boy", "Villager", "Pompous Noble")
-            if status:
-                ui.status(player, item_data)
-            if shop:
-                arena_shop.draw_shop("Arena Shop", player)
-            if system:
-                ui.system()
-            if state.battle_choice:
-                ui.battle_choice(player.fkills)
-            if state.post_battle:
-                ui.post_battle(player.progress)
+            if not prebattle_blocking:
+                if talking:
+                    ui.talk(talkval, player)
+                if options:
+                    if player.progress == 1:
+                        floor_talk.drawUi(4, "Old Man", "Boy", "Villager", "Stranger")
+                    elif player.progress == 2:
+                        floor_talk.drawUi(
+                            4, "Old Man", "Boy", "Villager", "Pompous Noble"
+                        )
+                if status:
+                    ui.status(player, item_data)
+                if shop:
+                    arena_shop.draw_shop("Arena Shop", player)
+                if system:
+                    ui.system()
+                if state.battle_choice:
+                    ui.battle_choice(player.fkills)
+                if state.post_battle:
+                    ui.post_battle(player.progress)
+            if prebattle_talk:
+                ui.txtbox.draw_textbox(prebattle_dialogue, state.surf, (0, 400))
+            elif prebattle_random_prompt:
+                ui.draw_battle_random_prompt(prebattle_random_selection)
+            elif prebattle_active and prebattle_encounter:
+                encounter_info = build_encounter_info(prebattle_encounter)
+                ui.draw_battle_preview(
+                    encounter_info,
+                    player,
+                    selection=prebattle_selection,
+                    title="Boss Battle" if prebattle_is_boss else "Next Challenge",
+                )
         elif state.scene == "inn":
             state.surf.blit(
                 pygame.transform.scale(inn_bg, (state.curwidth, state.curheight)),

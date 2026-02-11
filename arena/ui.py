@@ -119,6 +119,8 @@ class MainUi:
             ]
         )
         self.coinAnim.play()
+        self.hp_bar_empty = pygame.image.load("data/sprites/hpbar1.png").convert_alpha()
+        self.hp_bar_full = pygame.image.load("data/sprites/hpbar2.png").convert_alpha()
         self.shopkeep = True
         self.loaditems = False
         self.item_desc = ""
@@ -167,6 +169,227 @@ class MainUi:
                 surf.blit(outline_surf, (dx + thickness, dy + thickness))
         surf.blit(base, (thickness, thickness))
         return surf
+
+    def draw_gold_box(self, gold, pos=(10, 48)):
+        state.surf.blit(pygame.transform.scale(self.bg, (170, 50)), pos)
+        self.coinAnim.blit(state.surf, (pos[0] + 12, pos[1] + 14))
+        gold_txt = self.uitext2.render("Gold:  %d" % gold, False, self.txtcolor)
+        state.surf.blit(gold_txt, (pos[0] + 37, pos[1] + 14))
+
+    def draw_player_mini_status(self, player, pos=(820, 120)):
+        lines = [
+            "Name: %s" % player.name,
+            "Class: %s" % player.pclass.capitalize(),
+            "Level: %d" % player.level,
+        ]
+        equip_lines = [
+            "Weapon: %s" % item_data["weapons"][player.cur_weapon]["name"],
+            "Armor: %s" % item_data["armours"][player.cur_armour]["name"],
+            "Accessory: %s" % item_data["accessories"][player.cur_accessory]["name"],
+        ]
+
+        rendered = [
+            self.render_text(line, self.uitext2, self.txtcolor2, outline=True)
+            for line in lines
+        ]
+        equip_rendered = [
+            self.render_text(line, self.uitext2, self.txtcolor2, outline=True)
+            for line in equip_lines
+        ]
+
+        hp_text = self.render_text(
+            "HP: %d/%d" % (player.curhp, player.hp),
+            self.uitext2,
+            self.txtcolor2,
+            outline=True,
+        )
+        mp_text = self.render_text(
+            "MP: %d/%d" % (player.curmp, player.mp),
+            self.uitext2,
+            self.txtcolor2,
+            outline=True,
+        )
+
+        max_w = max(
+            [surf.get_width() for surf in rendered]
+            + [surf.get_width() for surf in equip_rendered]
+            + [hp_text.get_width(), mp_text.get_width()]
+        )
+        pad = 28
+        line_gap = 6
+        bar_h = 10
+        bar_gap = 4
+        bar_w = max(140, max_w - hp_text.get_width() - 18)
+        total_h = (
+            sum(surf.get_height() for surf in rendered)
+            + hp_text.get_height()
+            + mp_text.get_height()
+            + sum(surf.get_height() for surf in equip_rendered)
+            + line_gap * (len(rendered) + len(equip_rendered) + 1)
+            + bar_h * 2
+            + bar_gap * 2
+        )
+        box_w = max_w + pad * 2 + bar_w
+        box_h = total_h + pad * 2
+
+        bg = pygame.transform.scale(self.bg, (box_w, box_h))
+        state.surf.blit(bg, pos)
+
+        content_x = pos[0] + pad + 22
+        content_y = pos[1] + pad + 16
+        for surf in rendered:
+            state.surf.blit(surf, (content_x, content_y))
+            content_y += surf.get_height() + line_gap
+
+        state.surf.blit(hp_text, (content_x, content_y))
+        hp_ratio = player.curhp / player.hp if player.hp > 0 else 0
+        hp_bar_x = content_x + hp_text.get_width() + 12
+        hp_bar_y = content_y + 6
+        hp_bar = pygame.Rect(hp_bar_x, hp_bar_y, bar_w, bar_h)
+        pygame.draw.rect(state.surf, (20, 10, 10), hp_bar, border_radius=3)
+        pygame.draw.rect(
+            state.surf,
+            (170, 40, 50),
+            pygame.Rect(hp_bar.x, hp_bar.y, int(hp_bar.w * hp_ratio), hp_bar.h),
+            border_radius=3,
+        )
+        content_y += hp_text.get_height() + bar_gap
+
+        state.surf.blit(mp_text, (content_x, content_y))
+        mp_ratio = player.curmp / player.mp if player.mp > 0 else 0
+        mp_bar_x = content_x + mp_text.get_width() + 12
+        mp_bar_y = content_y + 6
+        mp_bar = pygame.Rect(mp_bar_x, mp_bar_y, bar_w, bar_h)
+        pygame.draw.rect(state.surf, (10, 10, 24), mp_bar, border_radius=3)
+        pygame.draw.rect(
+            state.surf,
+            (40, 80, 180),
+            pygame.Rect(mp_bar.x, mp_bar.y, int(mp_bar.w * mp_ratio), mp_bar.h),
+            border_radius=3,
+        )
+        content_y += mp_text.get_height() + line_gap
+
+        for surf in equip_rendered:
+            state.surf.blit(surf, (content_x, content_y))
+            content_y += surf.get_height() + line_gap
+
+    def draw_battle_preview(
+        self,
+        encounter_info,
+        player,
+        selection=0,
+        title="Next Challenge",
+    ):
+        margin_x = int(state.curwidth * 0.04)
+        margin_y = int(state.curheight * 0.06)
+        poster_w = int(state.curwidth * 0.50)
+        poster_h = int(state.curheight * 0.50)
+        poster_x = margin_x
+        poster_y = margin_y + 30
+        info_h = int(state.curheight * 0.15)
+        info_y = poster_y + poster_h + 10
+
+        poster_bg = pygame.transform.scale(self.bg, (poster_w, poster_h))
+        info_bg = pygame.transform.scale(self.bg, (poster_w, info_h))
+        state.surf.blit(poster_bg, (poster_x, poster_y))
+        state.surf.blit(info_bg, (poster_x, info_y))
+
+        title_txt = self.render_text(title, self.uitext, (186, 31, 34), outline=True)
+        state.surf.blit(title_txt, (poster_x + 22, poster_y - title_txt.get_height()))
+
+        slots = []
+        inset = 22
+        slot_w = (poster_w - inset * 2) // 2
+        slot_h = (poster_h - inset * 2) // 2
+        for row in range(2):
+            for col in range(2):
+                slots.append(
+                    pygame.Rect(
+                        poster_x + inset + col * slot_w,
+                        poster_y + inset + row * slot_h,
+                        slot_w,
+                        slot_h,
+                    )
+                )
+        for idx, enemy in enumerate(encounter_info.get("enemies", [])):
+            if idx >= len(slots):
+                break
+            rect = slots[idx]
+            sprite = enemy["sprite"]
+            max_w = rect.width - 16
+            max_h = rect.height - 16
+            scale = min(max_w / sprite.get_width(), max_h / sprite.get_height())
+            if scale <= 0:
+                scale = 1
+            draw_w = max(1, int(sprite.get_width() * scale))
+            draw_h = max(1, int(sprite.get_height() * scale))
+            draw_sprite = pygame.transform.scale(sprite, (draw_w, draw_h))
+            draw_x = rect.x + (rect.width - draw_w) // 2
+            draw_y = rect.y + (rect.height - draw_h) // 2
+            state.surf.blit(draw_sprite, (draw_x, draw_y))
+
+        names = [e["display_name"] for e in encounter_info.get("enemies", [])]
+        names_text = " / ".join(names) if names else "Unknown"
+        rewards_text = "Rewards: %d Gold / %d Exp" % (
+            encounter_info.get("total_gold", 0),
+            encounter_info.get("total_exp", 0),
+        )
+        names_surf = self.render_text(
+            names_text, self.uitext2, self.txtcolor2, outline=True
+        )
+        rewards_surf = self.render_text(
+            rewards_text, self.uitext2, self.txtcolor2, outline=True
+        )
+        state.surf.blit(names_surf, (poster_x + 56, info_y + 18))
+        state.surf.blit(
+            rewards_surf, (poster_x + 56, info_y + 18 + names_surf.get_height() + 6)
+        )
+
+        status_x = poster_x + poster_w + margin_x
+        status_y = poster_y + 8
+        self.draw_player_mini_status(player, (status_x, status_y))
+
+        action_w = int(state.curwidth * 0.26)
+        action_h = int(state.curheight * 0.18)
+        action_x = status_x
+        action_y = info_y
+        action_bg = pygame.transform.scale(self.bg, (action_w, action_h))
+        state.surf.blit(action_bg, (action_x, action_y))
+
+        prev_bold = self.uitext.get_bold()
+        self.uitext.set_bold(False)
+        start_txt = self.render_text("Start Battle!", self.uitext, self.txtcolor, False)
+        back_txt = self.render_text("Back", self.uitext, self.txtcolor, False)
+        self.uitext.set_bold(prev_bold)
+        state.surf.blit(start_txt, (action_x + 36, action_y + 24))
+        state.surf.blit(back_txt, (action_x + 36, action_y + 72))
+        if selection == 0:
+            state.surf.blit(self.cursor, (action_x + 8, action_y + 24))
+        else:
+            state.surf.blit(self.cursor, (action_x + 8, action_y + 72))
+
+    def draw_battle_random_prompt(self, selection=0):
+        box_w = int(state.curwidth * 0.55)
+        box_h = int(state.curheight * 0.25)
+        box_x = int((state.curwidth - box_w) / 2)
+        box_y = int(state.curheight * 0.35)
+        prompt_bg = pygame.transform.scale(self.bg, (box_w, box_h))
+        state.surf.blit(prompt_bg, (box_x, box_y))
+        prompt = self.render_text(
+            "Fight a random enemy you've faced this floor?",
+            self.uitext2,
+            self.txtcolor2,
+            outline=True,
+        )
+        state.surf.blit(prompt, (box_x + 48, box_y + 30))
+        yes_txt = self.render_text("Yes", self.uitext, self.txtcolor, False)
+        no_txt = self.render_text("No", self.uitext, self.txtcolor, False)
+        state.surf.blit(yes_txt, (box_x + 80, box_y + 82))
+        state.surf.blit(no_txt, (box_x + 80, box_y + 122))
+        if selection == 0:
+            state.surf.blit(self.cursor, (box_x + 50, box_y + 82))
+        else:
+            state.surf.blit(self.cursor, (box_x + 50, box_y + 122))
 
     def arena(self, floor=1):  # Main ui in the arena
         state.surf.blit(

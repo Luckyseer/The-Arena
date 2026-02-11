@@ -8,7 +8,7 @@ from arena.player import Player
 from arena.utils import Timer, fadein, fadeout, posfinder
 import arena.state as state
 
-alphatext = "Alpha v4.2 - Story and the Town"
+alphatext = "Alpha v5.0 - Overhauled Battle and Casino"
 
 
 class SideBattle:
@@ -1360,6 +1360,7 @@ class NewBattle:
         self.round_index = 0
         self.turn_order_slide = -80
         self.target_name_alpha = 0
+        self.item_effect_applied = False
         self.party_positions = [(920, 300), (840, 340)]
         self.enemy_positions = [(240, 280), (140, 240), (140, 360), (240, 340)]
         #  Player Details
@@ -1518,6 +1519,7 @@ class NewBattle:
         self.turn_banner_text = ""
         self.turn_banner_duration = 30
         self.last_enemy_target = None
+        self.enemy_start_delay_frames = 0
         #  Temp stuff remove later
         self.crit_text = self.dmg_font.render("Critical!", True, (225, 0, 100))
         self.weak_text = self.dmg_font.render("Weak!", True, (225, 0, 100))
@@ -1795,6 +1797,17 @@ class NewBattle:
             self.announce_turn("enemy")
         self.turn_order_burst = 10
 
+    def get_effective_speed(self, combatant):
+        speed = combatant.get("speed", 1)
+        for status in combatant.get("status", []):
+            name = status[0]
+            value = status[3] if len(status) >= 4 else 5
+            if name == "spd_up":
+                speed += value
+            elif name == "spd_down":
+                speed -= value
+        return max(1, int(speed))
+
     def build_round_order(self):
         alive = [c for c in self.party + self.enemies if c["hp"] > 0]
         if not alive:
@@ -1803,7 +1816,7 @@ class NewBattle:
         self.round_order = sorted(
             alive,
             key=lambda c: (
-                -max(1, c.get("speed", 1)),
+                -self.get_effective_speed(c),
                 0 if c["side"] == "player" else 1,
                 c.get("order_id", 0),
             ),
@@ -1942,6 +1955,9 @@ class NewBattle:
         target["hit_flash"] = 6
         if target["side"] == "enemy":
             self.last_enemy_target = target
+            target["hp_bar_timer"] = max(target.get("hp_bar_timer", 0), 30)
+            if target["hp"] == 0 or dmg >= target["max_hp"] * 0.35:
+                target["virtual_hp"] = target["hp"]
         if target["side"] == "enemy" and target["hp"] <= 0:
             if not target["death_sound_played"]:
                 self.play_sound("enemy_dead")
@@ -2699,6 +2715,14 @@ class NewBattle:
             else:
                 self.set_target("player", self.ally_target_index)
         self.sync_active_stats()
+        if self.game_state == "enemy_start_delay":
+            if self.enemy_start_delay_frames > 0:
+                self.enemy_start_delay_frames -= 1
+            if self.enemy_start_delay_frames <= 0:
+                self.announce_turn("enemy")
+                self.game_state = "enemy_turn"
+                self.global_timer.reset()
+            return
         if self.game_state == "player_attack":  # Player regular attack
             player_attacking = False
             attacker = self.active
@@ -2786,6 +2810,7 @@ class NewBattle:
                 self.sequence_flag = True
                 self.crit_chance = 0
                 self.sequence_to_play = "use_item"
+                self.item_effect_applied = False
                 if self.target:
                     self.sequence_target = (
                         self.target["pos"][0],
@@ -3162,9 +3187,12 @@ class NewBattle:
                                         else self.item_min + self.cursor_pos
                                     )
                                     item = self.p_inventory[item_index]["name"]
+                                    item_data = None
+                                    hp_heal = 0
                                     for items in self.consumable_data:
                                         if items["name"] == item:
                                             hp_heal = items["hp"]
+                                            item_data = items
                                     if hp_heal != 0 and self.target:
                                         self.spawn_floating_text(
                                             f"+{hp_heal}",
@@ -3177,6 +3205,38 @@ class NewBattle:
                                             life=55,
                                         )
                                         self.apply_heal(self.target, hp_heal=hp_heal)
+                                    if (
+                                        item_data
+                                        and not self.item_effect_applied
+                                        and item_data.get("effect")
+                                    ):
+                                        self.item_effect_applied = True
+                                        effect = item_data.get("effect")
+                                        if effect == "spd_up":
+                                            amount = item_data.get("spd", 5)
+                                            duration = item_data.get("duration", 3)
+                                            tgt = (
+                                                self.target
+                                                if self.target
+                                                else self.active
+                                            )
+                                            if tgt:
+                                                tgt["status"].append(
+                                                    [
+                                                        "spd_up",
+                                                        duration,
+                                                        self.round_number,
+                                                        amount,
+                                                    ]
+                                                )
+                                                self.spawn_floating_text(
+                                                    "SPD UP",
+                                                    (210, 210, 255),
+                                                    (tgt["pos"][0], tgt["pos"][1] - 50),
+                                                    scale=1.0,
+                                                    life=50,
+                                                    rise=-0.6,
+                                                )
                         elif action[0] == "heal_mp":
                             if self.turn == "player":
                                 if action[1] == "item":
@@ -3186,9 +3246,12 @@ class NewBattle:
                                         else self.item_min + self.cursor_pos
                                     )
                                     item = self.p_inventory[item_index]["name"]
+                                    item_data = None
+                                    mp_heal = 0
                                     for items in self.consumable_data:
                                         if items["name"] == item:
                                             mp_heal = items["mp"]
+                                            item_data = items
                                     if mp_heal != 0 and self.target:
                                         self.spawn_floating_text(
                                             f"+{mp_heal}",
@@ -3201,6 +3264,38 @@ class NewBattle:
                                             life=55,
                                         )
                                         self.apply_heal(self.target, mp_heal=mp_heal)
+                                    if (
+                                        item_data
+                                        and not self.item_effect_applied
+                                        and item_data.get("effect")
+                                    ):
+                                        self.item_effect_applied = True
+                                        effect = item_data.get("effect")
+                                        if effect == "spd_up":
+                                            amount = item_data.get("spd", 5)
+                                            duration = item_data.get("duration", 3)
+                                            tgt = (
+                                                self.target
+                                                if self.target
+                                                else self.active
+                                            )
+                                            if tgt:
+                                                tgt["status"].append(
+                                                    [
+                                                        "spd_up",
+                                                        duration,
+                                                        self.round_number,
+                                                        amount,
+                                                    ]
+                                                )
+                                                self.spawn_floating_text(
+                                                    "SPD UP",
+                                                    (210, 210, 255),
+                                                    (tgt["pos"][0], tgt["pos"][1] - 50),
+                                                    scale=1.0,
+                                                    life=50,
+                                                    rise=-0.6,
+                                                )
                                         # sequence syntax: ["move_to", "target", x, y, 0]
                         elif action[0] == "move_to":
                             self.move_flag = True
@@ -3288,17 +3383,11 @@ class NewBattle:
     def draw_healthbar(self, cur_health):  # Enemy health bar
         targets = []
         if self.last_enemy_targets:
-            targets = [
-                t
-                for t in self.last_enemy_targets
-                if t["side"] == "enemy" and t["hp"] > 0
-            ]
+            targets = [t for t in self.last_enemy_targets if t["side"] == "enemy"]
         elif self.last_enemy_target and self.last_enemy_target["side"] == "enemy":
-            if self.last_enemy_target["hp"] > 0:
-                targets = [self.last_enemy_target]
+            targets = [self.last_enemy_target]
         elif self.target and self.target["side"] == "enemy":
-            if self.target["hp"] > 0:
-                targets = [self.target]
+            targets = [self.target]
         if not targets:
             self.healthbar_flag = False
             self.last_enemy_targets = []
@@ -3307,7 +3396,13 @@ class NewBattle:
 
         for target in targets:
             cur_health = target["hp"]
+            if target.get("hp_bar_timer", 0) > 0:
+                target["hp_bar_timer"] -= 1
+            elif cur_health <= 0:
+                continue
             virtual_hp = target.get("virtual_hp", target["hp"])
+            if abs(cur_health - virtual_hp) > max(50, target["max_hp"] * 0.2):
+                virtual_hp = cur_health
             if cur_health > virtual_hp:
                 if virtual_hp % 100 == 0 and not virtual_hp + 100 > cur_health:
                     virtual_hp += 100
@@ -3329,7 +3424,7 @@ class NewBattle:
             target["virtual_hp"] = virtual_hp
             health_percent = (virtual_hp / target["max_hp"]) * 100
             if health_percent <= 0:
-                health_percent = 0.1
+                health_percent = 0
             x, y = target["pos"][0], target["pos"][1]
             state.surf.blit(
                 pygame.transform.scale(self.hp_bar_Empty, (260, 18)),
@@ -4088,6 +4183,8 @@ class NewBattle:
         self.healthbar_flag = False
         self.victory_flag = False
         self.draw_menu = True
+        self.item_effect_applied = False
+        self.enemy_start_delay_frames = 0
 
         for member in self.party:
             member["status"] = []
@@ -4141,6 +4238,15 @@ class NewBattle:
         self.display_mp = self.p_mana
         self.last_hp = self.p_health
         self.last_mp = self.p_mana
+        if self.active and self.active.get("side") == "enemy":
+            self.draw_menu = False
+            self.enemy_start_delay_frames = 60
+            self.game_state = "enemy_start_delay"
+            self.turn_banner_timer = 0
+            self.global_timer.reset()
+        else:
+            self.draw_menu = True
+            self.game_state = ""
         fadein(255)
         if set_music == 0:
             pygame.mixer_music.load("data/sounds&music/03_Endless_Battle.ogg")
