@@ -79,6 +79,12 @@
  + Added new 'talk' dialogue to floor 2 arena.
  + Added a move tester to test specific moves by the enemy. (Type in 'move' on the main menu)
  + Added new talk options to town.
+ # - Alpha v5.0 - Overhauled Battle and Casino
+ + Major battle overhaul with multi-enemy encounters, turn order improvements, and expanded battle UI.
+ + Added casino features and flow improvements for mini-games.
+ + Added planned encounter previews for arena battles and related UI updates.
+ + General polish, balancing updates, and bug fixes across battle/event systems.
+
 # Known issues:
  - Update current song after victory
 # TODO:

@@ -1,4 +1,4 @@
-# Alpha V4.2
+# Alpha v5.0
 from __future__ import print_function  # For compatibility with python 2.x
 import pickle
 import random
@@ -31,7 +31,7 @@ import arena.state as state
 
 icon = pygame.image.load("data/sprites/Icon2.png")
 pygame.display.set_icon(icon)
-alphatext = "Alpha v4.2 - Story and the Town"
+alphatext = "Alpha v5.0 - Overhauled Battle and Casino"
 
 
 if __name__ == "__main__":
